@@ -1,0 +1,1211 @@
+{
+ "code": 200,
+ "device": {
+  "BatteryLevel": 100,
+  "Brightness": {
+   "0": "RGB Profile",
+   "1": "33 %",
+   "2": "66 %",
+   "3": "100 %"
+  },
+  "ChangeableLedChannels": 2,
+  "Connected": true,
+  "CpuTemp": 0,
+  "DPIAmount": 6,
+  "Debug": true,
+  "DeviceProfile": {
+   "Active": true,
+   "AngleSnapping": 0,
+   "Brightness": 0,
+   "BrightnessSlider": 30,
+   "ButtonOptimization": 0,
+   "KeyAssignmentHash": "697b17498b5265851aff8e9c93f8d4d1",
+   "Label": "Mouse",
+   "LiftHeight": 2,
+   "OpenRGBIntegration": false,
+   "OriginalBrightness": 100,
+   "Path": "/opt/OpenLinkHub/database/profiles/SE0000000000TEST-Guildwars2.json",
+   "PollingRate": 4,
+   "Product": "SCIMITAR ELITE SE",
+   "Profile": 2,
+   "Profiles": {
+    "0": {
+     "Color": {
+      "Hex": "#ff0000",
+      "blue": 0,
+      "brightness": 0.3,
+      "green": 0,
+      "position": 0,
+      "red": 255,
+      "temperature": 0
+     },
+     "ColorIndex": {
+      "0": [
+       2,
+       6,
+       10
+      ]
+     },
+     "PackerIndex": 1,
+     "Sniper": false,
+     "Value": 800,
+     "name": "Stage 1"
+    },
+    "1": {
+     "Color": {
+      "Hex": "#ffffff",
+      "blue": 255,
+      "brightness": 0.3,
+      "green": 255,
+      "position": 0,
+      "red": 255,
+      "temperature": 0
+     },
+     "ColorIndex": {
+      "0": [
+       2,
+       6,
+       10
+      ]
+     },
+     "PackerIndex": 2,
+     "Sniper": false,
+     "Value": 1600,
+     "name": "Stage 2"
+    },
+    "2": {
+     "Color": {
+      "Hex": "#00ff00",
+      "blue": 0,
+      "brightness": 0.3,
+      "green": 255,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "ColorIndex": {
+      "0": [
+       2,
+       6,
+       10
+      ]
+     },
+     "PackerIndex": 3,
+     "Sniper": false,
+     "Value": 3600,
+     "name": "Stage 3"
+    },
+    "3": {
+     "Color": {
+      "Hex": "#ff00ff",
+      "blue": 255,
+      "brightness": 0.3,
+      "green": 0,
+      "position": 0,
+      "red": 255,
+      "temperature": 0
+     },
+     "ColorIndex": {
+      "0": [
+       2,
+       6,
+       10
+      ]
+     },
+     "PackerIndex": 4,
+     "Sniper": false,
+     "Value": 5000,
+     "name": "Stage 4"
+    },
+    "4": {
+     "Color": {
+      "Hex": "#00ffff",
+      "blue": 255,
+      "brightness": 0.3,
+      "green": 255,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "ColorIndex": {
+      "0": [
+       2,
+       6,
+       10
+      ]
+     },
+     "PackerIndex": 5,
+     "Sniper": false,
+     "Value": 7000,
+     "name": "Stage 5"
+    },
+    "5": {
+     "Color": {
+      "Hex": "#ffff00",
+      "blue": 0,
+      "brightness": 1,
+      "green": 255,
+      "position": 0,
+      "red": 255,
+      "temperature": 0
+     },
+     "ColorIndex": {
+      "0": [
+       2,
+       6,
+       10
+      ]
+     },
+     "PackerIndex": 6,
+     "Sniper": true,
+     "Value": 200,
+     "name": "Sniper"
+    }
+   },
+   "RGBCluster": false,
+   "RGBProfile": "colorshift",
+   "RgbOff": false,
+   "Serial": "SE0000000000TEST",
+   "SleepMode": 5,
+   "ZoneColors": {
+    "0": {
+     "Color": {
+      "Hex": "#aa0802",
+      "blue": 2,
+      "brightness": 1,
+      "green": 8,
+      "position": 0,
+      "red": 170,
+      "temperature": 0
+     },
+     "ColorIndex": [
+      1,
+      5,
+      9
+     ],
+     "Name": "Side"
+    },
+    "1": {
+     "Color": {
+      "Hex": "#aa0802",
+      "blue": 2,
+      "brightness": 1,
+      "green": 8,
+      "position": 0,
+      "red": 170,
+      "temperature": 0
+     },
+     "ColorIndex": [
+      0,
+      4,
+      8
+     ],
+     "Name": "Logo"
+    }
+   }
+  },
+  "Endpoint": 9,
+  "Exit": false,
+  "GpuTemp": 0,
+  "InputActions": {
+   "0": {
+    "CommandCode": 0,
+    "Controller": false,
+    "Media": false,
+    "Mouse": false,
+    "Name": "None",
+    "Scroll": false
+   },
+   "1": {
+    "CommandCode": 115,
+    "Controller": false,
+    "Media": true,
+    "Mouse": false,
+    "Name": "Volume Up",
+    "Scroll": false
+   },
+   "10": {
+    "CommandCode": 4,
+    "Controller": false,
+    "Media": false,
+    "Mouse": false,
+    "Name": "Number 3",
+    "Scroll": false
+   },
+   "46": {
+    "CommandCode": 59,
+    "Controller": false,
+    "Media": false,
+    "Mouse": false,
+    "Name": "F1",
+    "Scroll": false
+   },
+   "91": {
+    "CommandCode": 272,
+    "Controller": false,
+    "Media": false,
+    "Mouse": true,
+    "Name": "(Mouse) Left Click",
+    "Scroll": false
+   }
+  },
+  "KeyAssignment": {
+   "1": {
+    "actionCommand": 0,
+    "actionHold": false,
+    "actionType": 0,
+    "buttonIndex": 0,
+    "default": true,
+    "deviceId": "",
+    "isMacro": false,
+    "isTilt": false,
+    "modifierKey": 0,
+    "name": "Left Button",
+    "onRelease": false,
+    "profileSwitch": false,
+    "retainOriginal": false,
+    "tiltIndex": 0,
+    "tiltToggle": false,
+    "toggleDelay": 0
+   },
+   "1024": {
+    "actionCommand": 13,
+    "actionHold": false,
+    "actionType": 3,
+    "buttonIndex": 0,
+    "default": false,
+    "deviceId": "",
+    "isMacro": false,
+    "isTilt": false,
+    "modifierKey": 0,
+    "name": "Side Button 6",
+    "onRelease": false,
+    "profileSwitch": false,
+    "retainOriginal": false,
+    "tiltIndex": 0,
+    "tiltToggle": false,
+    "toggleDelay": 0
+   },
+   "128": {
+    "actionCommand": 48,
+    "actionHold": false,
+    "actionType": 3,
+    "buttonIndex": 0,
+    "default": false,
+    "deviceId": "",
+    "isMacro": false,
+    "isTilt": false,
+    "modifierKey": 0,
+    "name": "Side Button 3",
+    "onRelease": false,
+    "profileSwitch": false,
+    "retainOriginal": false,
+    "tiltIndex": 0,
+    "tiltToggle": false,
+    "toggleDelay": 0
+   },
+   "16": {
+    "actionCommand": 0,
+    "actionHold": false,
+    "actionType": 0,
+    "buttonIndex": 0,
+    "default": true,
+    "deviceId": "",
+    "isMacro": false,
+    "isTilt": false,
+    "modifierKey": 0,
+    "name": "Profile Switch",
+    "onRelease": false,
+    "profileSwitch": true,
+    "retainOriginal": false,
+    "tiltIndex": 0,
+    "tiltToggle": false,
+    "toggleDelay": 0
+   },
+   "16384": {
+    "actionCommand": 50,
+    "actionHold": false,
+    "actionType": 3,
+    "buttonIndex": 0,
+    "default": false,
+    "deviceId": "",
+    "isMacro": false,
+    "isTilt": false,
+    "modifierKey": 0,
+    "name": "Side Button 10",
+    "onRelease": false,
+    "profileSwitch": false,
+    "retainOriginal": false,
+    "tiltIndex": 0,
+    "tiltToggle": false,
+    "toggleDelay": 0
+   },
+   "2": {
+    "actionCommand": 0,
+    "actionHold": false,
+    "actionType": 0,
+    "buttonIndex": 0,
+    "default": true,
+    "deviceId": "",
+    "isMacro": false,
+    "isTilt": false,
+    "modifierKey": 0,
+    "name": "Right Button",
+    "onRelease": false,
+    "profileSwitch": false,
+    "retainOriginal": false,
+    "tiltIndex": 0,
+    "tiltToggle": false,
+    "toggleDelay": 0
+   },
+   "2048": {
+    "actionCommand": 14,
+    "actionHold": false,
+    "actionType": 3,
+    "buttonIndex": 0,
+    "default": false,
+    "deviceId": "",
+    "isMacro": false,
+    "isTilt": false,
+    "modifierKey": 0,
+    "name": "Side Button 7",
+    "onRelease": false,
+    "profileSwitch": false,
+    "retainOriginal": false,
+    "tiltIndex": 0,
+    "tiltToggle": false,
+    "toggleDelay": 0
+   },
+   "256": {
+    "actionCommand": 49,
+    "actionHold": false,
+    "actionType": 3,
+    "buttonIndex": 0,
+    "default": false,
+    "deviceId": "",
+    "isMacro": false,
+    "isTilt": false,
+    "modifierKey": 0,
+    "name": "Side Button 4",
+    "onRelease": false,
+    "profileSwitch": false,
+    "retainOriginal": false,
+    "tiltIndex": 0,
+    "tiltToggle": false,
+    "toggleDelay": 0
+   },
+   "32": {
+    "actionCommand": 46,
+    "actionHold": false,
+    "actionType": 3,
+    "buttonIndex": 0,
+    "default": false,
+    "deviceId": "",
+    "isMacro": false,
+    "isTilt": false,
+    "modifierKey": 0,
+    "name": "Side Button 1",
+    "onRelease": false,
+    "profileSwitch": false,
+    "retainOriginal": false,
+    "tiltIndex": 0,
+    "tiltToggle": false,
+    "toggleDelay": 0
+   },
+   "32768": {
+    "actionCommand": 51,
+    "actionHold": false,
+    "actionType": 3,
+    "buttonIndex": 0,
+    "default": false,
+    "deviceId": "",
+    "isMacro": false,
+    "isTilt": false,
+    "modifierKey": 0,
+    "name": "Side Button 11",
+    "onRelease": false,
+    "profileSwitch": false,
+    "retainOriginal": false,
+    "tiltIndex": 0,
+    "tiltToggle": false,
+    "toggleDelay": 0
+   },
+   "4": {
+    "actionCommand": 0,
+    "actionHold": false,
+    "actionType": 0,
+    "buttonIndex": 0,
+    "default": true,
+    "deviceId": "",
+    "isMacro": false,
+    "isTilt": false,
+    "modifierKey": 0,
+    "name": "Middle Button",
+    "onRelease": false,
+    "profileSwitch": false,
+    "retainOriginal": false,
+    "tiltIndex": 0,
+    "tiltToggle": false,
+    "toggleDelay": 0
+   },
+   "4096": {
+    "actionCommand": 15,
+    "actionHold": false,
+    "actionType": 3,
+    "buttonIndex": 0,
+    "default": false,
+    "deviceId": "",
+    "isMacro": false,
+    "isTilt": false,
+    "modifierKey": 0,
+    "name": "Side Button 8",
+    "onRelease": false,
+    "profileSwitch": false,
+    "retainOriginal": false,
+    "tiltIndex": 0,
+    "tiltToggle": false,
+    "toggleDelay": 0
+   },
+   "512": {
+    "actionCommand": 42,
+    "actionHold": false,
+    "actionType": 3,
+    "buttonIndex": 0,
+    "default": false,
+    "deviceId": "",
+    "isMacro": false,
+    "isTilt": false,
+    "modifierKey": 0,
+    "name": "Side Button 5",
+    "onRelease": false,
+    "profileSwitch": false,
+    "retainOriginal": false,
+    "tiltIndex": 0,
+    "tiltToggle": false,
+    "toggleDelay": 0
+   },
+   "64": {
+    "actionCommand": 47,
+    "actionHold": false,
+    "actionType": 3,
+    "buttonIndex": 0,
+    "default": false,
+    "deviceId": "",
+    "isMacro": false,
+    "isTilt": false,
+    "modifierKey": 0,
+    "name": "Side Button 2",
+    "onRelease": false,
+    "profileSwitch": false,
+    "retainOriginal": false,
+    "tiltIndex": 0,
+    "tiltToggle": false,
+    "toggleDelay": 0
+   },
+   "65536": {
+    "actionCommand": 17,
+    "actionHold": false,
+    "actionType": 3,
+    "buttonIndex": 0,
+    "default": false,
+    "deviceId": "",
+    "isMacro": false,
+    "isTilt": false,
+    "modifierKey": 0,
+    "name": "Side Button 12",
+    "onRelease": false,
+    "profileSwitch": false,
+    "retainOriginal": false,
+    "tiltIndex": 0,
+    "tiltToggle": false,
+    "toggleDelay": 0
+   },
+   "8": {
+    "actionCommand": 39,
+    "actionHold": true,
+    "actionType": 3,
+    "buttonIndex": 0,
+    "default": false,
+    "deviceId": "",
+    "isMacro": false,
+    "isTilt": false,
+    "modifierKey": 0,
+    "name": "DPI Button",
+    "onRelease": false,
+    "profileSwitch": false,
+    "retainOriginal": false,
+    "tiltIndex": 0,
+    "tiltToggle": false,
+    "toggleDelay": 0
+   },
+   "8192": {
+    "actionCommand": 16,
+    "actionHold": false,
+    "actionType": 3,
+    "buttonIndex": 0,
+    "default": false,
+    "deviceId": "",
+    "isMacro": false,
+    "isTilt": false,
+    "modifierKey": 0,
+    "name": "Side Button 9",
+    "onRelease": false,
+    "profileSwitch": false,
+    "retainOriginal": false,
+    "tiltIndex": 0,
+    "tiltToggle": false,
+    "toggleDelay": 0
+   }
+  },
+  "KeyAssignmentData": null,
+  "KeyAssignmentTypes": {
+   "0": "None",
+   "1": "Media Keys",
+   "10": "Macro",
+   "11": "Profile Switch",
+   "2": "DPI",
+   "3": "Keyboard",
+   "8": "Sniper",
+   "9": "Mouse"
+  },
+  "LEDChannels": 4,
+  "Layouts": null,
+  "LiftHeights": {
+   "2": "Low",
+   "3": "Medium",
+   "4": "High",
+   "6": "Calibrated"
+  },
+  "MacroTracker": {},
+  "MaxDPI": 33000,
+  "MinDPI": 100,
+  "ModifierIndex": 0,
+  "OriginalProfile": null,
+  "PressLoop": false,
+  "ProductId": 11042,
+  "RGBModes": [
+   "colorpulse",
+   "colorshift",
+   "colorwarp",
+   "cpu-temperature",
+   "flickering",
+   "gpu-temperature",
+   "gradient",
+   "mouse",
+   "off",
+   "rainbow",
+   "pastelrainbow",
+   "rotator",
+   "static",
+   "storm",
+   "watercolor",
+   "wave"
+  ],
+  "Rgb": {},
+  "SleepModes": {
+   "1": "1 minute",
+   "10": "10 minutes",
+   "15": "15 minutes",
+   "30": "30 minutes",
+   "5": "5 minutes",
+   "60": "1 hour"
+  },
+  "SlipstreamId": 11008,
+  "SniperMode": false,
+  "SwitchModes": {
+   "0": "Disabled",
+   "1": "Enabled"
+  },
+  "Template": "scimitarEliteWSE.html",
+  "Usb": false,
+  "VendorId": 6940,
+  "ZoneAmount": 2,
+  "devices": null,
+  "firmware": "7.8.11",
+  "manufacturer": "",
+  "path": "9",
+  "product": "SCIMITAR ELITE SE",
+  "profileOrder": [
+   "Guildwars2",
+   "dbts",
+   "default"
+  ],
+  "serial": "SE0000000000TEST",
+  "userProfiles": {
+   "Guildwars2": {
+    "Active": true,
+    "AngleSnapping": 0,
+    "Brightness": 0,
+    "BrightnessSlider": 30,
+    "ButtonOptimization": 0,
+    "KeyAssignmentHash": "697b17498b5265851aff8e9c93f8d4d1",
+    "Label": "Mouse",
+    "LiftHeight": 2,
+    "OpenRGBIntegration": false,
+    "OriginalBrightness": 100,
+    "Path": "/opt/OpenLinkHub/database/profiles/SE0000000000TEST-Guildwars2.json",
+    "PollingRate": 4,
+    "Product": "SCIMITAR ELITE SE",
+    "Profile": 2,
+    "Profiles": {
+     "0": {
+      "Color": {
+       "Hex": "#ff0000",
+       "blue": 0,
+       "brightness": 0.3,
+       "green": 0,
+       "position": 0,
+       "red": 255,
+       "temperature": 0
+      },
+      "ColorIndex": {
+       "0": [
+        2,
+        6,
+        10
+       ]
+      },
+      "PackerIndex": 1,
+      "Sniper": false,
+      "Value": 800,
+      "name": "Stage 1"
+     },
+     "1": {
+      "Color": {
+       "Hex": "#ffffff",
+       "blue": 255,
+       "brightness": 0.3,
+       "green": 255,
+       "position": 0,
+       "red": 255,
+       "temperature": 0
+      },
+      "ColorIndex": {
+       "0": [
+        2,
+        6,
+        10
+       ]
+      },
+      "PackerIndex": 2,
+      "Sniper": false,
+      "Value": 1600,
+      "name": "Stage 2"
+     },
+     "2": {
+      "Color": {
+       "Hex": "#00ff00",
+       "blue": 0,
+       "brightness": 0.3,
+       "green": 255,
+       "position": 0,
+       "red": 0,
+       "temperature": 0
+      },
+      "ColorIndex": {
+       "0": [
+        2,
+        6,
+        10
+       ]
+      },
+      "PackerIndex": 3,
+      "Sniper": false,
+      "Value": 3600,
+      "name": "Stage 3"
+     },
+     "3": {
+      "Color": {
+       "Hex": "#ff00ff",
+       "blue": 255,
+       "brightness": 0.3,
+       "green": 0,
+       "position": 0,
+       "red": 255,
+       "temperature": 0
+      },
+      "ColorIndex": {
+       "0": [
+        2,
+        6,
+        10
+       ]
+      },
+      "PackerIndex": 4,
+      "Sniper": false,
+      "Value": 5000,
+      "name": "Stage 4"
+     },
+     "4": {
+      "Color": {
+       "Hex": "#00ffff",
+       "blue": 255,
+       "brightness": 0.3,
+       "green": 255,
+       "position": 0,
+       "red": 0,
+       "temperature": 0
+      },
+      "ColorIndex": {
+       "0": [
+        2,
+        6,
+        10
+       ]
+      },
+      "PackerIndex": 5,
+      "Sniper": false,
+      "Value": 7000,
+      "name": "Stage 5"
+     },
+     "5": {
+      "Color": {
+       "Hex": "#ffff00",
+       "blue": 0,
+       "brightness": 1,
+       "green": 255,
+       "position": 0,
+       "red": 255,
+       "temperature": 0
+      },
+      "ColorIndex": {
+       "0": [
+        2,
+        6,
+        10
+       ]
+      },
+      "PackerIndex": 6,
+      "Sniper": true,
+      "Value": 200,
+      "name": "Sniper"
+     }
+    },
+    "RGBCluster": false,
+    "RGBProfile": "colorshift",
+    "RgbOff": false,
+    "Serial": "SE0000000000TEST",
+    "SleepMode": 5,
+    "ZoneColors": {
+     "0": {
+      "Color": {
+       "Hex": "#aa0802",
+       "blue": 2,
+       "brightness": 1,
+       "green": 8,
+       "position": 0,
+       "red": 170,
+       "temperature": 0
+      },
+      "ColorIndex": [
+       1,
+       5,
+       9
+      ],
+      "Name": "Side"
+     },
+     "1": {
+      "Color": {
+       "Hex": "#aa0802",
+       "blue": 2,
+       "brightness": 1,
+       "green": 8,
+       "position": 0,
+       "red": 170,
+       "temperature": 0
+      },
+      "ColorIndex": [
+       0,
+       4,
+       8
+      ],
+      "Name": "Logo"
+     }
+    }
+   },
+   "dbts": {
+    "Active": false,
+    "AngleSnapping": 0,
+    "Brightness": 0,
+    "BrightnessSlider": 30,
+    "ButtonOptimization": 0,
+    "KeyAssignmentHash": "672fc8e72c87a80531985e7fbc45aa54",
+    "Label": "Mouse",
+    "LiftHeight": 2,
+    "OpenRGBIntegration": false,
+    "OriginalBrightness": 100,
+    "Path": "/opt/OpenLinkHub/database/profiles/SE0000000000TEST-dbts.json",
+    "PollingRate": 4,
+    "Product": "SCIMITAR ELITE SE",
+    "Profile": 1,
+    "Profiles": {
+     "0": {
+      "Color": {
+       "Hex": "#ff0000",
+       "blue": 0,
+       "brightness": 0.3,
+       "green": 0,
+       "position": 0,
+       "red": 255,
+       "temperature": 0
+      },
+      "ColorIndex": {
+       "0": [
+        2,
+        6,
+        10
+       ]
+      },
+      "PackerIndex": 1,
+      "Sniper": false,
+      "Value": 800,
+      "name": "Stage 1"
+     },
+     "1": {
+      "Color": {
+       "Hex": "#ffffff",
+       "blue": 255,
+       "brightness": 0.3,
+       "green": 255,
+       "position": 0,
+       "red": 255,
+       "temperature": 0
+      },
+      "ColorIndex": {
+       "0": [
+        2,
+        6,
+        10
+       ]
+      },
+      "PackerIndex": 2,
+      "Sniper": false,
+      "Value": 1600,
+      "name": "Stage 2"
+     },
+     "2": {
+      "Color": {
+       "Hex": "#00ff00",
+       "blue": 0,
+       "brightness": 0.3,
+       "green": 255,
+       "position": 0,
+       "red": 0,
+       "temperature": 0
+      },
+      "ColorIndex": {
+       "0": [
+        2,
+        6,
+        10
+       ]
+      },
+      "PackerIndex": 3,
+      "Sniper": false,
+      "Value": 3600,
+      "name": "Stage 3"
+     },
+     "3": {
+      "Color": {
+       "Hex": "#ff00ff",
+       "blue": 255,
+       "brightness": 0.3,
+       "green": 0,
+       "position": 0,
+       "red": 255,
+       "temperature": 0
+      },
+      "ColorIndex": {
+       "0": [
+        2,
+        6,
+        10
+       ]
+      },
+      "PackerIndex": 4,
+      "Sniper": false,
+      "Value": 5000,
+      "name": "Stage 4"
+     },
+     "4": {
+      "Color": {
+       "Hex": "#00ffff",
+       "blue": 255,
+       "brightness": 0.3,
+       "green": 255,
+       "position": 0,
+       "red": 0,
+       "temperature": 0
+      },
+      "ColorIndex": {
+       "0": [
+        2,
+        6,
+        10
+       ]
+      },
+      "PackerIndex": 5,
+      "Sniper": false,
+      "Value": 7000,
+      "name": "Stage 5"
+     },
+     "5": {
+      "Color": {
+       "Hex": "#ffff00",
+       "blue": 0,
+       "brightness": 1,
+       "green": 255,
+       "position": 0,
+       "red": 255,
+       "temperature": 0
+      },
+      "ColorIndex": {
+       "0": [
+        2,
+        6,
+        10
+       ]
+      },
+      "PackerIndex": 6,
+      "Sniper": true,
+      "Value": 200,
+      "name": "Sniper"
+     }
+    },
+    "RGBCluster": false,
+    "RGBProfile": "colorshift",
+    "RgbOff": false,
+    "Serial": "SE0000000000TEST",
+    "SleepMode": 5,
+    "ZoneColors": {
+     "0": {
+      "Color": {
+       "Hex": "#aa0802",
+       "blue": 2,
+       "brightness": 1,
+       "green": 8,
+       "position": 0,
+       "red": 170,
+       "temperature": 0
+      },
+      "ColorIndex": [
+       1,
+       5,
+       9
+      ],
+      "Name": "Side"
+     },
+     "1": {
+      "Color": {
+       "Hex": "#aa0802",
+       "blue": 2,
+       "brightness": 1,
+       "green": 8,
+       "position": 0,
+       "red": 170,
+       "temperature": 0
+      },
+      "ColorIndex": [
+       0,
+       4,
+       8
+      ],
+      "Name": "Logo"
+     }
+    }
+   },
+   "default": {
+    "Active": false,
+    "AngleSnapping": 0,
+    "Brightness": 0,
+    "BrightnessSlider": 30,
+    "ButtonOptimization": 0,
+    "KeyAssignmentHash": "",
+    "Label": "Mouse",
+    "LiftHeight": 2,
+    "OpenRGBIntegration": false,
+    "OriginalBrightness": 100,
+    "Path": "/opt/OpenLinkHub/database/profiles/SE0000000000TEST.json",
+    "PollingRate": 4,
+    "Product": "SCIMITAR ELITE SE",
+    "Profile": 2,
+    "Profiles": {
+     "0": {
+      "Color": {
+       "Hex": "#ff0000",
+       "blue": 0,
+       "brightness": 0.3,
+       "green": 0,
+       "position": 0,
+       "red": 255,
+       "temperature": 0
+      },
+      "ColorIndex": {
+       "0": [
+        2,
+        6,
+        10
+       ]
+      },
+      "PackerIndex": 1,
+      "Sniper": false,
+      "Value": 800,
+      "name": "Stage 1"
+     },
+     "1": {
+      "Color": {
+       "Hex": "#ffffff",
+       "blue": 255,
+       "brightness": 0.3,
+       "green": 255,
+       "position": 0,
+       "red": 255,
+       "temperature": 0
+      },
+      "ColorIndex": {
+       "0": [
+        2,
+        6,
+        10
+       ]
+      },
+      "PackerIndex": 2,
+      "Sniper": false,
+      "Value": 1600,
+      "name": "Stage 2"
+     },
+     "2": {
+      "Color": {
+       "Hex": "#00ff00",
+       "blue": 0,
+       "brightness": 0.3,
+       "green": 255,
+       "position": 0,
+       "red": 0,
+       "temperature": 0
+      },
+      "ColorIndex": {
+       "0": [
+        2,
+        6,
+        10
+       ]
+      },
+      "PackerIndex": 3,
+      "Sniper": false,
+      "Value": 3600,
+      "name": "Stage 3"
+     },
+     "3": {
+      "Color": {
+       "Hex": "#ff00ff",
+       "blue": 255,
+       "brightness": 0.3,
+       "green": 0,
+       "position": 0,
+       "red": 255,
+       "temperature": 0
+      },
+      "ColorIndex": {
+       "0": [
+        2,
+        6,
+        10
+       ]
+      },
+      "PackerIndex": 4,
+      "Sniper": false,
+      "Value": 5000,
+      "name": "Stage 4"
+     },
+     "4": {
+      "Color": {
+       "Hex": "#00ffff",
+       "blue": 255,
+       "brightness": 0.3,
+       "green": 255,
+       "position": 0,
+       "red": 0,
+       "temperature": 0
+      },
+      "ColorIndex": {
+       "0": [
+        2,
+        6,
+        10
+       ]
+      },
+      "PackerIndex": 5,
+      "Sniper": false,
+      "Value": 7000,
+      "name": "Stage 5"
+     },
+     "5": {
+      "Color": {
+       "Hex": "#ffff00",
+       "blue": 0,
+       "brightness": 1,
+       "green": 255,
+       "position": 0,
+       "red": 255,
+       "temperature": 0
+      },
+      "ColorIndex": {
+       "0": [
+        2,
+        6,
+        10
+       ]
+      },
+      "PackerIndex": 6,
+      "Sniper": true,
+      "Value": 200,
+      "name": "Sniper"
+     }
+    },
+    "RGBCluster": false,
+    "RGBProfile": "colorshift",
+    "RgbOff": false,
+    "Serial": "SE0000000000TEST",
+    "SleepMode": 5,
+    "ZoneColors": {
+     "0": {
+      "Color": {
+       "Hex": "#aa0802",
+       "blue": 2,
+       "brightness": 1,
+       "green": 8,
+       "position": 0,
+       "red": 170,
+       "temperature": 0
+      },
+      "ColorIndex": [
+       1,
+       5,
+       9
+      ],
+      "Name": "Side"
+     },
+     "1": {
+      "Color": {
+       "Hex": "#aa0802",
+       "blue": 2,
+       "brightness": 1,
+       "green": 8,
+       "position": 0,
+       "red": 170,
+       "temperature": 0
+      },
+      "ColorIndex": [
+       0,
+       4,
+       8
+      ],
+      "Name": "Logo"
+     }
+    }
+   }
+  }
+ },
+ "status": 0
+}

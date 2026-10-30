@@ -1,0 +1,6 @@
+{
+  "thumbnail": "mouse.svg",
+  "views": [
+    {"id": "top", "title": "Top", "image": "mouse.svg", "size": [1200, 600], "hotspots": []}
+  ]
+}

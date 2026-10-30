@@ -1,0 +1,53 @@
+import pytest
+
+from olhclient.api.models import ActionType, MouseState, validate_assignment
+
+
+def test_parse_wireless_se(se_device):
+    state = MouseState.from_json(se_device)
+    assert state.product == "SCIMITAR ELITE SE"
+    assert state.product_id == 11042
+    assert state.wireless and state.battery == 100 and state.usb is False
+    assert (state.min_dpi, state.max_dpi) == (100, 33000)
+    assert len(state.keys) == 17
+    assert state.key_by_name("Side Button 1").index == 32
+    assert state.active_profile == "Guildwars2"
+    assert state.assignment_types[ActionType.SNIPER] == "Sniper"
+
+
+def test_parse_dpi_stages(se_device):
+    state = MouseState.from_json(se_device)
+    assert [s.index for s in state.stages] == [0, 1, 2, 3, 4, 5]
+    assert state.stages[0].value == 800 and state.stages[0].color == "#ff0000"
+    assert state.stages[-1].sniper and not any(s.sniper for s in state.stages[:-1])
+    assert state.active_stage == 2
+
+
+def test_parse_legacy_generation(legacy_device):
+    state = MouseState.from_json(legacy_device)
+    assert state.key_by_name("Side Button 1").index == 256
+    assert state.key_by_name("DPI Button").index == 64
+    assert state.battery is None and not state.wireless
+    assert state.active_profile == "default"
+
+
+def test_keys_sorted_by_index(se_device):
+    state = MouseState.from_json(se_device)
+    assert [k.index for k in state.keys] == sorted(k.index for k in state.keys)
+
+
+@pytest.mark.parametrize(
+    "action_type, hold, release, ok",
+    [
+        (ActionType.KEYBOARD, False, False, True),
+        (ActionType.KEYBOARD, True, False, True),
+        (ActionType.KEYBOARD, True, True, False),
+        (ActionType.MACRO, True, False, False),
+        (ActionType.MACRO, False, True, True),
+        (ActionType.SNIPER, True, False, True),
+        (ActionType.SNIPER, False, False, False),
+        (ActionType.SNIPER, True, True, False),
+    ],
+)
+def test_validate_assignment_matches_server_rules(action_type, hold, release, ok):
+    assert (validate_assignment(action_type, press_and_hold=hold, on_release=release) is None) == ok

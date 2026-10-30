@@ -1,0 +1,243 @@
+{
+  "thumbnail": "thumb.svg",
+  "button_labels": {
+    "Left Button": "Left click",
+    "Right Button": "Right click",
+    "Middle Button": "Middle click",
+    "Profile Switch": "Profile switch",
+    "DPI Button": "DPI toggle",
+    "Side Button 1": "G1",
+    "Side Button 2": "G2",
+    "Side Button 3": "G3",
+    "Side Button 4": "G4",
+    "Side Button 5": "G5",
+    "Side Button 6": "G6",
+    "Side Button 7": "G7",
+    "Side Button 8": "G8",
+    "Side Button 9": "G9",
+    "Side Button 10": "G10",
+    "Side Button 11": "G11",
+    "Side Button 12": "G12"
+  },
+  "button_list": [
+    "Left Button",
+    "Right Button",
+    "Middle Button",
+    "Profile Switch",
+    "DPI Button"
+  ],
+  "keypad": [
+    [
+      "Side Button 3",
+      "Side Button 6",
+      "Side Button 9",
+      "Side Button 12"
+    ],
+    [
+      "Side Button 2",
+      "Side Button 5",
+      "Side Button 8",
+      "Side Button 11"
+    ],
+    [
+      "Side Button 1",
+      "Side Button 4",
+      "Side Button 7",
+      "Side Button 10"
+    ]
+  ],
+  "views": [
+    {
+      "id": "side",
+      "title": "Side",
+      "image": "side.svg",
+      "size": [
+        1200,
+        600
+      ],
+      "hotspots": [
+        {
+          "button": "Side Button 1",
+          "rect": [
+            396,
+            353,
+            105,
+            58
+          ],
+          "radius": 10
+        },
+        {
+          "button": "Side Button 2",
+          "rect": [
+            396,
+            285,
+            105,
+            58
+          ],
+          "radius": 10
+        },
+        {
+          "button": "Side Button 3",
+          "rect": [
+            396,
+            217,
+            105,
+            58
+          ],
+          "radius": 10
+        },
+        {
+          "button": "Side Button 4",
+          "rect": [
+            513,
+            353,
+            105,
+            58
+          ],
+          "radius": 10
+        },
+        {
+          "button": "Side Button 5",
+          "rect": [
+            513,
+            285,
+            105,
+            58
+          ],
+          "radius": 10
+        },
+        {
+          "button": "Side Button 6",
+          "rect": [
+            513,
+            217,
+            105,
+            58
+          ],
+          "radius": 10
+        },
+        {
+          "button": "Side Button 7",
+          "rect": [
+            630,
+            353,
+            105,
+            58
+          ],
+          "radius": 10
+        },
+        {
+          "button": "Side Button 8",
+          "rect": [
+            630,
+            285,
+            105,
+            58
+          ],
+          "radius": 10
+        },
+        {
+          "button": "Side Button 9",
+          "rect": [
+            630,
+            217,
+            105,
+            58
+          ],
+          "radius": 10
+        },
+        {
+          "button": "Side Button 10",
+          "rect": [
+            747,
+            353,
+            105,
+            58
+          ],
+          "radius": 10
+        },
+        {
+          "button": "Side Button 11",
+          "rect": [
+            747,
+            285,
+            105,
+            58
+          ],
+          "radius": 10
+        },
+        {
+          "button": "Side Button 12",
+          "rect": [
+            747,
+            217,
+            105,
+            58
+          ],
+          "radius": 10
+        }
+      ]
+    },
+    {
+      "id": "top",
+      "title": "Top",
+      "image": "top.svg",
+      "size": [
+        1200,
+        600
+      ],
+      "hotspots": [
+        {
+          "button": "Left Button",
+          "rect": [
+            480,
+            70,
+            94,
+            170
+          ],
+          "radius": 20
+        },
+        {
+          "button": "Right Button",
+          "rect": [
+            626,
+            70,
+            94,
+            170
+          ],
+          "radius": 20
+        },
+        {
+          "button": "Middle Button",
+          "rect": [
+            578,
+            88,
+            44,
+            94
+          ],
+          "radius": 18
+        },
+        {
+          "button": "DPI Button",
+          "rect": [
+            582,
+            190,
+            36,
+            34
+          ],
+          "radius": 8
+        },
+        {
+          "button": "Profile Switch",
+          "rect": [
+            580,
+            270,
+            40,
+            28
+          ],
+          "radius": 8
+        }
+      ]
+    }
+  ]
+}
