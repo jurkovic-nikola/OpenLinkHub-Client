@@ -188,6 +188,11 @@ class DeviceSession(QObject):
     def hasArtwork(self) -> bool:
         return bool(self.module.layout.views)
 
+    @Property(bool, constant=True)
+    def hasKeyboardLayout(self) -> bool:
+        """A keyboard whose key layout OpenLinkHub sends, so it can be drawn."""
+        return "keyboard_keys" in self._controllers and bool(self.state.keyboard and self.state.keyboard.layout)
+
     @Slot()
     def openInBrowser(self) -> None:
         """OpenLinkHub's own page for this device, for what the client does not cover."""
@@ -283,7 +288,8 @@ class DeviceSession(QObject):
             )
         return result
 
-    @Slot(str, result=QObject)
+    # QVariant, not QObject: PySide hands QML an invalid object for None, which crashes QML.
+    @Slot(str, result="QVariant")
     def controller(self, feature_id: str) -> FeatureController | None:
         return self._controllers.get(feature_id)
 

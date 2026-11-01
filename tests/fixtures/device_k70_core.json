@@ -282,6 +282,8 @@
    "keyboard"
   ],
   "Template": "k70core.html",
+  "UIKeyboard": "keyboard-6",
+  "UIKeyboardRow": "keyboard-row-25",
   "VendorId": 6940,
   "devices": {
    "0": "K70 CORE RGB"

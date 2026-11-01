@@ -258,3 +258,16 @@ def test_unreadable_device_claims_no_connection(backend, every_api):
     backend.refresh()
     backend.selectDevice("BROKEN0TEST")
     assert backend.session.connectionMode == ""
+
+
+def test_keyboard_board(session, every_api):
+    s = session(KEYBOARD)
+    assert s.hasKeyboardLayout
+    board = {k["name"]: k for k in s.controller("keyboard_keys").boardKeys}
+    assert set(board) == {"Esc", "F1", "F2", "A", "Fn", "Space"}
+    assert board["Esc"]["x"] == 0 and board["Esc"]["y"] == 0  # top-left corner
+    assert all(0 <= k["x"] and k["x"] + k["w"] <= 1.0001 and k["y"] + k["h"] <= 1.0001 for k in board.values())
+    assert board["A"]["remapped"] and not board["F1"]["remapped"] and board["Fn"]["locked"]
+    assert board["Esc"]["color"] == "#ffffff"
+    assert s.controller("keyboard_keys").boardAspect > 1
+    assert not session(HEADSET).hasKeyboardLayout and session(HEADSET).controller("keyboard_keys") is None

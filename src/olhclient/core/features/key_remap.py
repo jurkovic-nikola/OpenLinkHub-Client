@@ -207,11 +207,14 @@ class KeyboardKeysController(KeyRemapController):
     """
 
     keyboardProfilesChanged = Signal()
+    boardChanged = Signal()
 
     def __init__(self, session):
         super().__init__(session)
         self._profile_names: list[str] = []
         self._active = ""
+        self._board: list[dict[str, Any]] = []
+        self._board_size = (0.0, 0.0)
 
     @classmethod
     def supports(cls, state: DeviceState) -> bool:
@@ -224,6 +227,35 @@ class KeyboardKeysController(KeyRemapController):
         if (names, active) != (self._profile_names, self._active):
             self._profile_names, self._active = names, active
             self.keyboardProfilesChanged.emit()
+        board, size = self._build_board(state)
+        if (board, size) != (self._board, self._board_size):
+            self._board, self._board_size = board, size
+            self.boardChanged.emit()
+
+    def _build_board(self, state: DeviceState) -> tuple[list[dict[str, Any]], tuple[float, float]]:
+        """The keys as OpenLinkHub draws them, scaled to 0..1 of the board."""
+        rects = state.keyboard.layout if state.keyboard else {}
+        if not rects:
+            return [], (0.0, 0.0)
+        width = max(r.x + r.w for r in rects.values())
+        height = max(r.y + r.h for r in rects.values())
+        keys = {k.index: k for k in state.keys}
+        board = []
+        for index, rect in rects.items():
+            key = keys.get(index)
+            if key is None:
+                continue
+            board.append({
+                "keyIndex": index,
+                "name": key.name,
+                "label": "" if rect.bar else key.caption or key.name,
+                "x": rect.x / width, "y": rect.y / height, "w": rect.w / width, "h": rect.h / height,
+                "color": key.color or "#bf8d19",
+                "locked": key.locked,
+                "remapped": not key.use_default,
+                "bar": rect.bar,
+            })
+        return board, (width, height)
 
     def _ordered(self, keys: list[KeyAssignment]) -> list[KeyAssignment]:
         return keys  # row by row, as on the keyboard
@@ -231,6 +263,16 @@ class KeyboardKeysController(KeyRemapController):
     def _modifier_options(self, state: DeviceState) -> list[dict[str, Any]]:
         modifiers = state.keyboard.modifiers if state.keyboard else {}
         return [{"value": value, "text": text} for value, text in modifiers.items()]
+
+    @Property("QVariantList", notify=boardChanged)
+    def boardKeys(self) -> list[dict[str, Any]]:
+        """Keys with their place on the board (0..1); empty when the device does not tell its layout."""
+        return self._board
+
+    @Property(float, notify=boardChanged)
+    def boardAspect(self) -> float:
+        width, height = self._board_size
+        return width / height if height else 0.0
 
     @Property("QStringList", notify=keyboardProfilesChanged)
     def keyboardProfiles(self) -> list[str]:

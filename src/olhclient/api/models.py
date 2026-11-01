@@ -10,9 +10,12 @@ from what is there, the way OpenLinkHub's own pages are.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import Enum, IntEnum
 from typing import Any
+
+from olhclient.api.keyboard_grid import KeyRect
+from olhclient.api.keyboard_grid import layout as keyboard_layout
 
 
 class ActionType(IntEnum):
@@ -142,6 +145,8 @@ class KeyAssignment:
     on_release: bool
     modifier: int = 0
     locked: bool = False  # keyboards: colour-only keys cannot be remapped
+    color: str = ""  # keyboards: the key's own colour
+    caption: str = ""  # keyboards: the text on the key, when ``name`` had to be made unique
 
     @classmethod
     def from_json(cls, index: int, data: dict[str, Any]) -> KeyAssignment:
@@ -168,7 +173,9 @@ class KeyAssignment:
             press_and_hold=bool(data.get("actionHold", False)),
             on_release=bool(data.get("onRelease", False)),
             modifier=int(data.get("modifierKey", 0)),
-            locked=bool(data.get("onlyColor", False)),
+            # unnamed keys are LED zones (light bars), only there for colour
+            locked=bool(data.get("onlyColor", False)) or not str(data.get("keyName") or "").strip(),
+            color=_hex(data.get("color") or {}),
         )
 
 
@@ -233,6 +240,8 @@ class KeyboardProfiles:
     active: str
     names: tuple[str, ...]
     modifiers: dict[int, str]
+    #: key id -> where OpenLinkHub draws it; empty when the device does not say how
+    layout: dict[int, KeyRect] = field(default_factory=dict)
 
 
 def _hex(color: dict[str, Any]) -> str:
@@ -347,9 +356,16 @@ def _keyboard(profile: dict[str, Any], data: dict[str, Any]) -> tuple[list[KeyAs
         for _, row in _by_index(keyboard.get("row"))
         for index, key in _by_index((row or {}).get("keys"))
     ]
+    # Keys are selected by name: number repeated names (Shift, Ctrl, Enter...) in keyboard order.
+    seen: dict[str, int] = {}
+    for i, key in enumerate(keys):
+        seen[key.name] = seen.get(key.name, 0) + 1
+        if seen[key.name] > 1:
+            keys[i] = replace(key, name=f"{key.name} {seen[key.name]}", caption=key.name)
     names = profile.get("Profiles") or list(keyboards)
     return keys, KeyboardProfiles(
-        active=active, names=tuple(names), modifiers=_choices(data.get("KeyAssignmentModifiers"))
+        active=active, names=tuple(names), modifiers=_choices(data.get("KeyAssignmentModifiers")),
+        layout=keyboard_layout(keyboard, data.get("UIKeyboardRow") or ""),
     )
 
 

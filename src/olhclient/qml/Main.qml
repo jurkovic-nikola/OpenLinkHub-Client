@@ -126,8 +126,19 @@ ApplicationWindow {
             // Devices without artwork get a compact header and more room for the editor.
             DeviceHeader {
                 visible: window.receiver === null && window.session !== null && !window.session.hasArtwork
+                         && !window.session.hasKeyboardLayout
                 Layout.fillWidth: true
                 session: window.session
+            }
+
+            KeyboardView {
+                visible: window.receiver === null && window.session !== null && window.session.hasKeyboardLayout
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.minimumHeight: 220
+                Layout.preferredHeight: 320
+                session: window.session
+                onKeyActivated: window.featureId = "keyboard_keys"
             }
 
             DeviceView {
