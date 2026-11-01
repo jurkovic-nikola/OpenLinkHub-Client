@@ -12,6 +12,8 @@ from urllib.parse import urlsplit
 
 import httpx
 
+from olhclient.api.receiver_page import parse_receiver_page
+
 INPUT_KINDS = ("media", "keyboard", "mouse")
 
 #: request field -> endpoint under /api/mouse/ for single-value mouse settings
@@ -22,6 +24,9 @@ MOUSE_SETTINGS = {
     "angleSnapping": "angleSnapping",
     "buttonOptimization": "buttonOptimization",
 }
+
+#: product names OpenLinkHub gives the (hidden) Slipstream receivers in /api/devices
+RECEIVER_PRODUCTS = ("SLIPSTREAM", "SLIPSTREAM V2")
 
 
 class ApiError(Exception):
@@ -84,6 +89,18 @@ class ApiClient:
         except ValueError as exc:
             raise ApiError(f"Invalid response from {path}") from exc
 
+    def _get_text(self, path: str) -> str:
+        """GET a dashboard page (HTML) instead of an API endpoint."""
+        try:
+            response = self._http.get(path, headers={"Accept": "text/html"})
+        except httpx.HTTPError as exc:
+            raise ApiError(f"Cannot reach OpenLinkHub at {self.base_url}: {exc}") from exc
+        if response.status_code == 401:
+            raise ApiError("Authentication required", http_status=401, auth_required=True)
+        if response.status_code != 200:
+            raise ApiError(response.text.strip() or response.reason_phrase, http_status=response.status_code)
+        return response.text
+
     def _call(self, method: str, path: str, payload: dict[str, Any] | None = None) -> dict[str, Any]:
         """Request that must come back with ``status == 1``."""
         body = self._request(method, path, payload)
@@ -121,6 +138,31 @@ class ApiClient:
         if not device:
             raise ApiError(body.get("message") or f"Device {serial} not found")
         return device
+
+    def list_receivers(self) -> dict[str, str]:
+        """Return ``{serial: product name}`` for every Slipstream receiver.
+
+        Receivers are hidden from the OpenLinkHub dashboard, but /api/devices
+        still lists them.
+        """
+        devices = self._request("GET", "/api/devices/").get("devices") or {}
+        return {
+            serial: device.get("Product", "")
+            for serial, device in devices.items()
+            if device.get("Hidden") and device.get("Product") in RECEIVER_PRODUCTS
+        }
+
+    def get_receiver(self, serial: str) -> dict[str, Any]:
+        """Receiver JSON; read from its dashboard page while the API cannot encode it."""
+        try:
+            return self.get_device(serial)
+        except ApiError as exc:
+            if exc.auth_required:
+                raise
+        try:
+            return parse_receiver_page(self._get_text(f"/device/{serial}"))
+        except ValueError as exc:
+            raise ApiError(f"Receiver {serial} not found") from exc
 
     def input_actions(self, kind: str) -> dict[int, str]:
         """Return ``{code: name}`` for ``media``, ``keyboard`` or ``mouse`` actions."""

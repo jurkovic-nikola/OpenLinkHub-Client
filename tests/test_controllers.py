@@ -150,7 +150,7 @@ def backend(qtbot, fake_api, registry):
 def test_backend_poll_opens_first_device(backend):
     backend.refresh()
     assert backend.connected
-    assert backend.devices.count == 2
+    assert backend.devices.count == 3  # two mice, then the receiver
     assert backend.session is not None and backend.session.serial == LEGACY  # sorted by serial
 
 
@@ -164,7 +164,7 @@ def test_backend_device_removed(backend, fake_api):
     backend.refresh()
     del fake_api.devices[LEGACY]
     backend.refresh()
-    assert backend.devices.count == 1
+    assert backend.devices.count == 2
     assert backend.session.serial == SE
 
 

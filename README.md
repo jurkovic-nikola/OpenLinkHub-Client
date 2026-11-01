@@ -14,6 +14,10 @@ an action list and a settings panel) but uses its own artwork.
   response optimization, as far as the model and connection mode support them.
 - **Profiles**: switch the active OpenLinkHub user profile, create one from the current
   settings, delete one.
+- **Slipstream receiver**: the USB dongle gets its own tile in the device list, like the
+  receiver card in iCUE's Device Settings. It shows the firmware, the paired devices and the USB
+  receiver polling rate, which applies to every device on the dongle. Changing the rate restarts
+  the receiver; its devices reconnect after 5–8 seconds.
 
 | Module | Devices (USB product id) |
 |---|---|
@@ -26,6 +30,12 @@ an action list and a settings panel) but uses its own artwork.
 
 Other mice reported by OpenLinkHub fall back to a generic module. You get the same features
 as a plain list, with no hotspots.
+
+OpenLinkHub hides Slipstream receivers from its dashboard and cannot return them as JSON
+(`GET /api/devices/{serial}` answers with an empty body). The client finds them through
+`/api/devices` and reads their state from the dashboard page `/device/{serial}`. The polling
+rate can only be changed on receivers whose OpenLinkHub driver supports it (product ids 7132,
+11008 and 11035 at the time of writing); other receivers reject the change.
 
 ## Running
 

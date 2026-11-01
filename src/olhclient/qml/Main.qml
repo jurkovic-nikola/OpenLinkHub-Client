@@ -11,6 +11,8 @@ ApplicationWindow {
     property string defaultUsername: ""
 
     readonly property var session: backend.session
+    // A Slipstream receiver is selected instead of a mouse.
+    readonly property var receiver: backend.receiver
     property string featureId: ""
     readonly property var feature: {
         if (!session)
@@ -40,7 +42,8 @@ ApplicationWindow {
     minimumWidth: 1120
     minimumHeight: 700
     visible: true
-    title: session ? session.product + " — OpenLinkHub" : "OpenLinkHub"
+    title: session ? session.product + " — OpenLinkHub"
+        : receiver ? receiver.product + " — OpenLinkHub" : "OpenLinkHub"
     color: Theme.window
 
     header: TopBar { backend: window.backend }
@@ -55,10 +58,11 @@ ApplicationWindow {
         anchors.fill: parent
         anchors.margins: Theme.gap
         spacing: Theme.gap
-        enabled: window.session !== null
+        enabled: window.session !== null || window.receiver !== null
 
         // -- left column ---------------------------------------------------
         ColumnLayout {
+            visible: window.receiver === null
             Layout.preferredWidth: 310
             Layout.maximumWidth: 310
             Layout.fillHeight: true
@@ -101,7 +105,16 @@ ApplicationWindow {
                 backend: window.backend
             }
 
+            ReceiverView {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                visible: window.receiver !== null
+                receiver: window.receiver
+                backend: window.backend
+            }
+
             DeviceView {
+                visible: window.receiver === null
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.minimumHeight: 300
@@ -111,6 +124,7 @@ ApplicationWindow {
             }
 
             Rectangle {
+                visible: window.receiver === null
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.minimumHeight: 280
@@ -128,7 +142,7 @@ ApplicationWindow {
     // -- empty / error states ------------------------------------------------
     Rectangle {
         anchors.fill: parent
-        visible: window.session === null && !window.backend.authRequired
+        visible: window.session === null && window.receiver === null && !window.backend.authRequired
         color: Qt.rgba(0.08, 0.08, 0.08, 0.92)
         Column {
             anchors.centerIn: parent

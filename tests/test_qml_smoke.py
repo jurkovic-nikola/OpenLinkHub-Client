@@ -92,3 +92,23 @@ def test_every_feature_panel_on_every_device(ui, qtbot, fake_api):
     settle(qtbot)
     assert warnings == []
 
+
+def test_receiver_page(ui, qtbot, fake_api):
+    backend, window, warnings = ui
+    backend.refresh()
+    settle(qtbot)
+    backend.selectDevice("SLIPSTREAM0TEST")
+    settle(qtbot)
+    assert backend.receiver is not None
+    assert window.property("title").startswith("CORSAIR SLIPSTREAM WIRELESS USB Receiver")
+    backend.receiver.setPollingRate(3)  # now restarting
+    settle(qtbot)
+    fake_api.fail_with = ApiError("Unable to change polling rate")
+    backend.receiver._set_restarting(False)
+    backend.receiver.setPollingRate(1)
+    fake_api.fail_with = None
+    settle(qtbot)
+    backend.selectDevice("SE0000000000TEST")  # back to a mouse
+    settle(qtbot)
+    assert backend.session is not None
+    assert warnings == []

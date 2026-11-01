@@ -7,14 +7,16 @@ from typing import Any
 from PySide6.QtCore import QObject, Property, QTimer, Signal, Slot
 
 from olhclient.api.client import ApiClient, ApiError
-from olhclient.api.models import MouseState
+from olhclient.api.models import MouseState, ReceiverState
 from olhclient.core.listmodel import DictListModel
-from olhclient.core.session import DeviceSession, file_url
+from olhclient.core.receiver import ReceiverSession
+from olhclient.core.session import QML_DIR, DeviceSession, file_url
 from olhclient.core.worker import Worker
 from olhclient.devices.base import DeviceModule
 from olhclient.devices.registry import Registry
 
 DEVICE_ROLES = ("serial", "product", "name", "thumbnail", "battery")
+RECEIVER_THUMBNAIL = QML_DIR / "images" / "slipstream.svg"
 
 
 class Backend(QObject):
@@ -36,7 +38,9 @@ class Backend(QObject):
         self.worker.busyChanged.connect(self.busyChanged)
         self._devices = DictListModel(DEVICE_ROLES, self)
         self._modules: dict[str, DeviceModule] = {}
+        self._receivers: dict[str, str] = {}
         self._session: DeviceSession | None = None
+        self._receiver: ReceiverSession | None = None
         self._connected = False
         self._status = "Connecting…"
         self._auth_required = False
@@ -66,7 +70,11 @@ class Backend(QObject):
                 battery = self.api.battery_levels()
             except ApiError:
                 battery = {}
-            return {"mice": mice, "new": new, "battery": battery}
+            try:
+                receivers = self.api.list_receivers()
+            except ApiError:
+                receivers = {}
+            return {"mice": mice, "new": new, "battery": battery, "receivers": receivers}
 
         self.worker.submit(poll, on_done=self._polled, on_error=self._poll_failed)
 
@@ -74,18 +82,19 @@ class Backend(QObject):
         self._refreshing = False
         self._set_connected(True, f"Connected to {self.api.base_url}")
         mice: dict[str, str] = result["mice"]
+        self._receivers = result["receivers"]
 
         for serial, device in sorted(result["new"].items()):
             try:
                 self._modules[serial] = self.registry.match(device)
             except LookupError:
                 continue
-            if self._session is None:
+            if self._session is None and self._receiver is None:
                 self._open_session(serial, device)
         for gone in set(self._modules) - set(mice):
             del self._modules[gone]
 
-        self._devices.set_items(
+        mouse_items = [
             {
                 "serial": serial,
                 "product": product,
@@ -95,15 +104,31 @@ class Backend(QObject):
             }
             for serial, product in sorted(mice.items())
             if serial in self._modules
-        )
+        ]
+        receiver_items = [
+            {
+                "serial": serial,
+                "product": f"{product} RECEIVER",
+                "name": "Slipstream receiver",
+                "thumbnail": file_url(RECEIVER_THUMBNAIL),
+                "battery": -1,
+            }
+            for serial, product in sorted(self._receivers.items())
+        ]
+        self._devices.set_items(mouse_items + receiver_items)
 
         if self._session is not None:
             if self._session.serial in self._modules:
                 self._session.reload()
             else:
-                self._set_session(None)
-                if self._devices.count:
-                    self.selectDevice(self._devices.get(0)["serial"])
+                self._select_first()
+        elif self._receiver is not None:
+            if self._receiver.serial in self._receivers:
+                self._receiver.reload()
+            elif not self._receiver.restarting:  # while restarting it is briefly unlisted
+                self._select_first()
+        elif self._devices.count:  # no mouse session was opened, e.g. only a receiver is connected
+            self.selectDevice(self._devices.get(0)["serial"])
 
     def _poll_failed(self, exc: Exception) -> None:
         self._refreshing = False
@@ -122,15 +147,31 @@ class Backend(QObject):
         if macros is None:
             session.reload()  # also loads macro names
 
-    def _set_session(self, session: DeviceSession | None) -> None:
-        if self._session is not None:
-            self._session.deleteLater()
+    def _open_receiver(self, data: dict[str, Any]) -> None:
+        receiver = ReceiverSession(self.api, self.worker, ReceiverState.from_json(data), self)
+        receiver.message.connect(self.notify)
+        self._set_session(None, receiver)
+
+    def _set_session(self, session: DeviceSession | None, receiver: ReceiverSession | None = None) -> None:
+        """Show ``session`` (a mouse) or ``receiver``; at most one is selected."""
+        for old in (self._session, self._receiver):
+            if old is not None:
+                old.deleteLater()
         self._session = session
+        self._receiver = receiver
         self.sessionChanged.emit()
+
+    def _select_first(self) -> None:
+        self._set_session(None)
+        if self._devices.count:
+            self.selectDevice(self._devices.get(0)["serial"])
 
     @Slot(str)
     def selectDevice(self, serial: str) -> None:
-        if self._session is not None and self._session.serial == serial:
+        if serial == self.selectedSerial:
+            return
+        if serial in self._receivers:
+            self.worker.submit(self.api.get_receiver, serial, on_done=self._open_receiver)
             return
         if serial not in self._modules:
             return
@@ -178,6 +219,15 @@ class Backend(QObject):
     @Property(QObject, notify=sessionChanged)
     def session(self) -> DeviceSession | None:
         return self._session
+
+    @Property(QObject, notify=sessionChanged)
+    def receiver(self) -> ReceiverSession | None:
+        return self._receiver
+
+    @Property(str, notify=sessionChanged)
+    def selectedSerial(self) -> str:
+        current = self._session or self._receiver
+        return current.serial if current is not None else ""
 
     @Property(bool, notify=connectedChanged)
     def connected(self) -> bool:

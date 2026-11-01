@@ -217,6 +217,44 @@ class MouseState:
         )
 
 
+@dataclass(frozen=True)
+class PairedDevice:
+    product_id: int
+    product: str
+    serial: str
+
+
+@dataclass
+class ReceiverState:
+    """A Slipstream USB receiver and the wireless devices paired with it."""
+
+    serial: str
+    product: str
+    firmware: str
+    polling_rate: int
+    polling_rates: dict[int, str]
+    paired: tuple[PairedDevice, ...]
+    raw: dict[str, Any] = field(repr=False, default_factory=dict)
+
+    @classmethod
+    def from_json(cls, data: dict[str, Any]) -> ReceiverState:
+        paired = tuple(
+            PairedDevice(product_id=int(pid), product=(device or {}).get("product", ""),
+                         serial=(device or {}).get("serial", ""))
+            for pid, device in sorted((data.get("PairedDevices") or {}).items(), key=lambda kv: int(kv[0]))
+        )
+        return cls(
+            serial=data.get("serial", ""),
+            product=data.get("product", ""),
+            firmware=data.get("firmware", ""),
+            polling_rate=int((data.get("DeviceProfile") or {}).get("PollingRate", 0)),
+            # 0 is "Not Set", which the server refuses (1..10).
+            polling_rates=_choices(data.get("PollingRates"), skip=(0,)),
+            paired=paired,
+            raw=data,
+        )
+
+
 def valid_profile_name(name: str) -> str | None:
     """Mirror the server rules for user profile names; returns an error message or ``None``."""
     if len(name) < 3:

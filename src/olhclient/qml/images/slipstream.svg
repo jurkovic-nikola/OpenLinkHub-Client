@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.2" baseProfile="tiny" viewBox="0 0 120 200" width="120" height="200">
+  <!-- Generic USB wireless receiver; no vendor logo. -->
+  <defs>
+    <linearGradient id="body" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#111112"/>
+      <stop offset="0.45" stop-color="#2c2c2e"/>
+      <stop offset="1" stop-color="#0e0e0f"/>
+    </linearGradient>
+    <linearGradient id="metal" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#8d8f93"/>
+      <stop offset="0.5" stop-color="#e2e4e8"/>
+      <stop offset="1" stop-color="#7d7f83"/>
+    </linearGradient>
+  </defs>
+  <!-- USB-A plug -->
+  <rect x="31" y="92" width="58" height="100" rx="3" fill="url(#metal)"/>
+  <rect x="31" y="92" width="58" height="100" rx="3" fill="none" stroke="#5c5e62" stroke-width="1.5"/>
+  <rect x="44" y="150" width="10" height="10" fill="#3b3c3f"/>
+  <rect x="66" y="150" width="10" height="10" fill="#3b3c3f"/>
+  <!-- housing -->
+  <rect x="24" y="8" width="72" height="92" rx="10" fill="url(#body)"/>
+  <rect x="24" y="8" width="72" height="92" rx="10" fill="none" stroke="#3e3e41" stroke-width="1.5"/>
+  <rect x="24" y="84" width="72" height="16" fill="#0b0b0c"/>
+  <!-- wireless mark -->
+  <g fill="none" stroke="#9a9a9e" stroke-width="4" stroke-linecap="round">
+    <path d="M45 46 a21 21 0 0 1 30 0"/>
+    <path d="M51 53 a12 12 0 0 1 18 0"/>
+  </g>
+  <circle cx="60" cy="61" r="3.5" fill="#9a9a9e"/>
+</svg>

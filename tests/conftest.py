@@ -13,6 +13,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 FIXTURES = Path(__file__).parent / "fixtures"
 SE = "SE0000000000TEST"
 LEGACY = "RGBELITE00TEST"
+RECEIVER = "SLIPSTREAM0TEST"
 
 
 def load_fixture(name: str) -> Any:
@@ -29,13 +30,21 @@ def legacy_device() -> dict[str, Any]:
     return load_fixture("device_scimitar_rgb_elite.json")["device"]
 
 
+@pytest.fixture
+def receiver_device() -> dict[str, Any]:
+    from olhclient.api.receiver_page import parse_receiver_page
+
+    return parse_receiver_page((FIXTURES / "slipstream_page.html").read_text())
+
+
 class FakeApi:
     """In-memory stand-in for ApiClient, backed by the fixtures."""
 
     base_url = "http://fake:27003"
 
-    def __init__(self, devices: list[dict[str, Any]]):
+    def __init__(self, devices: list[dict[str, Any]], receivers: list[dict[str, Any]] = ()):
         self.devices = {d["serial"]: copy.deepcopy(d) for d in devices}
+        self.receivers = {r["serial"]: copy.deepcopy(r) for r in receivers}
         self.calls: list[tuple] = []
         self.fail_with: Exception | None = None
 
@@ -50,6 +59,14 @@ class FakeApi:
     def get_device(self, serial: str) -> dict[str, Any]:
         self._check()
         return copy.deepcopy(self.devices[serial])
+
+    def list_receivers(self) -> dict[str, str]:
+        self._check()
+        return {serial: "SLIPSTREAM" for serial in self.receivers}
+
+    def get_receiver(self, serial: str) -> dict[str, Any]:
+        self._check()
+        return copy.deepcopy(self.receivers[serial])
 
     def battery_levels(self) -> dict[str, int]:
         return {s: d["BatteryLevel"] for s, d in self.devices.items() if "BatteryLevel" in d}
@@ -129,6 +146,9 @@ class FakeApi:
     def set_mouse_setting(self, serial: str, setting: str, value: int) -> None:
         self._check()
         self.calls.append(("set_mouse_setting", serial, setting, value))
+        if serial in self.receivers:  # same endpoint, and the receiver restarts
+            self.receivers[serial]["DeviceProfile"]["PollingRate"] = value
+            return
         self._profile(serial)[self.FIELDS[setting]] = value
 
     # -- user profiles
@@ -159,8 +179,8 @@ class FakeApi:
 
 
 @pytest.fixture
-def fake_api(se_device, legacy_device) -> FakeApi:
-    return FakeApi([se_device, legacy_device])
+def fake_api(se_device, legacy_device, receiver_device) -> FakeApi:
+    return FakeApi([se_device, legacy_device], [receiver_device])
 
 
 @pytest.fixture(scope="session")

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>OpenLinkHub</title>
+</head>
+<body>
+
+<div class="container-fluid">
+    <input type="hidden" id="deviceId" name="deviceId" value="SLIPSTREAM0TEST">
+
+    <div class="row">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="settings-row">
+                <span class="settings-label">Revision</span>
+                <span class="meta-value">a08204c</span>
+            </div>
+            <div class="settings-row">
+                <span class="settings-label">Version</span>
+                <span class="meta-value">0.7.4</span>
+            </div>
+        </aside>
+
+        <!-- Main -->
+        <main class="main-content p-4">
+            <!-- Slipstream -->
+            <div class="row g-4 mb-4 align-items-start">
+                <div class="col-md-2">
+                    <div class="card system-card text-center">
+                        <div class="card-header">
+                            CORSAIR SLIPSTREAM WIRELESS USB Receiver
+                        </div>
+                        <div class="card-body">
+                            <div class="settings-list">
+                                <!-- Firmware -->
+                                <div class="settings-row">
+                                    <span class="settings-label text-ellipsis">Firmware</span>
+                                    <span class="meta-value">5.12.54</span>
+                                </div>
+
+                                <!-- Polling Rate -->
+                                <div class="settings-row">
+                                    <span class="settings-label text-ellipsis">Polling Rate</span>
+                                    <label for="pollingRate">
+                                        <select id="pollingRate" class="system-select max-width-120 compact mousePollingRate" name="mousePollingRate">
+                                            <option value="0">Not Set</option>
+                                            <option value="1">125 Hz / 8 msec</option>
+                                            <option value="2">250 Hz / 4 msec</option>
+                                            <option value="3">500 Hz / 2 msec</option>
+                                            <option value="4" selected>1000 Hz / 1 msec</option>
+                                        </select>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-10">
+                    <div class="card system-card">
+                        <div class="card-header header-split">
+                            <span class="header-left">
+                                CORSAIR SLIPSTREAM WIRELESS USB Receiver
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <table class="dataTable text-sm">
+                                <!-- Header -->
+                                <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Device</th>
+                                    <th>Serial</th>
+                                </tr>
+                                </thead>
+                                <!-- Body -->
+                                <tbody>
+                                <tr>
+                                    <td>
+                                        <span>11042</span>
+                                    </td>
+                                    <td>
+                                        <span>SCIMITAR ELITE SE</span>
+                                    </td>
+                                    <td>
+                                        <span>SE0000000000TEST</span>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+<script src="/static/js/sidebar.js"></script>
+<script src="/static/js/mouse.js"></script>
+</body>
+</html>

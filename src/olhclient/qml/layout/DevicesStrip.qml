@@ -22,7 +22,7 @@ Panel {
             required property string product
             required property string thumbnail
             required property int battery
-            readonly property bool current: root.backend.session && root.backend.session.serialNumber === serial
+            readonly property bool current: root.backend.selectedSerial === serial
             width: 160
             height: ListView.view.height
 
