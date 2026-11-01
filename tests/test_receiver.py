@@ -134,30 +134,30 @@ def test_receiver_session_properties(receiver):
     assert receiver.pairedDevices == [{"productId": 11042, "product": "SCIMITAR ELITE SE", "serial": SE}]
 
 
-def test_set_polling_rate_restarts_receiver(receiver, fake_api, qtbot, monkeypatch):
-    receiver._restart_timer.setInterval(30)
+def test_set_polling_rate_applies_without_waiting(receiver, fake_api):
     receiver.setPollingRate(3)
     assert fake_api.calls[-1] == ("set_setting", RECEIVER, "mouse/pollingRate", {"pollingRate": 3})
-    assert receiver.restarting and receiver.pollingRate == 3
-    assert receiver.messages[-1] == ("USB receiver polling rate set to 500 Hz / 2 msec. The receiver restarts…", False)
-
-    # no reloads or new writes while it restarts
+    assert receiver.messages[-1] == ("Polling rate 500 Hz / 2 msec sent to the receiver", False)
+    assert receiver.pollingRate == 3 and not receiver.busy and receiver.may_be_restarting
+    # nothing is locked: the next change goes straight out
     receiver.setPollingRate(2)
-    assert len([c for c in fake_api.calls if c[0] == "set_setting"]) == 1
-    fetched = []
-    monkeypatch.setattr(fake_api, "get_receiver", lambda s: fetched.append(s) or fake_api.receivers[s])
-    receiver.reload()
-    assert fetched == []
+    assert fake_api.calls[-1] == ("set_setting", RECEIVER, "mouse/pollingRate", {"pollingRate": 2})
 
-    qtbot.waitUntil(lambda: not receiver.restarting)
-    assert fetched == [RECEIVER] and receiver.pollingRate == 3
+
+def test_restart_grace_ends(receiver, monkeypatch):
+    import olhclient.core.receiver as module
+
+    receiver.setPollingRate(3)
+    now = module.time.monotonic()
+    monkeypatch.setattr(module.time, "monotonic", lambda: now + module.RESTART_GRACE_S + 1)
+    assert not receiver.may_be_restarting
 
 
 @pytest.mark.parametrize("value", [4, 0, 9])
 def test_set_polling_rate_skips_current_and_invalid(receiver, fake_api, value):
     receiver.setPollingRate(value)
     assert not fake_api.calls
-    assert not receiver.restarting
+    assert not receiver.may_be_restarting
 
 
 def test_set_polling_rate_failure(receiver, fake_api):
@@ -171,7 +171,7 @@ def test_set_polling_rate_failure(receiver, fake_api):
     receiver.setPollingRate(1)
     fake_api.set_setting = original
     assert receiver.messages[-1] == ("Unable to change polling rate", True)
-    assert not receiver.restarting and not receiver.busy and receiver.pollingRate == 4
+    assert not receiver.may_be_restarting and not receiver.busy and receiver.pollingRate == 4
 
 
 # -- backend -------------------------------------------------------------------------
@@ -207,7 +207,7 @@ def test_backend_keeps_restarting_receiver(backend, fake_api):
     data = fake_api.receivers.pop(RECEIVER)
     mouse = fake_api.devices.pop(SE)
     backend.refresh()  # receiver and its mouse are gone while it restarts
-    assert backend.receiver is not None and backend.receiver.restarting
+    assert backend.receiver is not None and backend.receiver.may_be_restarting
 
     fake_api.receivers[RECEIVER] = data
     fake_api.devices[SE] = mouse

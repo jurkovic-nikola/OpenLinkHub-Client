@@ -188,10 +188,8 @@ Rectangle {
                 title: "DEVICE SETTINGS"
                 icon: "../icons/settings.svg"
                 Text {
-                    text: !root.receiver ? ""
-                        : root.receiver.restarting ? "Receiver is restarting…"
-                        : root.receiver.busy ? "Applying…" : "Changes apply immediately"
-                    color: root.receiver && root.receiver.restarting ? Theme.accent : Theme.textDim
+                    text: !root.receiver ? "" : root.receiver.busy ? "Applying…" : "Changes apply immediately"
+                    color: Theme.textDim
                     font.pixelSize: Theme.fontSmall
                 }
             }
@@ -237,7 +235,7 @@ Rectangle {
                         id: pollingRate
                         Layout.preferredWidth: 220
                         visible: root.receiver !== null && root.receiver.pollingRates.length > 0
-                        enabled: root.receiver !== null && !root.receiver.busy && !root.receiver.restarting
+                        enabled: root.receiver !== null && !root.receiver.busy
                         model: root.receiver ? root.receiver.pollingRates : []
                         currentIndex: root.receiver ? root.indexIn(model, root.receiver.pollingRate) : -1
                         displayText: currentIndex < 0 ? "Not set" : currentText
@@ -252,8 +250,8 @@ Rectangle {
                     }
                     InfoTip {
                         text: "How often the receiver reports to the computer. It applies to every device "
-                            + "paired with this receiver. Changing it restarts the receiver, so its devices "
-                            + "disconnect for a few seconds."
+                            + "paired with this receiver. The receiver may restart when it changes, so its "
+                            + "devices can disconnect for a few seconds."
                     }
                 }
             }

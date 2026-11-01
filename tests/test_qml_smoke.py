@@ -101,10 +101,9 @@ def test_receiver_page(ui, qtbot, fake_api):
     settle(qtbot)
     assert backend.receiver is not None
     assert window.property("title").startswith("CORSAIR SLIPSTREAM WIRELESS USB Receiver")
-    backend.receiver.setPollingRate(3)  # now restarting
+    backend.receiver.setPollingRate(3)
     settle(qtbot)
     fake_api.fail_with = ApiError("Unable to change polling rate")
-    backend.receiver._set_restarting(False)
     backend.receiver.setPollingRate(1)
     fake_api.fail_with = None
     settle(qtbot)

@@ -139,7 +139,7 @@ class Backend(QObject):
         elif self._receiver is not None:
             if self._receiver.serial in self._receivers:
                 self._receiver.reload()
-            elif not self._receiver.restarting:  # while restarting it is briefly unlisted
+            elif not self._receiver.may_be_restarting:  # a receiver may restart after a new polling rate
                 self._select_first()
         elif self._devices.count:  # no session was opened, e.g. only a receiver is connected
             self.selectDevice(self._devices.get(0)["serial"])
