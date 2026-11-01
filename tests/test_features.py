@@ -85,7 +85,7 @@ def test_zone_colours_send_only_changes(make_session, fake_api):
     assert not writes(fake_api, "save_zone_colors")
     colors[1] = "#00FF00"
     lighting.saveZoneColors(colors)
-    assert writes(fake_api, "save_zone_colors") == [("save_zone_colors", SE, {1: "#00ff00"})]
+    assert writes(fake_api, "save_zone_colors") == [("save_zone_colors", SE, {1: "#00ff00"}, "mouse")]
     assert lighting.zones.get(1)["color"] == "#00ff00"
 
 
@@ -121,9 +121,9 @@ def test_settings_apply(make_session, fake_api):
     settings = session.controller("settings")
     settings.apply("angleSnapping", 1)
     settings.apply("liftHeight", 4)
-    assert writes(fake_api, "set_mouse_setting") == [
-        ("set_mouse_setting", SE, "angleSnapping", 1),
-        ("set_mouse_setting", SE, "liftHeight", 4),
+    assert writes(fake_api, "set_setting") == [
+        ("set_setting", SE, "mouse/angleSnapping", {"angleSnapping": 1}),
+        ("set_setting", SE, "mouse/liftHeight", {"liftHeight": 4}),
     ]
     assert settings.items[0]["value"] == 4 and settings.items[2]["value"] == 1
     assert session.messages[-1] == ("Lift-off distance updated", False)
@@ -134,7 +134,7 @@ def test_settings_apply_rejects_or_skips(make_session, fake_api, key, value):
     # 5 is not an offered lift height, polling rate is not offered over the dongle,
     # and 2 is the current lift height (nothing to do)
     make_session().controller("settings").apply(key, value)
-    assert not writes(fake_api, "set_mouse_setting")
+    assert not writes(fake_api, "set_setting")
 
 
 # -- user profiles -------------------------------------------------------------

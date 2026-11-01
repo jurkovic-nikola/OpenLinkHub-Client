@@ -1,26 +1,125 @@
+"""Simple device settings (polling rate, sleep timer, sidetone...) for every device kind.
+
+OpenLinkHub pairs an options map in the device JSON (``SleepModes``) with the
+current value in ``DeviceProfile`` (``SleepMode``); toggles and sliders only
+have the ``DeviceProfile`` field. A setting is shown when its fields are there.
+The driver may still lack the setter, so every write can come back refused.
+"""
+
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 from typing import Any
 
 from PySide6.QtCore import Property, Signal, Slot
 
-from olhclient.api.client import MOUSE_SETTINGS
-from olhclient.api.models import DeviceSettings, MouseState
+from olhclient.api.models import DeviceKind, DeviceState
 from olhclient.core.features.base import FeatureController
 
-#: key -> title, in display order. Keys are the request fields of the API.
-TITLES = {
-    "pollingRate": "Polling rate",
-    "liftHeight": "Lift-off distance",
-    "sleepMode": "Sleep timer",
-    "angleSnapping": "Angle snapping",
-    "buttonOptimization": "Button response optimization",
-}
-TOGGLES = ("angleSnapping", "buttonOptimization")
+CHOICE, TOGGLE, SLIDER, TEXT_CHOICE = "choice", "toggle", "slider", "textChoice"
+
+
+@dataclass(frozen=True)
+class SettingSpec:
+    key: str  # unique id, also used in module allow-lists
+    title: str
+    kinds: tuple[str, ...]  # DeviceKind.api values
+    endpoint: str  # under /api/<kind>/
+    field: str  # request field carrying the value
+    current: str  # DeviceProfile field with the current value
+    type: str = CHOICE
+    options: str | None = None  # device JSON field with the choices (CHOICE, TEXT_CHOICE)
+    range: tuple[int, int] = (0, 100)  # SLIDER
+    extra: dict[str, Any] = field(default_factory=dict)  # fixed request fields
+    requires: tuple[str, Any] | None = None  # (DeviceProfile field, value) that enables it
+
+
+MOUSE, HEADSET, KEYBOARD, CONTROLLER = "mouse", "headset", "keyboard", "controller"
+EVERY = (MOUSE, HEADSET, KEYBOARD, CONTROLLER)
+
+#: In display order. From OpenLinkHub's request handlers (src/server/requests/requests.go).
+SPECS = (
+    SettingSpec("pollingRate", "Polling rate", (MOUSE, KEYBOARD), "pollingRate", "pollingRate", "PollingRate",
+                options="PollingRates"),
+    SettingSpec("liftHeight", "Lift-off distance", (MOUSE,), "liftHeight", "liftHeight", "LiftHeight",
+                options="LiftHeights"),
+    SettingSpec("surfaceSelection", "Surface", (MOUSE,), "surfaceSelection", "surfaceSelection", "SurfaceSelection",
+                options="SurfaceSelections"),
+    SettingSpec("sleepMode", "Sleep timer", EVERY, "sleep", "sleepMode", "SleepMode", options="SleepModes"),
+    SettingSpec("noiseCancellation", "Noise cancellation", (HEADSET,), "anc", "noiseCancellation",
+                "NoiseCancellation", options="NoiseCancellations"),
+    SettingSpec("sideTone", "Sidetone", (HEADSET,), "sidetone", "sideTone", "SideTone", options="SideToneModes"),
+    SettingSpec("sideToneValue", "Sidetone level", (HEADSET,), "sidetoneValue", "sideToneValue", "SideToneValue",
+                type=SLIDER, requires=("SideTone", 1)),
+    SettingSpec("muteIndicator", "Mute indicator", (HEADSET,), "muteIndicator", "muteIndicator",
+                "DisableMicIndicator", options="MuteIndicators"),
+    SettingSpec("leftWheel", "Left wheel", (HEADSET,), "wheelOption", "wheelOption", "LeftWheel",
+                options="WheelOptions", extra={"wheelId": 1}),
+    SettingSpec("rightWheel", "Right wheel", (HEADSET,), "wheelOption", "wheelOption", "RightWheel",
+                options="WheelOptions", extra={"wheelId": 2}),
+    SettingSpec("debounceTime", "Debounce time", (KEYBOARD,), "debounceTime", "debounceTime", "DebounceTime",
+                options="DebounceTimes"),
+    SettingSpec("layout", "Keyboard layout", (KEYBOARD,), "layout", "keyboardLayout", "Layout",
+                type=TEXT_CHOICE, options="Layouts"),
+    SettingSpec("angleSnapping", "Angle snapping", (MOUSE,), "angleSnapping", "angleSnapping", "AngleSnapping",
+                type=TOGGLE),
+    SettingSpec("buttonOptimization", "Button response optimization", (MOUSE,), "buttonOptimization",
+                "buttonOptimization", "ButtonOptimization", options="ButtonOptimizations"),
+    SettingSpec("motionSync", "Motion sync", (MOUSE,), "motionSync", "motionSync", "MotionSync", type=TOGGLE),
+    SettingSpec("rippleControl", "Ripple control", (MOUSE,), "rippleControl", "rippleControl", "RippleControl",
+                type=TOGGLE),
+    SettingSpec("leftHandMode", "Left-handed mode", (MOUSE,), "leftHandMode", "leftHandMode", "LeftHandMode",
+                type=TOGGLE),
+    SettingSpec("autoBrightness", "Automatic brightness", (KEYBOARD,), "autoBrightness", "autoBrightness",
+                "AutoBrightness", type=TOGGLE),
+    SettingSpec("leftVibration", "Left vibration", (CONTROLLER,), "vibration", "vibrationValue",
+                "LeftVibrationValue", type=SLIDER, extra={"vibrationModule": 0}),
+    SettingSpec("rightVibration", "Right vibration", (CONTROLLER,), "vibration", "vibrationValue",
+                "RightVibrationValue", type=SLIDER, extra={"vibrationModule": 1}),
+)
+SPECS_BY_KEY = {spec.key: spec for spec in SPECS}
+
+
+def _options(spec: SettingSpec, state: DeviceState) -> list[dict[str, Any]] | None:
+    raw = state.raw.get(spec.options) if spec.options else None
+    if spec.type == TEXT_CHOICE:
+        return [{"value": str(v), "text": str(v)} for v in raw] if isinstance(raw, list) and raw else None
+    if not isinstance(raw, dict) or not raw:
+        return None
+    options = []
+    for key, text in sorted(((int(k), v) for k, v in raw.items())):
+        if key == 0 and str(text).lower() == "not set":  # the server refuses it
+            continue
+        options.append({"value": key, "text": str(text)})
+    return options or None
+
+
+def build_item(spec: SettingSpec, state: DeviceState) -> dict[str, Any] | None:
+    """The UI row for ``spec``, or None when the device does not offer it."""
+    profile = state.profile
+    if state.kind.api not in spec.kinds or spec.current not in profile or profile[spec.current] is None:
+        return None
+    value = profile[spec.current]
+    item: dict[str, Any] = {"key": spec.key, "title": spec.title, "options": [], "min": 0, "max": 0,
+                            "enabled": True}
+    if spec.requires:
+        item["enabled"] = profile.get(spec.requires[0]) == spec.requires[1]
+    if spec.type in (CHOICE, TEXT_CHOICE):
+        options = _options(spec, state)
+        if options is None:
+            # Mice without a ButtonOptimizations map have it as an on/off switch.
+            if spec.key != "buttonOptimization":
+                return None
+            return {**item, "kind": TOGGLE, "value": int(bool(value))}
+        return {**item, "kind": spec.type, "value": value if spec.type == TEXT_CHOICE else int(value),
+                "options": options}
+    if spec.type == TOGGLE:
+        return {**item, "kind": TOGGLE, "value": int(bool(value))}
+    return {**item, "kind": SLIDER, "value": int(value), "min": spec.range[0], "max": spec.range[1]}
 
 
 class SettingsController(FeatureController):
-    """Sensor and power settings. Every change applies immediately."""
+    """Every simple setting the device offers. Every change applies immediately."""
 
     itemsChanged = Signal()
     busyChanged = Signal()
@@ -30,49 +129,33 @@ class SettingsController(FeatureController):
         self._items: list[dict[str, Any]] = []
         self._busy = False
 
-    def update(self, state: MouseState) -> None:
+    @classmethod
+    def supports(cls, state: DeviceState) -> bool:
+        return any(build_item(spec, state) for spec in SPECS)
+
+    def update(self, state: DeviceState) -> None:
         items = self._build(state)
         if items != self._items:
             self._items = items
             self.itemsChanged.emit()
 
-    def _build(self, state: MouseState) -> list[dict[str, Any]]:
-        settings = state.settings
-        if settings is None:
-            return []
-        supported = self.session.module.settings
-        choices = {
-            "pollingRate": (settings.polling_rate, settings.polling_rates),
-            "liftHeight": (settings.lift_height, settings.lift_heights),
-            "sleepMode": (settings.sleep_mode, settings.sleep_modes),
-        }
-        toggles = {"angleSnapping": settings.angle_snapping, "buttonOptimization": settings.button_optimization}
-
+    def _build(self, state: DeviceState) -> list[dict[str, Any]]:
+        allowed = self.session.module.settings
         items = []
-        for key, title in TITLES.items():
-            if key not in supported or not self._shown(key, state, settings):
+        for spec in SPECS:
+            if allowed is not None and spec.key not in allowed:
                 continue
-            if key in TOGGLES:
-                items.append({"key": key, "title": title, "kind": "toggle", "value": int(toggles[key]), "options": []})
+            if not self._shown(spec, state):
                 continue
-            value, options = choices[key]
-            if not options:  # the driver (or connection mode) does not offer this setting
-                continue
-            items.append(
-                {
-                    "key": key,
-                    "title": title,
-                    "kind": "choice",
-                    "value": value,
-                    "options": [{"value": v, "text": text} for v, text in options.items()],
-                }
-            )
+            item = build_item(spec, state)
+            if item:
+                items.append(item)
         return items
 
     @staticmethod
-    def _shown(key: str, state: MouseState, settings: DeviceSettings) -> bool:
-        # Like the web UI: the sleep timer only applies on the wireless (dongle) link.
-        if key == "sleepMode":
+    def _shown(spec: SettingSpec, state: DeviceState) -> bool:
+        # Like the web UI: a wireless mouse's sleep timer only applies on the wireless (dongle) link.
+        if spec.key == "sleepMode" and state.kind is DeviceKind.MOUSE:
             return state.wireless and state.usb is False
         return True
 
@@ -84,21 +167,26 @@ class SettingsController(FeatureController):
     def busy(self) -> bool:
         return self._busy
 
-    @Slot(str, int)
-    def apply(self, key: str, value: int) -> None:
+    @Slot(str, "QVariant")
+    def apply(self, key: str, value: Any) -> None:
         item = next((i for i in self._items if i["key"] == key), None)
-        if item is None or key not in MOUSE_SETTINGS:
+        spec = SPECS_BY_KEY.get(key)
+        if item is None or spec is None:
             self.session.report_message(f"{key} is not supported by this device", error=True)
             return
-        if item["value"] == value:
+        value = str(value) if item["kind"] == TEXT_CHOICE else int(value)
+        if item["value"] == value or not item["enabled"]:
             return
-        if item["kind"] == "choice" and value not in {o["value"] for o in item["options"]}:
+        if item["kind"] in (CHOICE, TEXT_CHOICE) and value not in {o["value"] for o in item["options"]}:
             self.session.report_message(f"Invalid value for {item['title']}", error=True)
             return
-        serial = self.session.serial
+        if item["kind"] == SLIDER and not item["min"] <= value <= item["max"]:
+            self.session.report_message(f"{item['title']} must be between {item['min']} and {item['max']}", error=True)
+            return
+        serial, endpoint = self.session.serial, f"{self.session.state.kind.api}/{spec.endpoint}"
         self._set_busy(True)
         self.write(
-            lambda: self.session.api.set_mouse_setting(serial, key, value),
+            lambda: self.session.api.set_setting(serial, endpoint, {spec.field: value, **spec.extra}),
             f"{item['title']} updated",
             done=self._applied,
         )

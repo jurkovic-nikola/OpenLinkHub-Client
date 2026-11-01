@@ -1,6 +1,6 @@
 import pytest
 
-from olhclient.api.models import MouseState
+from olhclient.api.models import DeviceState
 from olhclient.devices.base import resolve_image
 from olhclient.devices.registry import Registry
 
@@ -17,7 +17,7 @@ def layout_buttons(module):
 @pytest.mark.parametrize("module", SCIMITARS, ids=lambda m: m.id)
 def test_layout_buttons_exist_on_both_generations(module, se_device, legacy_device):
     for device in (se_device, legacy_device):
-        names = {k.name for k in MouseState.from_json(device).keys}
+        names = {k.name for k in DeviceState.from_json(device).keys}
         assert layout_buttons(module) <= names
         # and every device button is reachable from the layout
         assert names <= layout_buttons(module)

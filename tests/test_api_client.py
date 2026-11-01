@@ -18,9 +18,16 @@ def api():
 
 
 @respx.mock
-def test_list_mice(api):
-    respx.get(f"{BASE}/api/devices/mouse").respond(json=load_fixture("devices_mouse.json"))
-    assert api.list_mice() == {"SE0000000000TEST": "SCIMITAR ELITE SE"}
+def test_list_devices(api):
+    respx.get(f"{BASE}/api/").respond(json=load_fixture("api_root.json"))
+    devices = api.list_devices()
+    assert {s: (d.product, d.kind.value, d.hidden) for s, d in devices.items()} == {
+        "SE0000000000TEST": ("SCIMITAR ELITE SE", "mouse", False),
+        "VIRTUOSO00TEST": ("VIRTUOSO MAX", "headset", False),
+        "VIRTUOSO0DNGL": ("HEADSET DONGLE", "dongle", True),
+        "SLIPSTREAM0TEST": ("SLIPSTREAM", "dongle", True),
+        "cluster": ("Cluster", "device", True),
+    }
 
 
 @respx.mock
@@ -72,24 +79,24 @@ def test_save_dpi_stringifies_stage_keys(api):
 
 @respx.mock
 def test_get_requests_have_no_origin(api):
-    route = respx.get(f"{BASE}/api/devices/mouse").respond(json={"code": 200, "status": 1, "data": {}})
-    api.list_mice()
+    route = respx.get(f"{BASE}/api/").respond(json={"code": 200, "device": {}})
+    api.list_devices()
     assert "Origin" not in route.calls.last.request.headers
 
 
 @respx.mock
 def test_auth_required(api):
-    respx.get(f"{BASE}/api/devices/mouse").respond(401, text="Authentication required")
+    respx.get(f"{BASE}/api/").respond(401, text="Authentication required")
     with pytest.raises(ApiError) as info:
-        api.list_mice()
+        api.list_devices()
     assert info.value.auth_required
 
 
 @respx.mock
 def test_connection_error(api):
-    respx.get(f"{BASE}/api/devices/mouse").mock(side_effect=httpx.ConnectError("refused"))
+    respx.get(f"{BASE}/api/").mock(side_effect=httpx.ConnectError("refused"))
     with pytest.raises(ApiError, match="Cannot reach"):
-        api.list_mice()
+        api.list_devices()
 
 
 @respx.mock
@@ -139,15 +146,47 @@ def test_color_maps_are_sent_as_rgb(api):
 
 
 @respx.mock
-@pytest.mark.parametrize(
-    "setting, path",
-    [("pollingRate", "pollingRate"), ("liftHeight", "liftHeight"), ("sleepMode", "sleep"),
-     ("angleSnapping", "angleSnapping"), ("buttonOptimization", "buttonOptimization")],
-)
-def test_mouse_settings_endpoints(api, setting, path):
-    route = respx.post(f"{BASE}/api/mouse/{path}").respond(json=OK)
-    api.set_mouse_setting("SER", setting, 3)
-    assert json.loads(route.calls.last.request.content) == {"deviceId": "SER", setting: 3}
+def test_set_setting_posts_to_the_kind_endpoint(api):
+    route = respx.post(f"{BASE}/api/headset/wheelOption").respond(json=OK)
+    api.set_setting("SER", "headset/wheelOption", {"wheelOption": 2, "wheelId": 1})
+    assert json.loads(route.calls.last.request.content) == {"deviceId": "SER", "wheelOption": 2, "wheelId": 1}
+
+
+@respx.mock
+def test_generic_device_calls(api):
+    routes = {path: respx.route(method=method, url=f"{BASE}/api/{path}").respond(json=OK) for method, path in (
+        ("POST", "brightness"), ("POST", "headset/equalizer"), ("POST", "speed"), ("POST", "label"),
+        ("POST", "headset/zoneColors"), ("POST", "keyboard/updateKeyAssignment"), ("PUT", "keyboard/profile/new"),
+        ("POST", "keyboard/profile/change"), ("DELETE", "keyboard/profile/delete"))}
+    api.set_brightness_mode("SER", 2)
+    api.set_equalizer("SER", {1: 3.5, 2: -1})
+    api.set_speed_profile("SER", -1, "Quiet")
+    api.set_label("SER", 3, "Pump", rgb_device=True)
+    api.save_zone_colors("SER", {0: "#ff0000"}, "headset")
+    api.update_key_assignment("SER", 20, use_default=False, action_type=3, action_value=46, modifier=2,
+                              kind="keyboard")
+    api.new_keyboard_profile("SER", "gaming")
+    api.switch_keyboard_profile("SER", "gaming")
+    api.delete_keyboard_profile("SER", "gaming")
+
+    def sent(path):
+        return json.loads(routes[path].calls.last.request.content)
+
+    assert sent("brightness") == {"deviceId": "SER", "brightness": 2}
+    assert sent("headset/equalizer") == {"deviceId": "SER", "equalizers": {"1": 3.5, "2": -1.0}}
+    assert sent("speed") == {"deviceId": "SER", "channelId": -1, "profile": "Quiet"}
+    assert sent("label") == {"deviceId": "SER", "channelId": 3, "label": "Pump", "deviceType": 1}
+    assert sent("headset/zoneColors")["colorZones"] == {"0": {"red": 255, "green": 0, "blue": 0}}
+    key = sent("keyboard/updateKeyAssignment")
+    assert key["keyIndex"] == 20 and key["keyAssignmentModifier"] == 2 and key["keyAssignmentValue"] == 46
+    assert sent("keyboard/profile/new") == {"deviceId": "SER", "keyboardProfileName": "gaming", "new": True}
+    assert sent("keyboard/profile/delete") == {"deviceId": "SER", "keyboardProfileName": "gaming"}
+
+
+@respx.mock
+def test_temperature_profiles_accept_status_zero(api):
+    respx.get(f"{BASE}/api/temperatures/").respond(json={"code": 200, "status": 0, "data": {"Quiet": {}, "aioPump": {}}})
+    assert api.temperature_profiles() == ["aioPump", "Quiet"]
 
 
 @respx.mock

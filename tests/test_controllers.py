@@ -52,7 +52,8 @@ def test_save_key_assignment(make_session, fake_api):
     remap.save(index, False, 3, 10, False, False)
     assert fake_api.calls[-1] == (
         "update_key_assignment", SE, index,
-        {"use_default": False, "action_type": 3, "action_value": 10, "press_and_hold": False, "on_release": False},
+        {"use_default": False, "action_type": 3, "action_value": 10, "press_and_hold": False, "on_release": False,
+         "modifier": 0, "kind": "mouse"},
     )
     # reloaded from the "server"
     assert remap.selected["actionValue"] == 10
@@ -151,7 +152,7 @@ def test_backend_poll_opens_first_device(backend):
     backend.refresh()
     assert backend.connected
     assert backend.devices.count == 3  # two mice, then the receiver
-    assert backend.session is not None and backend.session.serial == LEGACY  # sorted by serial
+    assert backend.session is not None and backend.session.serial == SE  # by kind, then name
 
 
 def test_backend_select_device(backend):
@@ -162,10 +163,10 @@ def test_backend_select_device(backend):
 
 def test_backend_device_removed(backend, fake_api):
     backend.refresh()
-    del fake_api.devices[LEGACY]
+    del fake_api.devices[SE]  # the selected device
     backend.refresh()
     assert backend.devices.count == 2
-    assert backend.session.serial == SE
+    assert backend.session.serial == LEGACY
 
 
 def test_backend_connection_error_and_auth(backend, fake_api):

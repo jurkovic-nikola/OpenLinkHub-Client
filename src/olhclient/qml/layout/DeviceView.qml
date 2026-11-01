@@ -204,6 +204,16 @@ Rectangle {
         font.pixelSize: Theme.fontSmall
     }
 
+    // For what the client does not cover.
+    AccentButton {
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.margins: 10
+        visible: root.session !== null
+        text: "Open in OpenLinkHub"
+        onClicked: root.session.openInBrowser()
+    }
+
     // Wireless devices stay registered while switched off.
     Rectangle {
         anchors.fill: parent

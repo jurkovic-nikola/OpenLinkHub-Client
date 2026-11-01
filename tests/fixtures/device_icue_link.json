@@ -1,0 +1,73 @@
+{
+ "code": 200,
+ "device": {
+  "DeviceProfile": {
+   "Active": true,
+   "Labels": {
+    "1": "Front fan"
+   },
+   "Product": "iCUE LINK System Hub",
+   "RGBProfiles": {
+    "1": "colorpulse",
+    "2": "static"
+   },
+   "Serial": "LINKHUB000TEST",
+   "SpeedProfiles": {
+    "1": "Normal",
+    "2": "aioPump"
+   }
+  },
+  "ProductId": 3135,
+  "RGBModes": [
+   "colorpulse",
+   "colorshift",
+   "rainbow",
+   "static",
+   "liquid-temperature"
+  ],
+  "Template": "lsh.html",
+  "VendorId": 6940,
+  "devices": {
+   "1": {
+    "HasSpeed": true,
+    "HasTemps": false,
+    "IsTemperatureProbe": false,
+    "channelId": 1,
+    "description": "iCUE LINK QX120 RGB",
+    "deviceId": "dev1",
+    "label": "Front fan",
+    "name": "iCUE LINK QX120 RGB",
+    "profile": "Normal",
+    "rgb": "colorpulse",
+    "rpm": 1104,
+    "temperature": 0.0,
+    "temperatureString": "0.0 °C",
+    "type": 0
+   },
+   "2": {
+    "HasSpeed": true,
+    "HasTemps": true,
+    "IsTemperatureProbe": false,
+    "channelId": 2,
+    "description": "iCUE LINK H150i Pump",
+    "deviceId": "dev2",
+    "label": "",
+    "name": "iCUE LINK H150i Pump",
+    "profile": "aioPump",
+    "rgb": "static",
+    "rpm": 2632,
+    "temperature": 32.1,
+    "temperatureString": "32.1 °C",
+    "type": 0
+   }
+  },
+  "firmware": "2.6.201",
+  "product": "iCUE LINK System Hub",
+  "serial": "LINKHUB000TEST",
+  "userProfiles": {
+   "default": {
+    "Active": true
+   }
+  }
+ }
+}

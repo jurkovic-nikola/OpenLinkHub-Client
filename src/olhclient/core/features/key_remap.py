@@ -5,7 +5,7 @@ from typing import Any
 
 from PySide6.QtCore import Property, QObject, Signal, Slot
 
-from olhclient.api.models import ActionType, KeyAssignment, MouseState, validate_assignment
+from olhclient.api.models import ActionType, DeviceKind, DeviceState, KeyAssignment, valid_profile_name, validate_assignment
 from olhclient.core.features.base import FeatureController
 from olhclient.core.listmodel import DictListModel
 
@@ -19,8 +19,11 @@ KEY_ROLES = (
     "actionValue",
     "pressAndHold",
     "onRelease",
+    "modifier",
     "locked",
 )
+#: device kinds whose buttons are remapped through /api/<kind>/updateKeyAssignment
+REMAP_KINDS = ("mouse", "headset", "controller")
 
 
 class KeyRemapController(FeatureController):
@@ -29,6 +32,7 @@ class KeyRemapController(FeatureController):
     #: Value options for an action type finished loading.
     optionsLoaded = Signal(int)
     savingChanged = Signal()
+    modifiersChanged = Signal()
 
     def __init__(self, session):
         super().__init__(session)
@@ -37,19 +41,31 @@ class KeyRemapController(FeatureController):
         self._options: dict[int, list[dict[str, Any]]] = {}
         self._loading: set[int] = set()
         self._saving = False
+        self._modifiers: list[dict[str, Any]] = []
         session.selectedButtonChanged.connect(self.selectedChanged)
         self._keys.dataChanged.connect(lambda *_: self.selectedChanged.emit())
         self._keys.modelReset.connect(self.selectedChanged)
 
     # -- data --------------------------------------------------------------
 
-    def update(self, state: MouseState) -> None:
+    @classmethod
+    def supports(cls, state: DeviceState) -> bool:
+        return bool(state.keys) and state.kind.api in REMAP_KINDS
+
+    def update(self, state: DeviceState) -> None:
         missing = self.session.module.missing_buttons
         self._keys.set_items(self._row(key) for key in self._ordered(state.keys) if key.name not in missing)
         options = [{"value": value, "text": text} for value, text in state.assignment_types.items()]
         if options != self._type_options:
             self._type_options = options
             self.typeOptionsChanged.emit()
+        modifiers = self._modifier_options(state)
+        if modifiers != self._modifiers:
+            self._modifiers = modifiers
+            self.modifiersChanged.emit()
+
+    def _modifier_options(self, state: DeviceState) -> list[dict[str, Any]]:
+        return []
 
     def _ordered(self, keys: list[KeyAssignment]) -> list[KeyAssignment]:
         """Order keys like the device layout: callout list first, then the keypad."""
@@ -71,7 +87,8 @@ class KeyRemapController(FeatureController):
             "actionValue": key.action_value,
             "pressAndHold": key.press_and_hold,
             "onRelease": key.on_release,
-            "locked": key.name in self.session.module.locked_buttons,
+            "modifier": key.modifier,
+            "locked": key.locked or key.name in self.session.module.locked_buttons,
         }
 
     # -- QML API -----------------------------------------------------------
@@ -88,6 +105,11 @@ class KeyRemapController(FeatureController):
     @Property("QVariantList", notify=typeOptionsChanged)
     def typeOptions(self) -> list[dict[str, Any]]:
         return self._type_options
+
+    @Property("QVariantList", notify=modifiersChanged)
+    def modifierOptions(self) -> list[dict[str, Any]]:
+        """Modifier keys that can be combined with the action (keyboards); empty elsewhere."""
+        return self._modifiers
 
     @Property(bool, notify=savingChanged)
     def saving(self) -> bool:
@@ -131,9 +153,9 @@ class KeyRemapController(FeatureController):
     def validate(self, action_type: int, press_and_hold: bool, on_release: bool) -> str:
         return validate_assignment(action_type, press_and_hold=press_and_hold, on_release=on_release) or ""
 
-    @Slot(int, bool, int, int, bool, bool)
+    @Slot(int, bool, int, int, bool, bool, int)
     def save(self, key_index: int, use_default: bool, action_type: int, action_value: int,
-             press_and_hold: bool, on_release: bool) -> None:
+             press_and_hold: bool, on_release: bool, modifier: int = 0) -> None:
         row = self._keys.indexOf("keyIndex", key_index)
         if row < 0:
             return
@@ -154,6 +176,8 @@ class KeyRemapController(FeatureController):
                 action_value=action_value,
                 press_and_hold=press_and_hold,
                 on_release=on_release,
+                modifier=modifier,
+                kind=self.session.state.kind.api,
             ),
             on_done=lambda _: self._saved(),
             on_error=self._save_failed,
@@ -173,6 +197,78 @@ class KeyRemapController(FeatureController):
         if value != self._saving:
             self._saving = value
             self.savingChanged.emit()
+
+
+class KeyboardKeysController(KeyRemapController):
+    """Key remapping on a keyboard, plus its keyboard profiles (per-key layouts).
+
+    Keyboards share the key assignment endpoint with mice; keys come from the
+    active keyboard profile and are listed in keyboard order.
+    """
+
+    keyboardProfilesChanged = Signal()
+
+    def __init__(self, session):
+        super().__init__(session)
+        self._profile_names: list[str] = []
+        self._active = ""
+
+    @classmethod
+    def supports(cls, state: DeviceState) -> bool:
+        return state.kind is DeviceKind.KEYBOARD and bool(state.keys)
+
+    def update(self, state: DeviceState) -> None:
+        super().update(state)
+        keyboard = state.keyboard
+        names, active = (list(keyboard.names), keyboard.active) if keyboard else ([], "")
+        if (names, active) != (self._profile_names, self._active):
+            self._profile_names, self._active = names, active
+            self.keyboardProfilesChanged.emit()
+
+    def _ordered(self, keys: list[KeyAssignment]) -> list[KeyAssignment]:
+        return keys  # row by row, as on the keyboard
+
+    def _modifier_options(self, state: DeviceState) -> list[dict[str, Any]]:
+        modifiers = state.keyboard.modifiers if state.keyboard else {}
+        return [{"value": value, "text": text} for value, text in modifiers.items()]
+
+    @Property("QStringList", notify=keyboardProfilesChanged)
+    def keyboardProfiles(self) -> list[str]:
+        return self._profile_names
+
+    @Property(str, notify=keyboardProfilesChanged)
+    def keyboardProfile(self) -> str:
+        return self._active
+
+    @Slot(str, result=str)
+    def keyboardProfileProblem(self, name: str) -> str:
+        if name in self._profile_names:
+            return "A keyboard profile with this name already exists"
+        return valid_profile_name(name) or ""
+
+    @Slot(str)
+    def switchKeyboardProfile(self, name: str) -> None:
+        if name == self._active or name not in self._profile_names:
+            return
+        serial = self.session.serial
+        self.write(lambda: self.session.api.switch_keyboard_profile(serial, name), f"Switched to keyboard profile {name}")
+
+    @Slot(str)
+    def newKeyboardProfile(self, name: str) -> None:
+        problem = self.keyboardProfileProblem(name)
+        if problem:
+            self.session.report_message(problem, error=True)
+            return
+        serial = self.session.serial
+        self.write(lambda: self.session.api.new_keyboard_profile(serial, name), f"Keyboard profile {name} created")
+
+    @Slot(str)
+    def deleteKeyboardProfile(self, name: str) -> None:
+        if name == "default" or name not in self._profile_names:
+            self.session.report_message("The default keyboard profile cannot be deleted", error=True)
+            return
+        serial = self.session.serial
+        self.write(lambda: self.session.api.delete_keyboard_profile(serial, name), f"Keyboard profile {name} deleted")
 
 
 def _natural(text: str) -> tuple:

@@ -4,7 +4,7 @@ import QtQuick.Layouts
 import "../theme"
 import "../components"
 
-// Sensor and power settings; each change is sent right away.
+// Simple device settings; each change is sent right away.
 Item {
     id: root
     property var controller
@@ -49,7 +49,9 @@ Item {
                 RowLayout {
                     id: settingRow
                     required property var modelData
+                    readonly property bool choice: modelData.kind === "choice" || modelData.kind === "textChoice"
                     spacing: 18
+                    opacity: modelData.enabled ? 1 : 0.5
                     Text {
                         Layout.preferredWidth: 240
                         text: settingRow.modelData.title
@@ -57,19 +59,37 @@ Item {
                         font.pixelSize: Theme.fontNormal
                     }
                     DarkComboBox {
-                        visible: settingRow.modelData.kind === "choice"
+                        visible: settingRow.choice
                         Layout.preferredWidth: 220
-                        enabled: !root.controller.busy
-                        model: settingRow.modelData.options
+                        enabled: !root.controller.busy && settingRow.modelData.enabled
+                        model: settingRow.choice ? settingRow.modelData.options : []
                         currentIndex: root.indexIn(model, settingRow.modelData.value)
                         displayText: currentIndex < 0 ? "Not set" : currentText
                         onActivated: index => root.controller.apply(settingRow.modelData.key, model[index].value)
                     }
                     DarkSwitch {
                         visible: settingRow.modelData.kind === "toggle"
-                        enabled: !root.controller.busy
+                        enabled: !root.controller.busy && settingRow.modelData.enabled
                         checked: settingRow.modelData.value === 1
                         onToggled: root.controller.apply(settingRow.modelData.key, checked ? 1 : 0)
+                    }
+                    DarkSlider {
+                        id: slider
+                        visible: settingRow.modelData.kind === "slider"
+                        Layout.preferredWidth: 220
+                        enabled: !root.controller.busy && settingRow.modelData.enabled
+                        from: settingRow.modelData.min
+                        to: Math.max(settingRow.modelData.min + 1, settingRow.modelData.max)
+                        stepSize: 1
+                        value: settingRow.modelData.value
+                        // send once the handle is let go, not on every step
+                        onPressedChanged: if (!pressed) root.controller.apply(settingRow.modelData.key, Math.round(value))
+                    }
+                    Text {
+                        visible: settingRow.modelData.kind === "slider"
+                        text: Math.round(slider.value)
+                        color: Theme.accent
+                        font.pixelSize: Theme.fontNormal
                     }
                 }
             }

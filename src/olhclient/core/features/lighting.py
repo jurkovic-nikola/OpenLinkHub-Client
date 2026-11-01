@@ -4,11 +4,13 @@ from typing import Any
 
 from PySide6.QtCore import Property, QObject, Signal, Slot
 
-from olhclient.api.models import Lighting, MouseState
+from olhclient.api.models import DeviceState, Lighting
 from olhclient.core.features.base import FeatureController
 from olhclient.core.listmodel import DictListModel
 
 ZONE_ROLES = ("zoneIndex", "name", "color")
+#: device kinds with a zoneColors endpoint (/api/<kind>/zoneColors)
+ZONE_KINDS = ("mouse", "headset", "controller")
 
 
 def effect_title(effect: str) -> str:
@@ -31,9 +33,13 @@ class LightingController(FeatureController):
         self._lighting: Lighting | None = None
         self._saving = False
 
-    def update(self, state: MouseState) -> None:
+    @classmethod
+    def supports(cls, state: DeviceState) -> bool:
+        return state.lighting is not None
+
+    def update(self, state: DeviceState) -> None:
         lighting = state.lighting
-        zones = lighting.zones if lighting else ()
+        zones = lighting.zones if lighting and state.kind.api in ZONE_KINDS else ()
         self._zones.set_items({"zoneIndex": z.index, "name": z.name, "color": z.color} for z in zones)
         if lighting != self._lighting:
             self._lighting = lighting
@@ -62,13 +68,35 @@ class LightingController(FeatureController):
         effects = self._lighting.effects if self._lighting else ()
         return [{"value": e, "text": effect_title(e)} for e in effects]
 
+    @Property(bool, notify=changed)
+    def hasBrightness(self) -> bool:
+        """A 0-100 slider; otherwise see brightnessModes."""
+        return bool(self._lighting and self._lighting.brightness is not None)
+
     @Property(int, notify=changed)
     def brightness(self) -> int:
-        return self._lighting.brightness if self._lighting else 0
+        return (self._lighting.brightness or 0) if self._lighting else 0
+
+    @Property("QVariantList", notify=changed)
+    def brightnessModes(self) -> list[dict[str, Any]]:
+        modes = self._lighting.brightness_modes if self._lighting else {}
+        return [{"value": value, "text": text} for value, text in modes.items()]
+
+    @Property(int, notify=changed)
+    def brightnessMode(self) -> int:
+        return self._lighting.brightness_mode if self._lighting else 0
+
+    @Property(bool, notify=changed)
+    def hasRgbCluster(self) -> bool:
+        return bool(self._lighting and self._lighting.rgb_cluster is not None)
 
     @Property(bool, notify=changed)
     def rgbCluster(self) -> bool:
         return bool(self._lighting and self._lighting.rgb_cluster)
+
+    @Property(bool, notify=changed)
+    def hasOpenRgb(self) -> bool:
+        return bool(self._lighting and self._lighting.openrgb is not None)
 
     @Property(bool, notify=changed)
     def openRgb(self) -> bool:
@@ -90,7 +118,7 @@ class LightingController(FeatureController):
 
     @Slot(int)
     def setBrightness(self, percent: int) -> None:
-        if not self._lighting or percent == self._lighting.brightness:
+        if not self._lighting or self._lighting.brightness is None or percent == self._lighting.brightness:
             return
         if not 0 <= percent <= 100:
             self.session.report_message("Brightness must be between 0 and 100", error=True)
@@ -98,9 +126,20 @@ class LightingController(FeatureController):
         serial = self.session.serial
         self._apply(lambda: self.session.api.set_brightness(serial, percent), f"Brightness set to {percent} %")
 
+    @Slot(int)
+    def setBrightnessMode(self, mode: int) -> None:
+        if not self._lighting or mode == self._lighting.brightness_mode:
+            return
+        text = self._lighting.brightness_modes.get(mode)
+        if text is None:
+            self.session.report_message("Unknown brightness", error=True)
+            return
+        serial = self.session.serial
+        self._apply(lambda: self.session.api.set_brightness_mode(serial, mode), f"Brightness set to {text}")
+
     @Slot(bool)
     def setRgbCluster(self, enabled: bool) -> None:
-        if not self._lighting or enabled == self._lighting.rgb_cluster:
+        if not self._lighting or self._lighting.rgb_cluster is None or enabled == self._lighting.rgb_cluster:
             return
         serial = self.session.serial
         self._apply(
@@ -110,7 +149,7 @@ class LightingController(FeatureController):
 
     @Slot(bool)
     def setOpenRgb(self, enabled: bool) -> None:
-        if not self._lighting or enabled == self._lighting.openrgb:
+        if not self._lighting or self._lighting.openrgb is None or enabled == self._lighting.openrgb:
             return
         serial = self.session.serial
         self._apply(
@@ -137,10 +176,10 @@ class LightingController(FeatureController):
         if not changes:
             self.session.report_message("No colour changes to save")
             return
-        serial = self.session.serial
+        serial, kind = self.session.serial, self.session.state.kind.api
         self._set_saving(True)
         self.write(
-            lambda: self.session.api.save_zone_colors(serial, changes),
+            lambda: self.session.api.save_zone_colors(serial, changes, kind),
             "Zone colours saved",
             done=lambda ok: self._set_saving(False),
         )

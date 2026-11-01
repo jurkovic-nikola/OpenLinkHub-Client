@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Callable
 
 from PySide6.QtCore import QObject
 
-from olhclient.api.models import MouseState
+from olhclient.api.models import DeviceState
 
 if TYPE_CHECKING:
     from olhclient.core.session import DeviceSession
@@ -17,7 +17,12 @@ class FeatureController(QObject):
         super().__init__(session)
         self.session = session
 
-    def update(self, state: MouseState) -> None:
+    @classmethod
+    def supports(cls, state: DeviceState) -> bool:
+        """Whether the device JSON offers this feature at all."""
+        raise NotImplementedError
+
+    def update(self, state: DeviceState) -> None:
         """Called whenever fresh device data arrived."""
         raise NotImplementedError
 

@@ -12,20 +12,12 @@ from urllib.parse import urlsplit
 
 import httpx
 
+from olhclient.api.models import DeviceInfo
 from olhclient.api.receiver_page import parse_receiver_page
 
 INPUT_KINDS = ("media", "keyboard", "mouse")
 
-#: request field -> endpoint under /api/mouse/ for single-value mouse settings
-MOUSE_SETTINGS = {
-    "pollingRate": "pollingRate",
-    "liftHeight": "liftHeight",
-    "sleepMode": "sleep",
-    "angleSnapping": "angleSnapping",
-    "buttonOptimization": "buttonOptimization",
-}
-
-#: product names OpenLinkHub gives the (hidden) Slipstream receivers in /api/devices
+#: product names OpenLinkHub gives the (hidden) Slipstream receivers
 RECEIVER_PRODUCTS = ("SLIPSTREAM", "SLIPSTREAM V2")
 
 
@@ -127,9 +119,10 @@ class ApiClient:
 
     # -- reads -------------------------------------------------------------
 
-    def list_mice(self) -> dict[str, str]:
-        """Return ``{serial: product name}`` for every connected mouse."""
-        return self._call("GET", "/api/devices/mouse").get("data") or {}
+    def list_devices(self) -> dict[str, DeviceInfo]:
+        """Every device OpenLinkHub knows, hidden ones (receivers, clusters) included."""
+        devices = self._request("GET", "/api/").get("device") or {}
+        return {serial: DeviceInfo.from_json(serial, data or {}) for serial, data in devices.items()}
 
     def get_device(self, serial: str) -> dict[str, Any]:
         # This endpoint never sets status=1; presence of "device" means success.
@@ -138,19 +131,6 @@ class ApiClient:
         if not device:
             raise ApiError(body.get("message") or f"Device {serial} not found")
         return device
-
-    def list_receivers(self) -> dict[str, str]:
-        """Return ``{serial: product name}`` for every Slipstream receiver.
-
-        Receivers are hidden from the OpenLinkHub dashboard, but /api/devices
-        still lists them.
-        """
-        devices = self._request("GET", "/api/devices/").get("devices") or {}
-        return {
-            serial: device.get("Product", "")
-            for serial, device in devices.items()
-            if device.get("Hidden") and device.get("Product") in RECEIVER_PRODUCTS
-        }
 
     def get_receiver(self, serial: str) -> dict[str, Any]:
         """Receiver JSON; read from its dashboard page while the API cannot encode it."""
@@ -175,6 +155,11 @@ class ApiClient:
         data = self._call("GET", "/api/macro/").get("data") or {}
         return {int(macro_id): macro.get("name", str(macro_id)) for macro_id, macro in data.items()}
 
+    def temperature_profiles(self) -> list[str]:
+        """Names of the fan/pump speed profiles (this endpoint answers with status 0)."""
+        data = self._request("GET", "/api/temperatures/").get("data") or {}
+        return sorted(data, key=str.lower)
+
     def battery_levels(self) -> dict[str, int]:
         data = self._call("GET", "/api/batteryStats").get("data") or {}
         return {serial: int(stats.get("Level", 0)) for serial, stats in data.items()}
@@ -191,20 +176,22 @@ class ApiClient:
         action_value: int,
         press_and_hold: bool = False,
         on_release: bool = False,
+        modifier: int = 0,
+        kind: str = "mouse",
     ) -> None:
-        self._call(
-            "POST",
-            "/api/mouse/updateKeyAssignment",
-            {
-                "deviceId": serial,
-                "keyIndex": key_index,
-                "enabled": use_default,
-                "pressAndHold": press_and_hold,
-                "keyAssignmentType": action_type,
-                "keyAssignmentValue": action_value,
-                "onRelease": on_release,
-            },
-        )
+        """``kind`` is the endpoint family (mouse, headset, keyboard, controller); one server handler."""
+        payload = {
+            "deviceId": serial,
+            "keyIndex": key_index,
+            "enabled": use_default,
+            "pressAndHold": press_and_hold,
+            "keyAssignmentType": action_type,
+            "keyAssignmentValue": action_value,
+            "onRelease": on_release,
+        }
+        if modifier:
+            payload["keyAssignmentModifier"] = modifier
+        self._call("POST", f"/api/{kind}/updateKeyAssignment", payload)
 
     def save_dpi(self, serial: str, stages: dict[int, int]) -> None:
         self._call(
@@ -219,15 +206,20 @@ class ApiClient:
 
     # -- lighting ----------------------------------------------------------
 
-    def set_rgb_effect(self, serial: str, effect: str) -> None:
-        self._call("POST", "/api/color", {"deviceId": serial, "channelId": 0, "profile": effect})
+    def set_rgb_effect(self, serial: str, effect: str, channel: int = 0) -> None:
+        """``channel`` only matters for hubs; -1 is every channel."""
+        self._call("POST", "/api/color", {"deviceId": serial, "channelId": channel, "profile": effect})
 
     def set_brightness(self, serial: str, percent: int) -> None:
         self._call("POST", "/api/brightness/gradual", {"deviceId": serial, "brightness": percent})
 
-    def save_zone_colors(self, serial: str, colors: dict[int, str]) -> None:
+    def set_brightness_mode(self, serial: str, mode: int) -> None:
+        """Stepped brightness, a key of the device's ``Brightness`` map."""
+        self._call("POST", "/api/brightness", {"deviceId": serial, "brightness": mode})
+
+    def save_zone_colors(self, serial: str, colors: dict[int, str], kind: str = "mouse") -> None:
         """Set the colour per lighting zone; ``colors`` maps zone index -> ``#rrggbb``."""
-        self._call("POST", "/api/mouse/zoneColors", {"deviceId": serial, "colorZones": _rgb_map(colors)})
+        self._call("POST", f"/api/{kind}/zoneColors", {"deviceId": serial, "colorZones": _rgb_map(colors)})
 
     def set_rgb_cluster(self, serial: str, enabled: bool) -> None:
         self._call("POST", "/api/color/setCluster", {"deviceId": serial, "mode": int(enabled)})
@@ -237,10 +229,36 @@ class ApiClient:
 
     # -- device settings ---------------------------------------------------
 
-    def set_mouse_setting(self, serial: str, setting: str, value: int) -> None:
-        """Change one of :data:`MOUSE_SETTINGS` (``pollingRate``, ``liftHeight``...)."""
-        endpoint = MOUSE_SETTINGS[setting]
-        self._call("POST", f"/api/mouse/{endpoint}", {"deviceId": serial, setting: int(value)})
+    def set_setting(self, serial: str, endpoint: str, values: dict[str, Any]) -> None:
+        """POST ``values`` to ``/api/<endpoint>``, e.g. ``mouse/pollingRate`` with ``{"pollingRate": 2}``."""
+        self._call("POST", f"/api/{endpoint}", {"deviceId": serial, **values})
+
+    def set_equalizer(self, serial: str, bands: dict[int, float]) -> None:
+        """All ten bands, -12..12 dB."""
+        self._call("POST", "/api/headset/equalizer",
+                   {"deviceId": serial, "equalizers": {str(i): float(v) for i, v in bands.items()}})
+
+    # -- hubs and coolers ----------------------------------------------------
+
+    def set_speed_profile(self, serial: str, channel: int, profile: str) -> None:
+        """Fan/pump speed profile of one channel; -1 is every channel."""
+        self._call("POST", "/api/speed", {"deviceId": serial, "channelId": channel, "profile": profile})
+
+    def set_label(self, serial: str, channel: int, label: str, *, rgb_device: bool = False) -> None:
+        self._call("POST", "/api/label",
+                   {"deviceId": serial, "channelId": channel, "label": label, "deviceType": int(rgb_device)})
+
+    # -- keyboard profiles -------------------------------------------------
+
+    def new_keyboard_profile(self, serial: str, name: str) -> None:
+        """Copy the current key layout into a new keyboard profile."""
+        self._call("PUT", "/api/keyboard/profile/new", {"deviceId": serial, "keyboardProfileName": name, "new": True})
+
+    def switch_keyboard_profile(self, serial: str, name: str) -> None:
+        self._call("POST", "/api/keyboard/profile/change", {"deviceId": serial, "keyboardProfileName": name})
+
+    def delete_keyboard_profile(self, serial: str, name: str) -> None:
+        self._call("DELETE", "/api/keyboard/profile/delete", {"deviceId": serial, "keyboardProfileName": name})
 
     # -- user profiles -----------------------------------------------------
 

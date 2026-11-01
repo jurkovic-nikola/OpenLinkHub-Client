@@ -11,6 +11,8 @@ ListView {
     function valueText(item) {
         if (item.kind === "toggle")
             return item.value ? "On" : "Off"
+        if (item.kind === "slider")
+            return String(item.value)
         for (const option of item.options)
             if (option.value === item.value)
                 return option.text

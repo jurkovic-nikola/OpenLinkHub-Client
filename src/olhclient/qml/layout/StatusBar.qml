@@ -30,7 +30,8 @@ Rectangle {
         }
         Text {
             visible: root.session !== null
-            text: root.session ? root.session.product + "  ·  " + root.session.connectionMode : ""
+            text: !root.session ? "" : root.session.connectionMode ? root.session.product + "  ·  " + root.session.connectionMode
+                                                                   : root.session.product
             color: Theme.textDim
             font.pixelSize: Theme.fontSmall
         }

@@ -117,7 +117,23 @@ Item {
                 }
 
                 Text { text: "Brightness"; color: Theme.text; font.pixelSize: Theme.fontNormal }
+                // drivers have either a 0-100 slider or stepped brightness
+                DarkComboBox {
+                    visible: root.controller !== null && !root.controller.hasBrightness
+                    Layout.preferredWidth: 220
+                    model: root.controller ? root.controller.brightnessModes : []
+                    currentIndex: {
+                        for (let i = 0; i < model.length; ++i)
+                            if (model[i].value === root.controller.brightnessMode)
+                                return i
+                        return -1
+                    }
+                    displayText: currentIndex < 0 ? "Not available" : currentText
+                    enabled: model.length > 0
+                    onActivated: index => root.controller.setBrightnessMode(model[index].value)
+                }
                 RowLayout {
+                    visible: root.controller !== null && root.controller.hasBrightness
                     spacing: 10
                     DarkSlider {
                         id: brightnessSlider
@@ -143,16 +159,24 @@ Item {
                     }
                 }
 
-                Text { text: "RGB cluster"; color: Theme.text; font.pixelSize: Theme.fontNormal }
+                Text {
+                    visible: clusterSwitch.visible
+                    text: "RGB cluster"; color: Theme.text; font.pixelSize: Theme.fontNormal
+                }
                 DarkSwitch {
                     id: clusterSwitch
+                    visible: root.controller !== null && root.controller.hasRgbCluster
                     checked: root.controller ? root.controller.rgbCluster : false
                     onToggled: root.controller.setRgbCluster(checked)
                 }
 
-                Text { text: "OpenRGB integration"; color: Theme.text; font.pixelSize: Theme.fontNormal }
+                Text {
+                    visible: openRgbSwitch.visible
+                    text: "OpenRGB integration"; color: Theme.text; font.pixelSize: Theme.fontNormal
+                }
                 DarkSwitch {
                     id: openRgbSwitch
+                    visible: root.controller !== null && root.controller.hasOpenRgb
                     checked: root.controller ? root.controller.openRgb : false
                     onToggled: root.controller.setOpenRgb(checked)
                 }
@@ -172,6 +196,7 @@ Item {
 
             // -- zone colours -------------------------------------------------
             ColumnLayout {
+                visible: root.zones !== null && root.zones.count > 0
                 Layout.alignment: Qt.AlignTop
                 Layout.fillWidth: true
                 spacing: 10
@@ -211,7 +236,9 @@ Item {
                 Text {
                     Layout.fillWidth: true
                     Layout.topMargin: 4
-                    text: "Zone colours are used by the \"Mouse\" effect. The DPI LED always shows the colour of the active DPI stage."
+                    text: root.session && root.session.kind === "mouse"
+                          ? "Zone colours are used by the \"Mouse\" effect. The DPI LED always shows the colour of the active DPI stage."
+                          : "Which effects use the zone colours depends on the device."
                     wrapMode: Text.Wrap
                     color: Theme.textMuted
                     font.pixelSize: Theme.fontSmall

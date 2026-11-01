@@ -6,18 +6,29 @@ from typing import Any
 
 from PySide6.QtCore import QObject, Property, QTimer, Signal, Slot
 
-from olhclient.api.client import ApiClient, ApiError
-from olhclient.api.models import MouseState, ReceiverState
+from olhclient.api.client import RECEIVER_PRODUCTS, ApiClient, ApiError
+from olhclient.api.models import DeviceInfo, DeviceKind, DeviceState, ReceiverState
 from olhclient.core.artwork import lit, zone_colors
 from olhclient.core.listmodel import DictListModel
 from olhclient.core.receiver import ReceiverSession
-from olhclient.core.session import QML_DIR, DeviceSession, file_url
+from olhclient.core.session import QML_DIR, DeviceSession, file_url, kind_icon
 from olhclient.core.worker import Worker
 from olhclient.devices.base import DeviceModule
 from olhclient.devices.registry import Registry
 
 DEVICE_ROLES = ("serial", "product", "name", "thumbnail", "battery")
 RECEIVER_THUMBNAIL = QML_DIR / "images" / "slipstream.svg"
+KIND_ORDER = list(DeviceKind)
+
+
+def device_json(api: ApiClient, info: DeviceInfo) -> dict[str, Any]:
+    """The device JSON, or a minimal stand-in when OpenLinkHub cannot encode the device."""
+    try:
+        return api.get_device(info.serial)
+    except ApiError as exc:
+        if exc.auth_required:
+            raise
+        return {"serial": info.serial, "product": info.product}
 
 
 class Backend(QObject):
@@ -39,7 +50,8 @@ class Backend(QObject):
         self.worker.busyChanged.connect(self.busyChanged)
         self._devices = DictListModel(DEVICE_ROLES, self)
         self._modules: dict[str, DeviceModule] = {}
-        # serial -> thumbnail in the mouse's lighting colours, as last seen
+        self._infos: dict[str, DeviceInfo] = {}
+        # serial -> thumbnail (in the device's lighting colours when it has artwork), as last seen
         self._thumbnails: dict[str, str] = {}
         self._receivers: dict[str, str] = {}
         self._session: DeviceSession | None = None
@@ -66,50 +78,45 @@ class Backend(QObject):
         known = set(self._modules)
 
         def poll() -> dict[str, Any]:
-            mice = self.api.list_mice()
+            listed = self.api.list_devices()
+            devices = {serial: info for serial, info in listed.items() if not info.hidden}
+            receivers = {serial: info.product for serial, info in listed.items()
+                         if info.hidden and info.product in RECEIVER_PRODUCTS}
             # Only new devices need their full JSON to pick a module.
-            new = {serial: self.api.get_device(serial) for serial in mice if serial not in known}
+            new = {serial: device_json(self.api, info) for serial, info in devices.items() if serial not in known}
             try:
                 battery = self.api.battery_levels()
             except ApiError:
                 battery = {}
-            try:
-                receivers = self.api.list_receivers()
-            except ApiError:
-                receivers = {}
-            return {"mice": mice, "new": new, "battery": battery, "receivers": receivers}
+            return {"devices": devices, "new": new, "battery": battery, "receivers": receivers}
 
         self.worker.submit(poll, on_done=self._polled, on_error=self._poll_failed)
 
     def _polled(self, result: dict[str, Any]) -> None:
         self._refreshing = False
         self._set_connected(True, f"Connected to {self.api.base_url}")
-        mice: dict[str, str] = result["mice"]
+        self._infos = result["devices"]
         self._receivers = result["receivers"]
 
-        for serial, device in sorted(result["new"].items()):
-            try:
-                self._modules[serial] = self.registry.match(device)
-            except LookupError:
-                continue
-            colors = zone_colors(MouseState.from_json(device))
-            module = self._modules[serial]
-            self._thumbnails[serial] = file_url(lit(module.layout.thumbnail, colors, module.missing_buttons))
+        for serial, device in sorted(result["new"].items(), key=lambda kv: self._order(kv[0])):
+            module = self._modules[serial] = self.registry.match(device)
+            state = DeviceState.from_json(device, self._infos[serial].kind)
+            self._thumbnails[serial] = self._thumbnail(module, state)
             if self._session is None and self._receiver is None:
                 self._open_session(serial, device)
-        for gone in set(self._modules) - set(mice):
+        for gone in set(self._modules) - set(self._infos):
             del self._modules[gone]
             self._thumbnails.pop(gone, None)
 
-        mouse_items = [
+        device_items = [
             {
                 "serial": serial,
-                "product": product,
-                "name": self._modules[serial].name,
+                "product": info.product,
+                "name": self._modules[serial].name if self._modules[serial].layout.views else info.kind.title,
                 "thumbnail": self._thumbnails[serial],
                 "battery": result["battery"].get(serial, -1),
             }
-            for serial, product in sorted(mice.items())
+            for serial, info in sorted(self._infos.items(), key=lambda kv: self._order(kv[0]))
             if serial in self._modules
         ]
         receiver_items = [
@@ -122,7 +129,7 @@ class Backend(QObject):
             }
             for serial, product in sorted(self._receivers.items())
         ]
-        self._devices.set_items(mouse_items + receiver_items)
+        self._devices.set_items(device_items + receiver_items)
 
         if self._session is not None:
             if self._session.serial in self._modules:
@@ -134,8 +141,19 @@ class Backend(QObject):
                 self._receiver.reload()
             elif not self._receiver.restarting:  # while restarting it is briefly unlisted
                 self._select_first()
-        elif self._devices.count:  # no mouse session was opened, e.g. only a receiver is connected
+        elif self._devices.count:  # no session was opened, e.g. only a receiver is connected
             self.selectDevice(self._devices.get(0)["serial"])
+
+    def _order(self, serial: str) -> tuple[int, str]:
+        """Devices are listed by kind (mice first), then by name."""
+        info = self._infos[serial]
+        return KIND_ORDER.index(info.kind), info.product.lower()
+
+    @staticmethod
+    def _thumbnail(module: DeviceModule, state: DeviceState) -> str:
+        if module.layout.thumbnail is None:
+            return file_url(kind_icon(state.kind))
+        return file_url(lit(module.layout.thumbnail, zone_colors(state), module.missing_buttons))
 
     def _poll_failed(self, exc: Exception) -> None:
         self._refreshing = False
@@ -148,7 +166,8 @@ class Backend(QObject):
     # -- sessions ----------------------------------------------------------
 
     def _open_session(self, serial: str, device: dict[str, Any], macros: dict[int, str] | None = None) -> None:
-        session = DeviceSession(self.api, self.worker, self._modules[serial], MouseState.from_json(device), macros, self)
+        state = DeviceState.from_json(device, self._infos[serial].kind)
+        session = DeviceSession(self.api, self.worker, self._modules[serial], state, macros, self)
         session.message.connect(self.notify)
         session.stateChanged.connect(lambda: self._update_thumbnail(serial, session.thumbnail))
         self._set_session(session)
@@ -156,7 +175,7 @@ class Backend(QObject):
             session.reload()  # also loads macro names
 
     def _update_thumbnail(self, serial: str, thumbnail: str) -> None:
-        """Show the selected mouse's tile in its current lighting colours right away."""
+        """Show the selected device's tile in its current lighting colours right away."""
         if self._thumbnails.get(serial) == thumbnail or serial not in self._modules:
             return
         self._thumbnails[serial] = thumbnail
@@ -170,7 +189,7 @@ class Backend(QObject):
         self._set_session(None, receiver)
 
     def _set_session(self, session: DeviceSession | None, receiver: ReceiverSession | None = None) -> None:
-        """Show ``session`` (a mouse) or ``receiver``; at most one is selected."""
+        """Show ``session`` (a device) or ``receiver``; at most one is selected."""
         for old in (self._session, self._receiver):
             if old is not None:
                 old.deleteLater()
@@ -193,8 +212,10 @@ class Backend(QObject):
         if serial not in self._modules:
             return
 
+        info = self._infos[serial]
+
         def fetch() -> tuple[dict[str, Any], dict[int, str]]:
-            return self.api.get_device(serial), self.api.macros()
+            return device_json(self.api, info), self.api.macros()
 
         self.worker.submit(fetch, on_done=lambda r: self._open_session(serial, *r))
 

@@ -1,0 +1,301 @@
+{
+ "code": 200,
+ "device": {
+  "DeviceProfile": {
+   "Active": true,
+   "BrightnessSlider": 80,
+   "Keyboards": {
+    "default": {
+     "device": "K70 CORE RGB",
+     "key": "k70core-US",
+     "layout": "US",
+     "row": {
+      "1": {
+       "keys": {
+        "1": {
+         "actionCommand": 0,
+         "actionHold": false,
+         "actionType": 0,
+         "color": {
+          "blue": 255,
+          "green": 255,
+          "red": 255
+         },
+         "default": true,
+         "height": 50,
+         "keyName": "Esc",
+         "modifierKey": 0,
+         "onlyColor": false,
+         "width": 50
+        },
+        "2": {
+         "actionCommand": 0,
+         "actionHold": false,
+         "actionType": 0,
+         "color": {
+          "blue": 255,
+          "green": 255,
+          "red": 255
+         },
+         "default": true,
+         "height": 50,
+         "keyName": "F1",
+         "modifierKey": 0,
+         "onlyColor": false,
+         "width": 50
+        },
+        "3": {
+         "actionCommand": 0,
+         "actionHold": false,
+         "actionType": 0,
+         "color": {
+          "blue": 255,
+          "green": 255,
+          "red": 255
+         },
+         "default": true,
+         "height": 50,
+         "keyName": "F2",
+         "modifierKey": 0,
+         "onlyColor": false,
+         "width": 50
+        }
+       },
+       "top": 0
+      },
+      "2": {
+       "keys": {
+        "20": {
+         "actionCommand": 46,
+         "actionHold": false,
+         "actionType": 3,
+         "color": {
+          "blue": 255,
+          "green": 255,
+          "red": 255
+         },
+         "default": false,
+         "height": 50,
+         "keyName": "A",
+         "modifierKey": 1,
+         "onlyColor": false,
+         "width": 50
+        },
+        "21": {
+         "actionCommand": 0,
+         "actionHold": false,
+         "actionType": 0,
+         "color": {
+          "blue": 255,
+          "green": 255,
+          "red": 255
+         },
+         "default": true,
+         "height": 50,
+         "keyName": "Fn",
+         "modifierKey": 0,
+         "onlyColor": true,
+         "width": 50
+        },
+        "22": {
+         "actionCommand": 0,
+         "actionHold": false,
+         "actionType": 0,
+         "color": {
+          "blue": 255,
+          "green": 255,
+          "red": 255
+         },
+         "default": true,
+         "height": 50,
+         "keyName": "Space",
+         "modifierKey": 0,
+         "onlyColor": false,
+         "width": 50
+        }
+       },
+       "top": 60
+      }
+     },
+     "rows": 2,
+     "version": 1
+    },
+    "gaming": {
+     "device": "K70 CORE RGB",
+     "key": "k70core-US",
+     "layout": "US",
+     "row": {
+      "1": {
+       "keys": {
+        "1": {
+         "actionCommand": 0,
+         "actionHold": false,
+         "actionType": 0,
+         "color": {
+          "blue": 255,
+          "green": 255,
+          "red": 255
+         },
+         "default": true,
+         "height": 50,
+         "keyName": "Esc",
+         "modifierKey": 0,
+         "onlyColor": false,
+         "width": 50
+        },
+        "2": {
+         "actionCommand": 0,
+         "actionHold": false,
+         "actionType": 0,
+         "color": {
+          "blue": 255,
+          "green": 255,
+          "red": 255
+         },
+         "default": true,
+         "height": 50,
+         "keyName": "F1",
+         "modifierKey": 0,
+         "onlyColor": false,
+         "width": 50
+        },
+        "3": {
+         "actionCommand": 0,
+         "actionHold": false,
+         "actionType": 0,
+         "color": {
+          "blue": 255,
+          "green": 255,
+          "red": 255
+         },
+         "default": true,
+         "height": 50,
+         "keyName": "F2",
+         "modifierKey": 0,
+         "onlyColor": false,
+         "width": 50
+        }
+       },
+       "top": 0
+      },
+      "2": {
+       "keys": {
+        "20": {
+         "actionCommand": 0,
+         "actionHold": false,
+         "actionType": 0,
+         "color": {
+          "blue": 255,
+          "green": 255,
+          "red": 255
+         },
+         "default": true,
+         "height": 50,
+         "keyName": "A",
+         "modifierKey": 0,
+         "onlyColor": false,
+         "width": 50
+        },
+        "21": {
+         "actionCommand": 0,
+         "actionHold": false,
+         "actionType": 0,
+         "color": {
+          "blue": 255,
+          "green": 255,
+          "red": 255
+         },
+         "default": true,
+         "height": 50,
+         "keyName": "Fn",
+         "modifierKey": 0,
+         "onlyColor": true,
+         "width": 50
+        },
+        "22": {
+         "actionCommand": 0,
+         "actionHold": false,
+         "actionType": 0,
+         "color": {
+          "blue": 255,
+          "green": 255,
+          "red": 255
+         },
+         "default": true,
+         "height": 50,
+         "keyName": "Space",
+         "modifierKey": 0,
+         "onlyColor": false,
+         "width": 50
+        }
+       },
+       "top": 60
+      }
+     },
+     "rows": 2,
+     "version": 1
+    }
+   },
+   "Layout": "US",
+   "OpenRGBIntegration": false,
+   "PollingRate": 1,
+   "Product": "K70 CORE RGB",
+   "Profile": "default",
+   "Profiles": [
+    "default",
+    "gaming"
+   ],
+   "RGBCluster": false,
+   "RGBProfile": "keyboard",
+   "Serial": "K70CORE000TEST"
+  },
+  "KeyAssignmentModifiers": {
+   "0": "None",
+   "1": "Left Ctrl",
+   "2": "Left Shift",
+   "3": "Left Alt"
+  },
+  "KeyAssignmentTypes": {
+   "0": "None",
+   "1": "Media Keys",
+   "10": "Macro",
+   "3": "Keyboard"
+  },
+  "Layouts": [
+   "US",
+   "UK",
+   "BE"
+  ],
+  "PollingRates": {
+   "1": "1000 Hz / 1 msec",
+   "2": "500 Hz / 2 msec",
+   "4": "250 Hz / 4 msec",
+   "8": "125 Hz / 8 msec"
+  },
+  "ProductId": 7159,
+  "RGBModes": [
+   "colorpulse",
+   "colorshift",
+   "rainbow",
+   "static",
+   "liquid-temperature",
+   "keyboard"
+  ],
+  "Template": "k70core.html",
+  "VendorId": 6940,
+  "devices": {
+   "0": "K70 CORE RGB"
+  },
+  "firmware": "1.12.40",
+  "product": "K70 CORE RGB",
+  "profileOrder": [
+   "default"
+  ],
+  "serial": "K70CORE000TEST",
+  "userProfiles": {
+   "default": {
+    "Active": true
+   }
+  }
+ }
+}

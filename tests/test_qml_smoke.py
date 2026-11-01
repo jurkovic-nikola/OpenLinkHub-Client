@@ -112,3 +112,50 @@ def test_receiver_page(ui, qtbot, fake_api):
     settle(qtbot)
     assert backend.session is not None
     assert warnings == []
+
+
+@pytest.fixture
+def every_ui(qtbot, every_api):
+    backend = Backend(every_api, Registry.discover(), worker=Worker(synchronous=True))
+    engine = QQmlApplicationEngine()
+    warnings = []
+    engine.warnings.connect(lambda ws: warnings.extend(w.toString() for w in ws))
+    engine.setInitialProperties({"backend": backend})
+    engine.load(QUrl.fromLocalFile(str(QML_DIR / "Main.qml")))
+    assert engine.rootObjects(), warnings
+    window = engine.rootObjects()[0]
+    yield backend, window, warnings
+    window.close()
+    engine.deleteLater()
+
+
+def test_every_feature_on_every_device_kind(every_ui, qtbot, every_api):
+    from tests.conftest import COMMANDER, HEADSET, KEYBOARD
+
+    backend, window, warnings = every_ui
+    every_api.unreadable["BROKEN0TEST"] = "HS80 RGB WIRELESS"
+    backend.refresh()
+    settle(qtbot)
+    for row in range(backend.devices.count):
+        backend.selectDevice(backend.devices.get(row)["serial"])
+        settle(qtbot)
+        for feature in backend.session.features if backend.session else []:
+            window.setProperty("featureId", feature["id"])
+            settle(qtbot)
+    # writes while the new editors are shown
+    backend.selectDevice(HEADSET)
+    window.setProperty("featureId", "settings")
+    settle(qtbot)
+    backend.session.controller("settings").apply("sideTone", 1)
+    window.setProperty("featureId", "equalizer")
+    settle(qtbot)
+    backend.selectDevice(COMMANDER)
+    window.setProperty("featureId", "fans")
+    settle(qtbot)
+    backend.session.controller("fans").setSpeedProfile(-1, "Quiet")
+    backend.selectDevice(KEYBOARD)
+    window.setProperty("featureId", "keyboard_keys")
+    settle(qtbot)
+    backend.session.controller("keyboard_keys").switchKeyboardProfile("gaming")
+    settle(qtbot)
+    assert warnings == []

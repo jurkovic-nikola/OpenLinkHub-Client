@@ -6,15 +6,21 @@ from pathlib import Path
 from typing import Any
 
 from PySide6.QtCore import QObject, Property, QUrl, Signal, Slot
+from PySide6.QtGui import QDesktopServices
 
 from olhclient.api.client import ApiClient, ApiError
-from olhclient.api.models import ActionType, KeyAssignment, MouseState, valid_profile_name
+from olhclient.api.models import ActionType, DeviceKind, DeviceState, KeyAssignment, valid_profile_name
 from olhclient.core.artwork import lit, zone_colors
 from olhclient.core.features import CONTROLLERS, FeatureController
 from olhclient.core.worker import Worker
 from olhclient.devices.base import DeviceModule
 
 QML_DIR = Path(__file__).resolve().parent.parent / "qml"
+
+
+def kind_icon(kind: DeviceKind) -> Path:
+    """Stand-in picture for devices without artwork."""
+    return QML_DIR / "icons" / f"kind-{kind.value}.svg"
 
 
 def file_url(path: Path) -> str:
@@ -28,7 +34,7 @@ class DeviceSession(QObject):
     #: text, is_error
     message = Signal(str, bool)
 
-    def __init__(self, api: ApiClient, worker: Worker, module: DeviceModule, state: MouseState,
+    def __init__(self, api: ApiClient, worker: Worker, module: DeviceModule, state: DeviceState,
                  macros: dict[int, str] | None = None, parent: QObject | None = None):
         super().__init__(parent)
         self.api = api
@@ -36,14 +42,19 @@ class DeviceSession(QObject):
         self.module = module
         self.state = state
         self._macros: dict[int, str] = dict(macros or {})
+        # names of keyboard/media/mouse actions, for devices whose JSON lacks InputActions (keyboards)
+        self._input_names: dict[str, dict[int, str]] = {}
         self._selected = ""
         self._reloading = False
         self._reload_again = False
         self._profile_busy = False
         self._colors: dict[str, str] | None = None
         self._images: dict[str, str] = {}  # view id (and "thumbnail") -> lit artwork URL
+        # Features are fixed for the session: what the device offered when it was opened.
         self._controllers: dict[str, FeatureController] = {
-            feature.id: CONTROLLERS[feature](self) for feature in CONTROLLERS if feature in module.features
+            feature.id: controller(self)
+            for feature, controller in CONTROLLERS.items()
+            if (module.features is None or feature in module.features) and controller.supports(state)
         }
         self._apply(state)
         selectable = [k for k in self._key_order() if k not in module.locked_buttons | module.missing_buttons]
@@ -65,19 +76,27 @@ class DeviceSession(QObject):
         self._reloading = True
         serial = self.serial
 
-        def fetch() -> tuple[MouseState, dict[int, str]]:
-            state = MouseState.from_json(self.api.get_device(serial))
+        kind = self.state.kind
+
+        def fetch() -> tuple[DeviceState, dict[int, str], dict[str, dict[int, str]]]:
+            state = DeviceState.from_json(self.api.get_device(serial), kind)
             try:
                 macros = self.api.macros()
             except ApiError:
                 macros = self._macros
-            return state, macros
+            names = dict(self._input_names)
+            for source in self._missing_input_names(state) - set(names):
+                try:
+                    names[source] = self.api.input_actions(source)
+                except ApiError:
+                    pass
+            return state, macros, names
 
         self.worker.submit(fetch, on_done=self._reloaded, on_error=self._reload_failed, owner=self)
 
-    def _reloaded(self, result: tuple[MouseState, dict[int, str]]) -> None:
+    def _reloaded(self, result: tuple[DeviceState, dict[int, str], dict[str, dict[int, str]]]) -> None:
         self._reloading = False
-        state, self._macros = result
+        state, self._macros, self._input_names = result
         self._apply(state)
         self._maybe_reload_again()
 
@@ -91,7 +110,7 @@ class DeviceSession(QObject):
             self._reload_again = False
             self.reload()
 
-    def _apply(self, state: MouseState) -> None:
+    def _apply(self, state: DeviceState) -> None:
         self.state = state
         colors = zone_colors(state)
         if colors != self._colors:
@@ -99,10 +118,19 @@ class DeviceSession(QObject):
             layout = self.module.layout
             missing = self.module.missing_buttons
             self._images = {view.id: file_url(lit(view.image, colors, missing)) for view in layout.views}
-            self._images["thumbnail"] = file_url(lit(layout.thumbnail, colors, missing))
+            thumbnail = lit(layout.thumbnail, colors, missing) if layout.thumbnail else kind_icon(state.kind)
+            self._images["thumbnail"] = file_url(thumbnail)
         for controller in self._controllers.values():
             controller.update(state)
         self.stateChanged.emit()
+
+    @staticmethod
+    def _missing_input_names(state: DeviceState) -> set[str]:
+        """Action lists to fetch because the device JSON does not name its actions."""
+        if "InputActions" in state.raw:
+            return set()
+        return {ActionType(k.action_type).value_source for k in state.keys
+                if not k.use_default and k.action_type in (ActionType.MEDIA, ActionType.KEYBOARD, ActionType.MOUSE)}
 
     def describe_action(self, key: KeyAssignment) -> str:
         if key.use_default:
@@ -110,7 +138,8 @@ class DeviceSession(QObject):
         kind = self.state.assignment_types.get(key.action_type, f"Type {key.action_type}")
         if key.action_type in (ActionType.MEDIA, ActionType.KEYBOARD, ActionType.MOUSE):
             action = (self.state.raw.get("InputActions") or {}).get(str(key.action_value)) or {}
-            name = action.get("Name", f"#{key.action_value}")
+            source = ActionType(key.action_type).value_source
+            name = action.get("Name") or self._input_names.get(source, {}).get(key.action_value) or f"#{key.action_value}"
             return f"{kind}: {name}"
         if key.action_type == ActionType.MACRO:
             return f"Macro: {self._macros.get(key.action_value, f'#{key.action_value}')}"
@@ -143,6 +172,27 @@ class DeviceSession(QObject):
     def moduleId(self) -> str:
         return self.module.id
 
+    @Property(str, constant=True)
+    def kind(self) -> str:
+        return self.state.kind.value
+
+    @Property(str, constant=True)
+    def kindTitle(self) -> str:
+        return self.state.kind.title
+
+    @Property(str, notify=stateChanged)
+    def firmware(self) -> str:
+        return self.state.firmware
+
+    @Property(bool, constant=True)
+    def hasArtwork(self) -> bool:
+        return bool(self.module.layout.views)
+
+    @Slot()
+    def openInBrowser(self) -> None:
+        """OpenLinkHub's own page for this device, for what the client does not cover."""
+        QDesktopServices.openUrl(QUrl(f"{self.api.base_url}/device/{self.serial}"))
+
     @Property(str, notify=stateChanged)
     def profileName(self) -> str:
         return self.state.active_profile
@@ -161,6 +211,8 @@ class DeviceSession(QObject):
 
     @Property(str, notify=stateChanged)
     def connectionMode(self) -> str:
+        if not self.state.raw.get("DeviceProfile"):
+            return ""  # OpenLinkHub could not send the device data; nothing is known
         if not self.state.wireless:
             return "Wired"
         return "USB cable" if self.state.usb else "Wireless"
@@ -219,7 +271,7 @@ class DeviceSession(QObject):
     @Property("QVariantList", constant=True)
     def features(self) -> list[dict[str, Any]]:
         result = []
-        for feature in sorted(self.module.features, key=lambda f: list(CONTROLLERS).index(f)):
+        for feature in (f for f in CONTROLLERS if f.id in self._controllers):
             override = self.module.qml_override(feature)
             result.append(
                 {

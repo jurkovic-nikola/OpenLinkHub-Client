@@ -4,7 +4,7 @@ from typing import Any
 
 from PySide6.QtCore import Property, QObject, Signal, Slot
 
-from olhclient.api.models import MouseState
+from olhclient.api.models import DeviceState
 from olhclient.core.features.base import FeatureController
 from olhclient.core.listmodel import DictListModel
 
@@ -22,7 +22,11 @@ class DpiController(FeatureController):
         self._max = 0
         self._saving = False
 
-    def update(self, state: MouseState) -> None:
+    @classmethod
+    def supports(cls, state: DeviceState) -> bool:
+        return bool(state.stages) and state.kind.api == "mouse"
+
+    def update(self, state: DeviceState) -> None:
         self._stages.set_items(
             {
                 "stageIndex": stage.index,

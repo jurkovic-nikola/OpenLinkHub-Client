@@ -8,6 +8,15 @@ ListView {
     property var controller
     property var session
 
+    function brightnessText() {
+        if (controller.hasBrightness)
+            return controller.brightness + " %"
+        for (const mode of controller.brightnessModes)
+            if (mode.value === controller.brightnessMode)
+                return mode.text
+        return "—"
+    }
+
     topMargin: 10
     clip: true
     model: controller ? controller.zones : null
@@ -17,7 +26,7 @@ ListView {
         spacing: 2
         Repeater {
             model: root.controller && root.controller.available
-                   ? [["Effect", root.controller.effectTitle], ["Brightness", root.controller.brightness + " %"]]
+                   ? [["Effect", root.controller.effectTitle], ["Brightness", root.brightnessText()]]
                    : []
             RowLayout {
                 required property var modelData

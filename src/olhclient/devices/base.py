@@ -41,8 +41,8 @@ class DeviceView:
 
 @dataclass(frozen=True)
 class Layout:
-    views: tuple[DeviceView, ...]
-    thumbnail: Path
+    views: tuple[DeviceView, ...] = ()
+    thumbnail: Path | None = None  # None: the client shows an icon for the device kind
     button_labels: dict[str, str] = field(default_factory=dict)
     # Rows of button names of a grid on the device, e.g. the 3x4 keypad of an MMO
     # mouse. Its buttons are reached through hotspots, not through the callout.
@@ -100,20 +100,26 @@ def load_layout(path: Path, asset_dirs: list[Path]) -> Layout:
 
 
 class DeviceModule:
-    """Describes one device model (or a set of models that look the same)."""
+    """Describes one device model (or a set of models that look the same).
+
+    A module is optional for a device: without one, the generic module shows
+    whatever features the device JSON offers. A module adds artwork, button
+    labels and limits.
+    """
 
     id: str = ""
     name: str = ""
-    features: frozenset[Feature] = frozenset()
+    # None: every feature the device JSON supports.
+    features: frozenset[Feature] | None = None
     # Buttons that are shown but cannot be remapped (e.g. left click).
     locked_buttons: frozenset[str] = frozenset()
     # Buttons OpenLinkHub reports that this model does not physically have. They are
     # left out of every list, and artwork elements with class="button-<name>" are dropped.
     missing_buttons: frozenset[str] = frozenset()
     dpi_step: int = 50
-    # Device settings (see core/features/settings.py) the hardware supports.
-    # Choice settings are only shown when the device JSON lists their options.
-    settings: frozenset[str] = frozenset()
+    # Device settings (keys in core/features/settings.py) the hardware supports; None: all
+    # the device JSON offers. Choice settings are only shown when the JSON lists their options.
+    settings: frozenset[str] | None = None
 
     def __init__(self, layout: Layout):
         self.layout = layout

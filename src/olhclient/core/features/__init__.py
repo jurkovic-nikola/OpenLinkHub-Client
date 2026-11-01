@@ -4,15 +4,21 @@ from __future__ import annotations
 
 from olhclient.core.features.base import FeatureController
 from olhclient.core.features.dpi import DpiController
-from olhclient.core.features.key_remap import KeyRemapController
+from olhclient.core.features.equalizer import EqualizerController
+from olhclient.core.features.fans import FansController
+from olhclient.core.features.key_remap import KeyboardKeysController, KeyRemapController
 from olhclient.core.features.lighting import LightingController
 from olhclient.core.features.settings import SettingsController
 from olhclient.devices.features import Feature
 
+#: In display order.
 CONTROLLERS: dict[Feature, type[FeatureController]] = {
     Feature.KEY_REMAP: KeyRemapController,
+    Feature.KEYBOARD_KEYS: KeyboardKeysController,
     Feature.DPI: DpiController,
     Feature.LIGHTING: LightingController,
+    Feature.FANS: FansController,
+    Feature.EQUALIZER: EqualizerController,
     Feature.SETTINGS: SettingsController,
 }
 

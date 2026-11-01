@@ -1,0 +1,140 @@
+{
+ "code": 200,
+ "device": {
+  "DeviceProfile": {
+   "Active": true,
+   "Labels": {
+    "0": "Pump"
+   },
+   "Product": "iCUE COMMANDER CORE",
+   "RGBProfiles": {
+    "0": "colorshift",
+    "1": "static"
+   },
+   "Serial": "COMMANDER0TEST",
+   "SpeedProfiles": {
+    "0": "aioPump",
+    "1": "Normal",
+    "2": "Normal"
+   }
+  },
+  "ProductId": 3100,
+  "RGBModes": [
+   "colorpulse",
+   "colorshift",
+   "rainbow",
+   "static",
+   "liquid-temperature"
+  ],
+  "Template": "cc.html",
+  "VendorId": 6940,
+  "devices": {
+   "0": {
+    "HasSpeed": true,
+    "HasTemps": true,
+    "IsTemperatureProbe": false,
+    "channelId": 0,
+    "description": "AIO Pump",
+    "deviceId": "dev0",
+    "label": "Pump",
+    "name": "AIO Pump",
+    "profile": "aioPump",
+    "rgb": "static",
+    "rpm": 2410,
+    "temperature": 31.4,
+    "temperatureString": "31.4 °C",
+    "type": 0
+   },
+   "1": {
+    "HasSpeed": true,
+    "HasTemps": false,
+    "IsTemperatureProbe": false,
+    "channelId": 1,
+    "description": "Fan 1",
+    "deviceId": "dev1",
+    "label": "",
+    "name": "Fan 1",
+    "profile": "Normal",
+    "rgb": "static",
+    "rpm": 980,
+    "temperature": 0.0,
+    "temperatureString": "0.0 °C",
+    "type": 0
+   },
+   "2": {
+    "HasSpeed": true,
+    "HasTemps": false,
+    "IsTemperatureProbe": false,
+    "channelId": 2,
+    "description": "Fan 2",
+    "deviceId": "dev2",
+    "label": "",
+    "name": "Fan 2",
+    "profile": "Normal",
+    "rgb": "static",
+    "rpm": 1012,
+    "temperature": 0.0,
+    "temperatureString": "0.0 °C",
+    "type": 0
+   },
+   "7": {
+    "HasSpeed": false,
+    "HasTemps": true,
+    "IsTemperatureProbe": true,
+    "channelId": 7,
+    "description": "Temperature Probe 1",
+    "deviceId": "dev7",
+    "label": "",
+    "name": "Temperature Probe 1",
+    "profile": "",
+    "rgb": "static",
+    "rpm": 0,
+    "temperature": 29.8,
+    "temperatureString": "29.8 °C",
+    "type": 0
+   }
+  },
+  "firmware": "2.10.219",
+  "product": "iCUE COMMANDER CORE",
+  "rgbDevices": {
+   "0": {
+    "HasSpeed": false,
+    "HasTemps": false,
+    "IsTemperatureProbe": false,
+    "channelId": 0,
+    "description": "Pump LED ring",
+    "deviceId": "dev0",
+    "label": "",
+    "name": "Pump LED ring",
+    "profile": "",
+    "rgb": "colorshift",
+    "rpm": 0,
+    "temperature": 0.0,
+    "temperatureString": "0.0 °C",
+    "type": 0
+   },
+   "1": {
+    "HasSpeed": false,
+    "HasTemps": false,
+    "IsTemperatureProbe": false,
+    "channelId": 1,
+    "description": "Fan 1 LEDs",
+    "deviceId": "dev1",
+    "label": "",
+    "name": "Fan 1 LEDs",
+    "profile": "",
+    "rgb": "static",
+    "rpm": 0,
+    "temperature": 0.0,
+    "temperatureString": "0.0 °C",
+    "type": 0
+   }
+  },
+  "serial": "COMMANDER0TEST",
+  "userProfiles": {
+   "default": {
+    "Active": true
+   }
+  }
+ }
+}

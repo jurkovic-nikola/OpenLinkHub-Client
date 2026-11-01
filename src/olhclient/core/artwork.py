@@ -17,7 +17,7 @@ from pathlib import Path
 
 from PySide6.QtCore import QStandardPaths
 
-from olhclient.api.models import MouseState
+from olhclient.api.models import DeviceState
 
 SVG_NS = "http://www.w3.org/2000/svg"
 #: LEDs that are switched off
@@ -27,7 +27,7 @@ COLOR_ATTRIBUTES = ("fill", "stroke", "stop-color")
 ET.register_namespace("", SVG_NS)
 
 
-def zone_colors(state: MouseState) -> dict[str, str]:
+def zone_colors(state: DeviceState) -> dict[str, str]:
     """``{zone name (lower case): #rrggbb}`` the artwork should show."""
     lighting = state.lighting
     if lighting is None:

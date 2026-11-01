@@ -1,0 +1,61 @@
+{
+ "code": 200,
+ "device": {
+  "SE0000000000TEST": {
+   "DeviceType": 6,
+   "Firmware": "n/a",
+   "GetDevice": null,
+   "Hidden": false,
+   "Image": "icon-mouse.svg",
+   "Product": "SCIMITAR ELITE SE",
+   "ProductId": 11042,
+   "ProductType": 230,
+   "Serial": "SE0000000000TEST"
+  },
+  "SLIPSTREAM0TEST": {
+   "DeviceType": 0,
+   "Firmware": "7.6.59",
+   "GetDevice": null,
+   "Hidden": true,
+   "Image": "icon-dongle.svg",
+   "Product": "SLIPSTREAM",
+   "ProductId": 0,
+   "ProductType": 998,
+   "Serial": "SLIPSTREAM0TEST"
+  },
+  "VIRTUOSO00TEST": {
+   "DeviceType": 0,
+   "Firmware": "n/a",
+   "GetDevice": null,
+   "Hidden": false,
+   "Image": "icon-headphone.svg",
+   "Product": "VIRTUOSO MAX",
+   "ProductId": 0,
+   "ProductType": 302,
+   "Serial": "VIRTUOSO00TEST"
+  },
+  "VIRTUOSO0DNGL": {
+   "DeviceType": 0,
+   "Firmware": "0.25.140",
+   "GetDevice": null,
+   "Hidden": true,
+   "Image": "icon-dongle.svg",
+   "Product": "HEADSET DONGLE",
+   "ProductId": 0,
+   "ProductType": 302,
+   "Serial": "VIRTUOSO0DNGL"
+  },
+  "cluster": {
+   "DeviceType": 0,
+   "Firmware": "",
+   "GetDevice": null,
+   "Hidden": true,
+   "Image": "",
+   "Product": "Cluster",
+   "ProductId": 0,
+   "ProductType": 999,
+   "Serial": "cluster"
+  }
+ },
+ "status": 0
+}

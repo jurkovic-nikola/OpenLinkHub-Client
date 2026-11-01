@@ -17,12 +17,16 @@ Item {
     property int draftValue: 0
     property bool draftHold: false
     property bool draftRelease: false
+    property int draftModifier: 0
+    // keyboards: a modifier key can be combined with the action
+    readonly property var modifierOptions: controller ? controller.modifierOptions : []
     property var valueOptions: []
     // set when the user picks another action type: select the first value once options arrive
     property bool pickFirstValue: false
 
     readonly property bool dirty: key !== null && (draftDefault !== key.useDefault || draftType !== key.actionType
-        || draftValue !== key.actionValue || draftHold !== key.pressAndHold || draftRelease !== key.onRelease)
+        || draftValue !== key.actionValue || draftHold !== key.pressAndHold || draftRelease !== key.onRelease
+        || draftModifier !== key.modifier)
     readonly property string problem: controller ? controller.validate(draftType, draftHold, draftRelease) : ""
 
     function indexIn(options, value) {
@@ -40,6 +44,7 @@ Item {
         draftValue = key.actionValue
         draftHold = key.pressAndHold
         draftRelease = key.onRelease
+        draftModifier = key.modifier
         pickFirstValue = false
         loadOptions()
     }
@@ -95,7 +100,9 @@ Item {
                 }
                 Text {
                     Layout.fillWidth: true
-                    text: root.key ? "REMAP " + root.key.label.toUpperCase() + "   ·   " + root.key.name : "SELECT A BUTTON"
+                    text: !root.key ? "SELECT A BUTTON"
+                        : root.key.label === root.key.name ? "REMAP " + root.key.name.toUpperCase()
+                        : "REMAP " + root.key.label.toUpperCase() + "   ·   " + root.key.name
                     color: Theme.accent
                     font.pixelSize: Theme.fontLarge
                     elide: Text.ElideRight
@@ -111,7 +118,8 @@ Item {
                     enabled: root.key !== null && !root.key.locked && root.dirty && root.problem === ""
                              && !(root.controller && root.controller.saving)
                     onClicked: root.controller.save(root.key.keyIndex, root.draftDefault, root.draftType,
-                                                    root.draftValue, root.draftHold, root.draftRelease)
+                                                    root.draftValue, root.draftHold, root.draftRelease,
+                                                    root.draftModifier)
                 }
             }
         }
@@ -143,7 +151,7 @@ Item {
         Text {
             Layout.margins: 24
             visible: root.key !== null && root.key.locked
-            text: "This button is fixed and cannot be remapped on this device."
+            text: "This key is fixed and cannot be remapped on this device."
             color: Theme.textDim
             font.pixelSize: Theme.fontNormal
         }
@@ -185,6 +193,20 @@ Item {
                 displayText: !root.valueOptions.length ? "Loading…"
                            : currentIndex < 0 ? "Unknown (" + root.draftValue + ")" : currentText
                 onActivated: index => root.draftValue = root.valueOptions[index].value
+            }
+
+            Text {
+                visible: root.modifierOptions.length > 0
+                text: "Modifier"; color: Theme.text; font.pixelSize: Theme.fontNormal; opacity: root.draftDefault ? 0.5 : 1
+            }
+            DarkComboBox {
+                visible: root.modifierOptions.length > 0
+                Layout.preferredWidth: 300
+                enabled: !root.draftDefault
+                model: root.modifierOptions
+                currentIndex: root.indexIn(model, root.draftModifier)
+                displayText: currentIndex < 0 ? "None" : currentText
+                onActivated: index => root.draftModifier = model[index].value
             }
 
             Text { text: "Press and hold"; color: Theme.text; font.pixelSize: Theme.fontNormal; opacity: root.draftDefault ? 0.5 : 1 }

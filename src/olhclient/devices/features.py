@@ -21,8 +21,11 @@ class FeatureInfo:
 
 class Feature(Enum):
     KEY_REMAP = FeatureInfo("Key remapping", "features/KeyRemapList.qml", "features/KeyRemapEditor.qml")
+    KEYBOARD_KEYS = FeatureInfo("Keys", "features/KeyboardKeysList.qml", "features/KeyRemapEditor.qml")
     DPI = FeatureInfo("DPI", "features/DpiList.qml", "features/DpiEditor.qml")
     LIGHTING = FeatureInfo("Lighting", "features/LightingList.qml", "features/LightingEditor.qml")
+    FANS = FeatureInfo("Fans & pumps", "features/FansList.qml", "features/FansEditor.qml")
+    EQUALIZER = FeatureInfo("Equalizer", "features/EqualizerList.qml", "features/EqualizerEditor.qml")
     SETTINGS = FeatureInfo("Device settings", "features/SettingsList.qml", "features/SettingsEditor.qml")
 
     @property

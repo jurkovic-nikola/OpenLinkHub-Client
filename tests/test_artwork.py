@@ -3,7 +3,7 @@
 from pathlib import Path
 from urllib.parse import urlparse
 
-from olhclient.api.models import MouseState
+from olhclient.api.models import DeviceState
 from olhclient.core.artwork import UNLIT, lit, tint, zone_colors
 from olhclient.core.backend import Backend
 from olhclient.core.worker import Worker
@@ -24,11 +24,11 @@ def path_of(url: str) -> Path:
 
 
 def test_zone_colors(se_device):
-    assert zone_colors(MouseState.from_json(se_device)) == {"side": "#aa0802", "logo": "#aa0802"}
+    assert zone_colors(DeviceState.from_json(se_device)) == {"side": "#aa0802", "logo": "#aa0802"}
     se_device["DeviceProfile"]["RGBProfile"] = "off"
-    assert set(zone_colors(MouseState.from_json(se_device)).values()) == {UNLIT}
+    assert set(zone_colors(DeviceState.from_json(se_device)).values()) == {UNLIT}
     del se_device["DeviceProfile"]["RGBProfile"]  # no lighting support
-    assert zone_colors(MouseState.from_json(se_device)) == {}
+    assert zone_colors(DeviceState.from_json(se_device)) == {}
 
 
 def test_tint_only_touches_zone_elements():

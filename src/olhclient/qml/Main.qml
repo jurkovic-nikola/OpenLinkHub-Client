@@ -70,6 +70,7 @@ ApplicationWindow {
 
             ProfilesPanel {
                 Layout.fillWidth: true
+                visible: window.session !== null && window.session.profiles.length > 0
                 session: window.session
             }
 
@@ -83,6 +84,15 @@ ApplicationWindow {
                 Loader {
                     id: listLoader
                     anchors.fill: parent
+                }
+                Text {
+                    anchors.fill: parent
+                    anchors.margins: 16
+                    visible: window.session !== null && window.session.features.length === 0
+                    text: "The client has no settings for this device yet. Use \u201cOpen in OpenLinkHub\u201d to change it there."
+                    color: Theme.textDim
+                    font.pixelSize: Theme.fontNormal
+                    wrapMode: Text.WordWrap
                 }
             }
 
@@ -113,8 +123,15 @@ ApplicationWindow {
                 backend: window.backend
             }
 
+            // Devices without artwork get a compact header and more room for the editor.
+            DeviceHeader {
+                visible: window.receiver === null && window.session !== null && !window.session.hasArtwork
+                Layout.fillWidth: true
+                session: window.session
+            }
+
             DeviceView {
-                visible: window.receiver === null
+                visible: window.receiver === null && (window.session === null || window.session.hasArtwork)
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.minimumHeight: 300
@@ -150,13 +167,13 @@ ApplicationWindow {
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: !window.backend.connected ? "Cannot reach OpenLinkHub"
-                    : window.backend.devices.count === 0 ? "No supported mouse found" : "Loading device…"
+                    : window.backend.devices.count === 0 ? "No devices found" : "Loading device…"
                 color: Theme.text
                 font.pixelSize: Theme.fontHeader + 3
             }
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: window.backend.connected ? "Connect a mouse; the list refreshes automatically."
+                text: window.backend.connected ? "Connect a device; the list refreshes automatically."
                     : window.backend.status + "\nRetrying every few seconds."
                 horizontalAlignment: Text.AlignHCenter
                 color: Theme.textDim

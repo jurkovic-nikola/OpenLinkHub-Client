@@ -1,0 +1,2064 @@
+{
+ "code": 200,
+ "device": {
+  "BatteryLevel": 52,
+  "Brightness": {
+   "0": "RGB Profile",
+   "1": "33 %",
+   "2": "66 %",
+   "3": "100 %"
+  },
+  "ChangeableLedChannels": 6,
+  "Connected": true,
+  "CpuTemp": 0,
+  "Debug": true,
+  "DeviceProfile": {
+   "Active": true,
+   "Brightness": 0,
+   "BrightnessSlider": 100,
+   "DisableMicIndicator": 0,
+   "Equalizers": {
+    "1": {
+     "Name": "32",
+     "Value": 0
+    },
+    "10": {
+     "Name": "16K",
+     "Value": 0
+    },
+    "2": {
+     "Name": "64",
+     "Value": 0
+    },
+    "3": {
+     "Name": "125",
+     "Value": 0
+    },
+    "4": {
+     "Name": "250",
+     "Value": 0
+    },
+    "5": {
+     "Name": "500",
+     "Value": 0
+    },
+    "6": {
+     "Name": "1K",
+     "Value": 0
+    },
+    "7": {
+     "Name": "2K",
+     "Value": 0
+    },
+    "8": {
+     "Name": "4K",
+     "Value": 0
+    },
+    "9": {
+     "Name": "8K",
+     "Value": 0
+    }
+   },
+   "Label": "Headset",
+   "LeftWheel": 1,
+   "NoiseCancellation": 1,
+   "OriginalBrightness": 100,
+   "Path": "/opt/OpenLinkHub/database/profiles/VIRTUOSO00TEST.json",
+   "Product": "VIRTUOSO MAX",
+   "Profile": 0,
+   "RGBProfile": "colorshift",
+   "RgbOff": false,
+   "RightWheel": 2,
+   "Serial": "VIRTUOSO00TEST",
+   "SideTone": 0,
+   "SideToneValue": 56,
+   "SleepMode": 15,
+   "ZoneColors": {
+    "0": {
+     "Color": {
+      "Hex": "#ff7300",
+      "blue": 0,
+      "brightness": 1,
+      "green": 115,
+      "position": 0,
+      "red": 255,
+      "temperature": 0
+     },
+     "ColorIndex": [
+      0,
+      1,
+      2
+     ],
+     "Name": "Left Earcup 1"
+    },
+    "1": {
+     "Color": {
+      "Hex": "#ff7300",
+      "blue": 0,
+      "brightness": 1,
+      "green": 115,
+      "position": 0,
+      "red": 255,
+      "temperature": 0
+     },
+     "ColorIndex": [
+      3,
+      4,
+      5
+     ],
+     "Name": "Left Earcup 2"
+    },
+    "2": {
+     "Color": {
+      "Hex": "#ff7300",
+      "blue": 0,
+      "brightness": 1,
+      "green": 115,
+      "position": 0,
+      "red": 255,
+      "temperature": 0
+     },
+     "ColorIndex": [
+      6,
+      7,
+      8
+     ],
+     "Name": "Left Earcup 3"
+    },
+    "3": {
+     "Color": {
+      "Hex": "#ff7300",
+      "blue": 0,
+      "brightness": 1,
+      "green": 115,
+      "position": 0,
+      "red": 255,
+      "temperature": 0
+     },
+     "ColorIndex": [
+      9,
+      10,
+      11
+     ],
+     "Name": "Right Earcup 1"
+    },
+    "4": {
+     "Color": {
+      "Hex": "#ff7300",
+      "blue": 0,
+      "brightness": 1,
+      "green": 115,
+      "position": 0,
+      "red": 255,
+      "temperature": 0
+     },
+     "ColorIndex": [
+      12,
+      13,
+      14
+     ],
+     "Name": "Right Earcup 2"
+    },
+    "5": {
+     "Color": {
+      "Hex": "#ff7300",
+      "blue": 0,
+      "brightness": 1,
+      "green": 115,
+      "position": 0,
+      "red": 255,
+      "temperature": 0
+     },
+     "ColorIndex": [
+      15,
+      16,
+      17
+     ],
+     "Name": "Right Earcup 3"
+    }
+   }
+  },
+  "Endpoint": 9,
+  "Exit": false,
+  "GpuTemp": 0,
+  "LEDChannels": 6,
+  "Layouts": null,
+  "MuteIndicators": {
+   "0": "Disabled",
+   "1": "Enabled"
+  },
+  "MuteStatus": 0,
+  "NoiseCancellations": {
+   "0": "Off",
+   "1": "On",
+   "2": "Transparency"
+  },
+  "OriginalProfile": null,
+  "ProductId": 10752,
+  "RGBModes": [
+   "colorpulse",
+   "colorshift",
+   "colorwarp",
+   "cpu-temperature",
+   "flickering",
+   "gpu-temperature",
+   "gradient",
+   "headset",
+   "nebula",
+   "off",
+   "rainbow",
+   "pastelrainbow",
+   "rotator",
+   "static",
+   "storm",
+   "watercolor",
+   "wave"
+  ],
+  "Rgb": {
+   "defaultColor": {
+    "Hex": "",
+    "blue": 0,
+    "brightness": 1,
+    "green": 100,
+    "position": 0,
+    "red": 255,
+    "temperature": 0
+   },
+   "device": "VIRTUOSO MAX",
+   "profiles": {
+    "circle": {
+     "alternateColors": false,
+     "brightness": 1,
+     "end": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 1,
+      "green": 0,
+      "position": 0,
+      "red": 255,
+      "temperature": 0
+     },
+     "gradients": null,
+     "maxTemp": 0,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "minTemp": 0,
+     "perLed": false,
+     "profileName": "Circle",
+     "rgbDirection": 0,
+     "smoothness": 20,
+     "speed": 1,
+     "start": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 1,
+      "green": 0,
+      "position": 0,
+      "red": 255,
+      "temperature": 0
+     },
+     "version": 0
+    },
+    "circleshift": {
+     "alternateColors": false,
+     "brightness": 1,
+     "end": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 1,
+      "green": 255,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "gradients": null,
+     "maxTemp": 0,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "minTemp": 0,
+     "perLed": false,
+     "profileName": "Circle Shift",
+     "rgbDirection": 0,
+     "smoothness": 100,
+     "speed": 5,
+     "start": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 1,
+      "green": 0,
+      "position": 0,
+      "red": 255,
+      "temperature": 0
+     },
+     "version": 0
+    },
+    "colorpulse": {
+     "alternateColors": false,
+     "brightness": 1,
+     "end": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 1,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "gradients": null,
+     "maxTemp": 0,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "minTemp": 0,
+     "perLed": false,
+     "profileName": "Color Pulse",
+     "rgbDirection": 0,
+     "smoothness": 40,
+     "speed": 1,
+     "start": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 1,
+      "green": 0,
+      "position": 0,
+      "red": 255,
+      "temperature": 0
+     },
+     "version": 0
+    },
+    "colorshift": {
+     "alternateColors": false,
+     "brightness": 1,
+     "end": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 1,
+      "green": 100,
+      "position": 0,
+      "red": 255,
+      "temperature": 0
+     },
+     "gradients": null,
+     "maxTemp": 0,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "minTemp": 0,
+     "perLed": false,
+     "profileName": "Color Shift",
+     "rgbDirection": 0,
+     "smoothness": 50,
+     "speed": 4,
+     "start": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 1,
+      "green": 0,
+      "position": 0,
+      "red": 255,
+      "temperature": 0
+     },
+     "version": 0
+    },
+    "colorwarp": {
+     "alternateColors": false,
+     "brightness": 1,
+     "end": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "gradients": null,
+     "maxTemp": 0,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "minTemp": 0,
+     "perLed": false,
+     "profileName": "Color Warp",
+     "rgbDirection": 0,
+     "smoothness": 20,
+     "speed": 1,
+     "start": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "version": 0
+    },
+    "colorwave": {
+     "alternateColors": false,
+     "brightness": 0,
+     "end": {
+      "Hex": "",
+      "blue": 255,
+      "brightness": 0.5,
+      "green": 255,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "gradients": null,
+     "maxTemp": 0,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "minTemp": 0,
+     "perLed": false,
+     "profileName": "Color Wave",
+     "rgbDirection": 4,
+     "smoothness": 0,
+     "speed": 2,
+     "start": {
+      "Hex": "",
+      "blue": 255,
+      "brightness": 0.5,
+      "green": 255,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "version": 0
+    },
+    "controller": {
+     "alternateColors": false,
+     "brightness": 0,
+     "end": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "gradients": null,
+     "maxTemp": 0,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "minTemp": 0,
+     "perLed": false,
+     "profileName": "",
+     "rgbDirection": 0,
+     "smoothness": 0,
+     "speed": 0,
+     "start": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "version": 0
+    },
+    "cpu-temperature": {
+     "alternateColors": false,
+     "brightness": 1,
+     "end": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 1,
+      "green": 0,
+      "position": 0,
+      "red": 255,
+      "temperature": 95
+     },
+     "gradients": null,
+     "maxTemp": 95,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 1,
+      "green": 255,
+      "position": 0,
+      "red": 255,
+      "temperature": 50
+     },
+     "minTemp": 20,
+     "perLed": false,
+     "profileName": "CPU Temperature",
+     "rgbDirection": 0,
+     "smoothness": 40,
+     "speed": 4,
+     "start": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 1,
+      "green": 255,
+      "position": 0,
+      "red": 0,
+      "temperature": 20
+     },
+     "version": 1
+    },
+    "custom": {
+     "alternateColors": false,
+     "brightness": 0,
+     "end": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "gradients": null,
+     "maxTemp": 0,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "minTemp": 0,
+     "perLed": false,
+     "profileName": "",
+     "rgbDirection": 0,
+     "smoothness": 0,
+     "speed": 0,
+     "start": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "version": 0
+    },
+    "flickering": {
+     "alternateColors": false,
+     "brightness": 1,
+     "end": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 1,
+      "green": 100,
+      "position": 0,
+      "red": 255,
+      "temperature": 0
+     },
+     "gradients": null,
+     "maxTemp": 0,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "minTemp": 0,
+     "perLed": false,
+     "profileName": "Flickering",
+     "rgbDirection": 0,
+     "smoothness": 40,
+     "speed": 1,
+     "start": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 1,
+      "green": 0,
+      "position": 0,
+      "red": 255,
+      "temperature": 0
+     },
+     "version": 0
+    },
+    "gpu-temperature": {
+     "alternateColors": false,
+     "brightness": 1,
+     "end": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 1,
+      "green": 0,
+      "position": 0,
+      "red": 255,
+      "temperature": 80
+     },
+     "gradients": null,
+     "maxTemp": 80,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 1,
+      "green": 255,
+      "position": 0,
+      "red": 255,
+      "temperature": 50
+     },
+     "minTemp": 20,
+     "perLed": false,
+     "profileName": "GPU Temperature",
+     "rgbDirection": 0,
+     "smoothness": 40,
+     "speed": 4,
+     "start": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 1,
+      "green": 255,
+      "position": 0,
+      "red": 0,
+      "temperature": 20
+     },
+     "version": 1
+    },
+    "gradient": {
+     "alternateColors": false,
+     "brightness": 1,
+     "end": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "gradients": {
+      "0": {
+       "Hex": "",
+       "blue": 0,
+       "brightness": 1,
+       "green": 0,
+       "position": 0,
+       "red": 255,
+       "temperature": 0
+      },
+      "1": {
+       "Hex": "",
+       "blue": 0,
+       "brightness": 1,
+       "green": 255,
+       "position": 0.33,
+       "red": 0,
+       "temperature": 0
+      },
+      "2": {
+       "Hex": "",
+       "blue": 255,
+       "brightness": 1,
+       "green": 0,
+       "position": 0.66,
+       "red": 0,
+       "temperature": 0
+      },
+      "3": {
+       "Hex": "",
+       "blue": 0,
+       "brightness": 1,
+       "green": 255,
+       "position": 1,
+       "red": 255,
+       "temperature": 0
+      }
+     },
+     "maxTemp": 0,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "minTemp": 0,
+     "perLed": false,
+     "profileName": "Gradient",
+     "rgbDirection": 0,
+     "smoothness": 0,
+     "speed": 10,
+     "start": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "version": 0
+    },
+    "headset": {
+     "alternateColors": false,
+     "brightness": 0,
+     "end": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "gradients": null,
+     "maxTemp": 0,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "minTemp": 0,
+     "perLed": false,
+     "profileName": "",
+     "rgbDirection": 0,
+     "smoothness": 0,
+     "speed": 0,
+     "start": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "version": 0
+    },
+    "keyboard": {
+     "alternateColors": false,
+     "brightness": 0,
+     "end": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "gradients": null,
+     "maxTemp": 0,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "minTemp": 0,
+     "perLed": false,
+     "profileName": "",
+     "rgbDirection": 0,
+     "smoothness": 0,
+     "speed": 0,
+     "start": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "version": 0
+    },
+    "led": {
+     "alternateColors": false,
+     "brightness": 0,
+     "end": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "gradients": null,
+     "maxTemp": 0,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "minTemp": 0,
+     "perLed": true,
+     "profileName": "Per LED",
+     "rgbDirection": 0,
+     "smoothness": 0,
+     "speed": 0,
+     "start": {
+      "Hex": "",
+      "blue": 255,
+      "brightness": 0.5,
+      "green": 255,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "version": 0
+    },
+    "liquid-temperature": {
+     "alternateColors": false,
+     "brightness": 1,
+     "end": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0.5,
+      "green": 0,
+      "position": 0,
+      "red": 255,
+      "temperature": 60
+     },
+     "gradients": null,
+     "maxTemp": 60,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 1,
+      "green": 255,
+      "position": 0,
+      "red": 255,
+      "temperature": 40
+     },
+     "minTemp": 0,
+     "perLed": false,
+     "profileName": "Liquid Temperature",
+     "rgbDirection": 0,
+     "smoothness": 40,
+     "speed": 4,
+     "start": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0.5,
+      "green": 255,
+      "position": 0,
+      "red": 0,
+      "temperature": 20
+     },
+     "version": 1
+    },
+    "marquee": {
+     "alternateColors": false,
+     "brightness": 1,
+     "end": {
+      "Hex": "",
+      "blue": 255,
+      "brightness": 0.5,
+      "green": 255,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "gradients": null,
+     "maxTemp": 0,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "minTemp": 0,
+     "perLed": false,
+     "profileName": "Marquee",
+     "rgbDirection": 0,
+     "smoothness": 0,
+     "speed": 5,
+     "start": {
+      "Hex": "",
+      "blue": 255,
+      "brightness": 0.5,
+      "green": 255,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "version": 0
+    },
+    "mouse": {
+     "alternateColors": false,
+     "brightness": 0,
+     "end": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "gradients": null,
+     "maxTemp": 0,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "minTemp": 0,
+     "perLed": false,
+     "profileName": "",
+     "rgbDirection": 0,
+     "smoothness": 0,
+     "speed": 0,
+     "start": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "version": 0
+    },
+    "mousepad": {
+     "alternateColors": false,
+     "brightness": 0,
+     "end": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "gradients": null,
+     "maxTemp": 0,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "minTemp": 0,
+     "perLed": false,
+     "profileName": "",
+     "rgbDirection": 0,
+     "smoothness": 0,
+     "speed": 0,
+     "start": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "version": 0
+    },
+    "nebula": {
+     "alternateColors": false,
+     "brightness": 1,
+     "end": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "gradients": null,
+     "maxTemp": 0,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "minTemp": 0,
+     "perLed": false,
+     "profileName": "Nebula",
+     "rgbDirection": 0,
+     "smoothness": 0,
+     "speed": 5,
+     "start": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "version": 0
+    },
+    "off": {
+     "alternateColors": false,
+     "brightness": 0,
+     "end": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "gradients": null,
+     "maxTemp": 0,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "minTemp": 0,
+     "perLed": false,
+     "profileName": "",
+     "rgbDirection": 0,
+     "smoothness": 0,
+     "speed": 0,
+     "start": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "version": 0
+    },
+    "pastelrainbow": {
+     "alternateColors": false,
+     "brightness": 1,
+     "end": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "gradients": null,
+     "maxTemp": 0,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "minTemp": 0,
+     "perLed": false,
+     "profileName": "Pastel Rainbow",
+     "rgbDirection": 0,
+     "smoothness": 0,
+     "speed": 4,
+     "start": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "version": 0
+    },
+    "pastelspiralrainbow": {
+     "alternateColors": false,
+     "brightness": 1,
+     "end": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "gradients": null,
+     "maxTemp": 0,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "minTemp": 0,
+     "perLed": false,
+     "profileName": "Pastel Spiral Rainbow",
+     "rgbDirection": 0,
+     "smoothness": 0,
+     "speed": 2,
+     "start": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "version": 0
+    },
+    "probe-temperature": {
+     "alternateColors": false,
+     "brightness": 1,
+     "end": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0.5,
+      "green": 0,
+      "position": 0,
+      "red": 255,
+      "temperature": 0
+     },
+     "gradients": null,
+     "maxTemp": 60,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "minTemp": 0,
+     "perLed": false,
+     "profileName": "Probe Temperature",
+     "rgbDirection": 0,
+     "smoothness": 40,
+     "speed": 4,
+     "start": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0.5,
+      "green": 255,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "version": 0
+    },
+    "rain": {
+     "alternateColors": false,
+     "brightness": 0,
+     "end": {
+      "Hex": "",
+      "blue": 255,
+      "brightness": 0.5,
+      "green": 255,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "gradients": null,
+     "maxTemp": 0,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "minTemp": 0,
+     "perLed": false,
+     "profileName": "Rain",
+     "rgbDirection": 0,
+     "smoothness": 0,
+     "speed": 2,
+     "start": {
+      "Hex": "",
+      "blue": 255,
+      "brightness": 0.5,
+      "green": 255,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "version": 0
+    },
+    "rainbow": {
+     "alternateColors": false,
+     "brightness": 1,
+     "end": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "gradients": null,
+     "maxTemp": 0,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "minTemp": 0,
+     "perLed": false,
+     "profileName": "Rainbow",
+     "rgbDirection": 0,
+     "smoothness": 0,
+     "speed": 4,
+     "start": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "version": 0
+    },
+    "rainbowwave": {
+     "alternateColors": false,
+     "brightness": 0,
+     "end": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "gradients": null,
+     "maxTemp": 0,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "minTemp": 0,
+     "perLed": false,
+     "profileName": "Rainbow Wave",
+     "rgbDirection": 0,
+     "smoothness": 0,
+     "speed": 2,
+     "start": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "version": 0
+    },
+    "rotarystack": {
+     "alternateColors": false,
+     "brightness": 1,
+     "end": {
+      "Hex": "",
+      "blue": 255,
+      "brightness": 0.5,
+      "green": 255,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "gradients": null,
+     "maxTemp": 0,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "minTemp": 0,
+     "perLed": false,
+     "profileName": "Rotary Stack",
+     "rgbDirection": 0,
+     "smoothness": 0,
+     "speed": 5,
+     "start": {
+      "Hex": "",
+      "blue": 255,
+      "brightness": 0.5,
+      "green": 255,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "version": 0
+    },
+    "rotator": {
+     "alternateColors": false,
+     "brightness": 1,
+     "end": {
+      "Hex": "",
+      "blue": 152,
+      "brightness": 1,
+      "green": 100,
+      "position": 0,
+      "red": 255,
+      "temperature": 0
+     },
+     "gradients": null,
+     "maxTemp": 0,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "minTemp": 0,
+     "perLed": false,
+     "profileName": "Rotator",
+     "rgbDirection": 0,
+     "smoothness": 0,
+     "speed": 5,
+     "start": {
+      "Hex": "",
+      "blue": 149,
+      "brightness": 1,
+      "green": 100,
+      "position": 0,
+      "red": 255,
+      "temperature": 0
+     },
+     "version": 0
+    },
+    "sequential": {
+     "alternateColors": false,
+     "brightness": 1,
+     "end": {
+      "Hex": "",
+      "blue": 255,
+      "brightness": 0.5,
+      "green": 255,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "gradients": null,
+     "maxTemp": 0,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "minTemp": 0,
+     "perLed": false,
+     "profileName": "Sequential",
+     "rgbDirection": 0,
+     "smoothness": 0,
+     "speed": 5,
+     "start": {
+      "Hex": "",
+      "blue": 255,
+      "brightness": 0.5,
+      "green": 255,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "version": 0
+    },
+    "spinner": {
+     "alternateColors": false,
+     "brightness": 1,
+     "end": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 1,
+      "green": 100,
+      "position": 0,
+      "red": 255,
+      "temperature": 0
+     },
+     "gradients": null,
+     "maxTemp": 0,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "minTemp": 0,
+     "perLed": false,
+     "profileName": "Spinner",
+     "rgbDirection": 0,
+     "smoothness": 20,
+     "speed": 1,
+     "start": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 1,
+      "green": 0,
+      "position": 0,
+      "red": 255,
+      "temperature": 0
+     },
+     "version": 0
+    },
+    "spiralrainbow": {
+     "alternateColors": false,
+     "brightness": 1,
+     "end": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "gradients": null,
+     "maxTemp": 0,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "minTemp": 0,
+     "perLed": false,
+     "profileName": "Spiral Rainbow",
+     "rgbDirection": 0,
+     "smoothness": 0,
+     "speed": 2,
+     "start": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "version": 0
+    },
+    "stand": {
+     "alternateColors": false,
+     "brightness": 0,
+     "end": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "gradients": null,
+     "maxTemp": 0,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "minTemp": 0,
+     "perLed": false,
+     "profileName": "",
+     "rgbDirection": 0,
+     "smoothness": 0,
+     "speed": 0,
+     "start": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "version": 0
+    },
+    "static": {
+     "alternateColors": false,
+     "brightness": 1,
+     "end": {
+      "Hex": "",
+      "blue": 255,
+      "brightness": 0.5,
+      "green": 255,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "gradients": null,
+     "maxTemp": 0,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "minTemp": 0,
+     "perLed": false,
+     "profileName": "Static",
+     "rgbDirection": 0,
+     "smoothness": 20,
+     "speed": 4,
+     "start": {
+      "Hex": "",
+      "blue": 255,
+      "brightness": 0.5,
+      "green": 255,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "version": 0
+    },
+    "storm": {
+     "alternateColors": false,
+     "brightness": 1,
+     "end": {
+      "Hex": "",
+      "blue": 255,
+      "brightness": 0.5,
+      "green": 255,
+      "position": 0,
+      "red": 255,
+      "temperature": 0
+     },
+     "gradients": null,
+     "maxTemp": 0,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "minTemp": 0,
+     "perLed": false,
+     "profileName": "Storm",
+     "rgbDirection": 0,
+     "smoothness": 20,
+     "speed": 4,
+     "start": {
+      "Hex": "",
+      "blue": 77,
+      "brightness": 0.5,
+      "green": 62,
+      "position": 0,
+      "red": 32,
+      "temperature": 0
+     },
+     "version": 0
+    },
+    "tlk": {
+     "alternateColors": false,
+     "brightness": 0,
+     "end": {
+      "Hex": "",
+      "blue": 255,
+      "brightness": 0.5,
+      "green": 255,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "gradients": null,
+     "maxTemp": 0,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "minTemp": 0,
+     "perLed": false,
+     "profileName": "Type Lighting - Key",
+     "rgbDirection": 0,
+     "smoothness": 0,
+     "speed": 2,
+     "start": {
+      "Hex": "",
+      "blue": 255,
+      "brightness": 0.5,
+      "green": 255,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "version": 0
+    },
+    "tlr": {
+     "alternateColors": false,
+     "brightness": 0,
+     "end": {
+      "Hex": "",
+      "blue": 255,
+      "brightness": 0.5,
+      "green": 255,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "gradients": null,
+     "maxTemp": 0,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "minTemp": 0,
+     "perLed": false,
+     "profileName": "Type Lighting - Ripple",
+     "rgbDirection": 0,
+     "smoothness": 0,
+     "speed": 2,
+     "start": {
+      "Hex": "",
+      "blue": 255,
+      "brightness": 0.5,
+      "green": 255,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "version": 0
+    },
+    "visor": {
+     "alternateColors": false,
+     "brightness": 0,
+     "end": {
+      "Hex": "",
+      "blue": 255,
+      "brightness": 0.5,
+      "green": 255,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "gradients": null,
+     "maxTemp": 0,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "minTemp": 0,
+     "perLed": false,
+     "profileName": "Visor",
+     "rgbDirection": 0,
+     "smoothness": 0,
+     "speed": 2,
+     "start": {
+      "Hex": "",
+      "blue": 255,
+      "brightness": 0.5,
+      "green": 255,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "version": 0
+    },
+    "watercolor": {
+     "alternateColors": false,
+     "brightness": 1,
+     "end": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "gradients": null,
+     "maxTemp": 0,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "minTemp": 0,
+     "perLed": false,
+     "profileName": "Water Color",
+     "rgbDirection": 0,
+     "smoothness": 0,
+     "speed": 8,
+     "start": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "version": 0
+    },
+    "wave": {
+     "alternateColors": false,
+     "brightness": 1,
+     "end": {
+      "Hex": "",
+      "blue": 130,
+      "brightness": 1,
+      "green": 130,
+      "position": 0,
+      "red": 130,
+      "temperature": 0
+     },
+     "gradients": null,
+     "maxTemp": 0,
+     "middle": {
+      "Hex": "",
+      "blue": 0,
+      "brightness": 0,
+      "green": 0,
+      "position": 0,
+      "red": 0,
+      "temperature": 0
+     },
+     "minTemp": 0,
+     "perLed": false,
+     "profileName": "Wave",
+     "rgbDirection": 0,
+     "smoothness": 10,
+     "speed": 5,
+     "start": {
+      "Hex": "",
+      "blue": 232,
+      "brightness": 1,
+      "green": 143,
+      "position": 0,
+      "red": 65,
+      "temperature": 0
+     },
+     "version": 0
+    }
+   }
+  },
+  "SideToneModes": {
+   "0": "Disabled",
+   "1": "Enabled"
+  },
+  "SleepModes": {
+   "0": "Off",
+   "1": "1 minute",
+   "10": "10 minutes",
+   "15": "15 minutes",
+   "30": "30 minutes",
+   "5": "5 minutes",
+   "60": "1 hour"
+  },
+  "SlipstreamId": 10754,
+  "Template": "virtuosomaxW.html",
+  "VendorId": 6940,
+  "WheelOptions": {
+   "1": "System Volume",
+   "2": "Bluetooth Volume"
+  },
+  "ZoneAmount": 6,
+  "devices": null,
+  "firmware": "0.36.190",
+  "manufacturer": "",
+  "product": "VIRTUOSO MAX",
+  "serial": "VIRTUOSO00TEST",
+  "userProfiles": {
+   "default": {
+    "Active": true,
+    "Brightness": 0,
+    "BrightnessSlider": 100,
+    "DisableMicIndicator": 0,
+    "Equalizers": {
+     "1": {
+      "Name": "32",
+      "Value": 0
+     },
+     "10": {
+      "Name": "16K",
+      "Value": 0
+     },
+     "2": {
+      "Name": "64",
+      "Value": 0
+     },
+     "3": {
+      "Name": "125",
+      "Value": 0
+     },
+     "4": {
+      "Name": "250",
+      "Value": 0
+     },
+     "5": {
+      "Name": "500",
+      "Value": 0
+     },
+     "6": {
+      "Name": "1K",
+      "Value": 0
+     },
+     "7": {
+      "Name": "2K",
+      "Value": 0
+     },
+     "8": {
+      "Name": "4K",
+      "Value": 0
+     },
+     "9": {
+      "Name": "8K",
+      "Value": 0
+     }
+    },
+    "Label": "Headset",
+    "LeftWheel": 1,
+    "NoiseCancellation": 1,
+    "OriginalBrightness": 100,
+    "Path": "/opt/OpenLinkHub/database/profiles/VIRTUOSO00TEST.json",
+    "Product": "VIRTUOSO MAX",
+    "Profile": 0,
+    "RGBProfile": "colorshift",
+    "RgbOff": false,
+    "RightWheel": 2,
+    "Serial": "VIRTUOSO00TEST",
+    "SideTone": 0,
+    "SideToneValue": 56,
+    "SleepMode": 15,
+    "ZoneColors": {
+     "0": {
+      "Color": {
+       "Hex": "#ff7300",
+       "blue": 0,
+       "brightness": 1,
+       "green": 115,
+       "position": 0,
+       "red": 255,
+       "temperature": 0
+      },
+      "ColorIndex": [
+       0,
+       1,
+       2
+      ],
+      "Name": "Left Earcup 1"
+     },
+     "1": {
+      "Color": {
+       "Hex": "#ff7300",
+       "blue": 0,
+       "brightness": 1,
+       "green": 115,
+       "position": 0,
+       "red": 255,
+       "temperature": 0
+      },
+      "ColorIndex": [
+       3,
+       4,
+       5
+      ],
+      "Name": "Left Earcup 2"
+     },
+     "2": {
+      "Color": {
+       "Hex": "#ff7300",
+       "blue": 0,
+       "brightness": 1,
+       "green": 115,
+       "position": 0,
+       "red": 255,
+       "temperature": 0
+      },
+      "ColorIndex": [
+       6,
+       7,
+       8
+      ],
+      "Name": "Left Earcup 3"
+     },
+     "3": {
+      "Color": {
+       "Hex": "#ff7300",
+       "blue": 0,
+       "brightness": 1,
+       "green": 115,
+       "position": 0,
+       "red": 255,
+       "temperature": 0
+      },
+      "ColorIndex": [
+       9,
+       10,
+       11
+      ],
+      "Name": "Right Earcup 1"
+     },
+     "4": {
+      "Color": {
+       "Hex": "#ff7300",
+       "blue": 0,
+       "brightness": 1,
+       "green": 115,
+       "position": 0,
+       "red": 255,
+       "temperature": 0
+      },
+      "ColorIndex": [
+       12,
+       13,
+       14
+      ],
+      "Name": "Right Earcup 2"
+     },
+     "5": {
+      "Color": {
+       "Hex": "#ff7300",
+       "blue": 0,
+       "brightness": 1,
+       "green": 115,
+       "position": 0,
+       "red": 255,
+       "temperature": 0
+      },
+      "ColorIndex": [
+       15,
+       16,
+       17
+      ],
+      "Name": "Right Earcup 3"
+     }
+    }
+   }
+  }
+ },
+ "status": 0
+}

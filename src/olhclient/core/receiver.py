@@ -130,7 +130,8 @@ class ReceiverSession(QObject):
             self.reload()
 
         self.worker.submit(
-            lambda: self.api.set_mouse_setting(serial, "pollingRate", value), on_done=done, on_error=failed, owner=self
+            lambda: self.api.set_setting(serial, "mouse/pollingRate", {"pollingRate": value}),
+            on_done=done, on_error=failed, owner=self
         )
 
     def _restarted(self) -> None:

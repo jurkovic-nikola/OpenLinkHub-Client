@@ -18,6 +18,13 @@ FIXTURES = Path(__file__).parent / "fixtures"
 SE = "SE0000000000TEST"
 LEGACY = "RGBELITE00TEST"
 RECEIVER = "SLIPSTREAM0TEST"
+HEADSET = "VIRTUOSO00TEST"
+COMMANDER = "COMMANDER0TEST"
+LINK_HUB = "LINKHUB000TEST"
+KEYBOARD = "K70CORE000TEST"
+#: OpenLinkHub's icon per device kind, as GET /api/ reports it
+IMAGES = {"mouse": "icon-mouse.svg", "keyboard": "icon-keyboard.svg", "headset": "icon-headphone.svg",
+          "hub": "icon-device.svg"}
 
 
 def load_fixture(name: str) -> Any:
@@ -35,6 +42,13 @@ def legacy_device() -> dict[str, Any]:
 
 
 @pytest.fixture
+def other_devices() -> list[dict[str, Any]]:
+    """A headset, two hubs and a keyboard."""
+    names = ("device_virtuoso_max.json", "device_commander_core.json", "device_icue_link.json", "device_k70_core.json")
+    return [load_fixture(name)["device"] for name in names]
+
+
+@pytest.fixture
 def receiver_device() -> dict[str, Any]:
     from olhclient.api.receiver_page import parse_receiver_page
 
@@ -49,6 +63,8 @@ class FakeApi:
     def __init__(self, devices: list[dict[str, Any]], receivers: list[dict[str, Any]] = ()):
         self.devices = {d["serial"]: copy.deepcopy(d) for d in devices}
         self.receivers = {r["serial"]: copy.deepcopy(r) for r in receivers}
+        #: serials whose JSON OpenLinkHub cannot encode (GET /api/devices/{serial} has an empty body)
+        self.unreadable: dict[str, str] = {}
         self.calls: list[tuple] = []
         self.fail_with: Exception | None = None
 
@@ -56,17 +72,28 @@ class FakeApi:
         if self.fail_with is not None:
             raise self.fail_with
 
-    def list_mice(self) -> dict[str, str]:
+    def list_devices(self) -> dict[str, Any]:
+        from olhclient.api.models import DeviceInfo, DeviceState
+
         self._check()
-        return {serial: d["product"] for serial, d in self.devices.items()}
+        listed = {
+            serial: DeviceInfo.from_json(serial, {"Product": d["product"],
+                                                  "Image": IMAGES.get(DeviceState.from_json(d).kind.value, "")})
+            for serial, d in self.devices.items()
+        }
+        listed.update({serial: DeviceInfo.from_json(serial, {"Product": product, "Image": "icon-headphone.svg"})
+                       for serial, product in self.unreadable.items()})
+        listed.update({serial: DeviceInfo.from_json(serial, {"Product": "SLIPSTREAM", "Hidden": True})
+                       for serial in self.receivers})
+        return listed
 
     def get_device(self, serial: str) -> dict[str, Any]:
-        self._check()
-        return copy.deepcopy(self.devices[serial])
+        from olhclient.api.client import ApiError
 
-    def list_receivers(self) -> dict[str, str]:
         self._check()
-        return {serial: "SLIPSTREAM" for serial in self.receivers}
+        if serial in self.unreadable:
+            raise ApiError(f"Invalid response from /api/devices/{serial}")
+        return copy.deepcopy(self.devices[serial])
 
     def get_receiver(self, serial: str) -> dict[str, Any]:
         self._check()
@@ -85,7 +112,14 @@ class FakeApi:
     def update_key_assignment(self, serial: str, key_index: int, **kwargs: Any) -> None:
         self._check()
         self.calls.append(("update_key_assignment", serial, key_index, kwargs))
-        key = self.devices[serial]["KeyAssignment"][str(key_index)]
+        device = self.devices[serial]
+        if "KeyAssignment" in device:
+            key = device["KeyAssignment"][str(key_index)]
+        else:  # keyboard: the key in the active keyboard profile
+            profile = device["DeviceProfile"]
+            rows = profile["Keyboards"][profile["Profile"]]["row"].values()
+            key = next(row["keys"][str(key_index)] for row in rows if str(key_index) in row["keys"])
+            key["modifierKey"] = kwargs.get("modifier", 0)
         key.update(
             default=kwargs["use_default"],
             actionType=kwargs["action_type"],
@@ -111,19 +145,30 @@ class FakeApi:
     def _profile(self, serial: str) -> dict[str, Any]:
         return self.devices[serial]["DeviceProfile"]
 
-    def set_rgb_effect(self, serial: str, effect: str) -> None:
+    def set_rgb_effect(self, serial: str, effect: str, channel: int = 0) -> None:
         self._check()
-        self.calls.append(("set_rgb_effect", serial, effect))
-        self._profile(serial)["RGBProfile"] = effect
+        self.calls.append(("set_rgb_effect", serial, effect, channel))
+        device = self.devices[serial]
+        if "RGBProfile" in device["DeviceProfile"]:
+            device["DeviceProfile"]["RGBProfile"] = effect
+            return
+        for entry in self._channels(serial, rgb=True):
+            if channel in (-1, entry["channelId"]):
+                entry["rgb"] = effect
+
+    def set_brightness_mode(self, serial: str, mode: int) -> None:
+        self._check()
+        self.calls.append(("set_brightness_mode", serial, mode))
+        self._profile(serial)["Brightness"] = mode
 
     def set_brightness(self, serial: str, percent: int) -> None:
         self._check()
         self.calls.append(("set_brightness", serial, percent))
         self._profile(serial)["BrightnessSlider"] = percent
 
-    def save_zone_colors(self, serial: str, colors: dict[int, str]) -> None:
+    def save_zone_colors(self, serial: str, colors: dict[int, str], kind: str = "mouse") -> None:
         self._check()
-        self.calls.append(("save_zone_colors", serial, dict(colors)))
+        self.calls.append(("save_zone_colors", serial, dict(colors), kind))
         for index, color in colors.items():
             self._profile(serial)["ZoneColors"][str(index)]["Color"]["Hex"] = color
 
@@ -139,21 +184,69 @@ class FakeApi:
 
     # -- settings
 
-    FIELDS = {
-        "pollingRate": "PollingRate",
-        "liftHeight": "LiftHeight",
-        "sleepMode": "SleepMode",
-        "angleSnapping": "AngleSnapping",
-        "buttonOptimization": "ButtonOptimization",
-    }
+    def set_setting(self, serial: str, endpoint: str, values: dict[str, Any]) -> None:
+        from olhclient.core.features.settings import SPECS
 
-    def set_mouse_setting(self, serial: str, setting: str, value: int) -> None:
         self._check()
-        self.calls.append(("set_mouse_setting", serial, setting, value))
-        if serial in self.receivers:  # same endpoint, and the receiver restarts
-            self.receivers[serial]["DeviceProfile"]["PollingRate"] = value
+        self.calls.append(("set_setting", serial, endpoint, dict(values)))
+        if serial in self.receivers:  # same endpoint as a mouse, and the receiver restarts
+            self.receivers[serial]["DeviceProfile"]["PollingRate"] = values["pollingRate"]
             return
-        self._profile(serial)[self.FIELDS[setting]] = value
+        name = endpoint.split("/", 1)[1]
+        spec = next(s for s in SPECS if s.endpoint == name and s.field in values
+                    and all(values.get(k) == v for k, v in s.extra.items()))
+        self._profile(serial)[spec.current] = values[spec.field]
+
+    def set_equalizer(self, serial: str, bands: dict[int, float]) -> None:
+        self._check()
+        self.calls.append(("set_equalizer", serial, dict(bands)))
+        for index, value in bands.items():
+            self._profile(serial)["Equalizers"][str(index)]["Value"] = value
+
+    # -- hubs
+
+    def _channels(self, serial: str, *, rgb: bool = False) -> list[dict[str, Any]]:
+        device = self.devices[serial]
+        source = device.get("rgbDevices") if rgb and device.get("rgbDevices") else device.get("devices")
+        return list((source or {}).values())
+
+    def temperature_profiles(self) -> list[str]:
+        self._check()
+        return ["aioPump", "Normal", "Quiet"]
+
+    def set_speed_profile(self, serial: str, channel: int, profile: str) -> None:
+        self._check()
+        self.calls.append(("set_speed_profile", serial, channel, profile))
+        for entry in self._channels(serial):
+            if entry["HasSpeed"] and channel in (-1, entry["channelId"]):
+                entry["profile"] = profile
+
+    def set_label(self, serial: str, channel: int, label: str, *, rgb_device: bool = False) -> None:
+        self._check()
+        self.calls.append(("set_label", serial, channel, label, rgb_device))
+        entries = self._channels(serial, rgb=rgb_device)
+        next(e for e in entries if e["channelId"] == channel)["label"] = label
+
+    # -- keyboard profiles
+
+    def new_keyboard_profile(self, serial: str, name: str) -> None:
+        self._check()
+        self.calls.append(("new_keyboard_profile", serial, name))
+        profile = self._profile(serial)
+        profile["Keyboards"][name] = copy.deepcopy(profile["Keyboards"][profile["Profile"]])
+        profile["Profiles"].append(name)
+
+    def switch_keyboard_profile(self, serial: str, name: str) -> None:
+        self._check()
+        self.calls.append(("switch_keyboard_profile", serial, name))
+        self._profile(serial)["Profile"] = name
+
+    def delete_keyboard_profile(self, serial: str, name: str) -> None:
+        self._check()
+        self.calls.append(("delete_keyboard_profile", serial, name))
+        profile = self._profile(serial)
+        del profile["Keyboards"][name]
+        profile["Profiles"].remove(name)
 
     # -- user profiles
 
@@ -187,6 +280,12 @@ def fake_api(se_device, legacy_device, receiver_device) -> FakeApi:
     return FakeApi([se_device, legacy_device], [receiver_device])
 
 
+@pytest.fixture
+def every_api(se_device, legacy_device, other_devices, receiver_device) -> FakeApi:
+    """Every kind of device the fixtures have."""
+    return FakeApi([se_device, legacy_device, *other_devices], [receiver_device])
+
+
 @pytest.fixture(scope="session")
 def registry():
     from olhclient.devices.registry import Registry
@@ -197,14 +296,15 @@ def registry():
 @pytest.fixture
 def make_session(qtbot, fake_api, registry):
     """Build a DeviceSession on the fake API; ``session.messages`` collects its messages."""
-    from olhclient.api.models import MouseState
+    from olhclient.api.models import DeviceState
     from olhclient.core.session import DeviceSession
     from olhclient.core.worker import Worker
 
-    def make(serial=SE):
-        device = fake_api.get_device(serial)
+    def make(serial=SE, api=None):
+        api = api or fake_api
+        device = api.get_device(serial)
         worker = Worker(synchronous=True)
-        session = DeviceSession(fake_api, worker, registry.match(device), MouseState.from_json(device), {1: "DPI"})
+        session = DeviceSession(api, worker, registry.match(device), DeviceState.from_json(device), {1: "DPI"})
         messages = []
         session.message.connect(lambda text, error: messages.append((text, error)))
         session.messages = messages

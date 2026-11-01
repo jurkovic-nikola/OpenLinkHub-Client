@@ -17,7 +17,7 @@ def test_discovers_all_scimitar_variants(registry):
         "scimitar-rgb",
         "scimitar-elite-wireless",
         "scimitar-elite-se",
-        "generic-mouse",
+        "generic",
     } <= ids
 
 
@@ -43,10 +43,11 @@ def test_match_by_product_id(registry, pid, template, expected):
     assert registry.match({"ProductId": pid, "Template": template, "KeyAssignment": {}}).id == expected
 
 
-def test_unknown_mouse_falls_back_to_generic(registry):
-    assert registry.match({"ProductId": 1, "Template": "m65.html", "KeyAssignment": {}}).id == "generic-mouse"
-
-
-def test_non_mouse_is_rejected(registry):
-    with pytest.raises(LookupError):
-        registry.match({"ProductId": 1, "Template": "k70.html"})
+@pytest.mark.parametrize("device", [
+    {"ProductId": 1, "Template": "m65.html", "KeyAssignment": {}},  # an unknown mouse
+    {"ProductId": 1, "Template": "k70.html"},  # any other device
+    {},  # a device whose JSON OpenLinkHub cannot send
+])
+def test_everything_else_falls_back_to_generic(registry, device):
+    module = registry.match(device)
+    assert module.id == "generic" and not module.layout.views and module.features is None

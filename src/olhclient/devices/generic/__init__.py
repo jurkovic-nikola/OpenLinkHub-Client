@@ -1,26 +1,20 @@
-"""Fallback for mice without a dedicated module: list-based UI, no hotspots."""
+"""Fallback for every device without a dedicated module: no artwork, all features
+the device JSON offers."""
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 
-from olhclient.devices.base import DeviceModule, load_layout
-from olhclient.devices.features import Feature
-
-HERE = Path(__file__).parent
+from olhclient.devices.base import DeviceModule, Layout
 
 
-class GenericMouse(DeviceModule):
-    id = "generic-mouse"
-    name = "Mouse"
-    features = frozenset({Feature.KEY_REMAP, Feature.DPI})
-    locked_buttons = frozenset({"Left Button"})
-    dpi_step = 50
+class GenericDevice(DeviceModule):
+    id = "generic"
+    name = "Device"
 
     def match_score(self, device: dict[str, Any]) -> int:
         # Lowest possible score: only used when nothing better matches.
-        return 1 if "KeyAssignment" in device or "DPIAmount" in device else 0
+        return 1
 
 
-MODULES = [GenericMouse(load_layout(HERE / "layout.json", [HERE / "assets"]))]
+MODULES = [GenericDevice(Layout())]

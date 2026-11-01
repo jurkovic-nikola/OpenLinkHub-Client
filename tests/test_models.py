@@ -1,10 +1,10 @@
 import pytest
 
-from olhclient.api.models import ActionType, MouseState, valid_profile_name, validate_assignment
+from olhclient.api.models import ActionType, DeviceState, valid_profile_name, validate_assignment
 
 
 def test_parse_wireless_se(se_device):
-    state = MouseState.from_json(se_device)
+    state = DeviceState.from_json(se_device)
     assert state.product == "SCIMITAR ELITE SE"
     assert state.product_id == 11042
     assert state.wireless and state.battery == 100 and state.usb is False
@@ -16,7 +16,7 @@ def test_parse_wireless_se(se_device):
 
 
 def test_parse_dpi_stages(se_device):
-    state = MouseState.from_json(se_device)
+    state = DeviceState.from_json(se_device)
     assert [s.index for s in state.stages] == [0, 1, 2, 3, 4, 5]
     assert state.stages[0].value == 800 and state.stages[0].color == "#ff0000"
     assert state.stages[-1].sniper and not any(s.sniper for s in state.stages[:-1])
@@ -24,7 +24,7 @@ def test_parse_dpi_stages(se_device):
 
 
 def test_parse_legacy_generation(legacy_device):
-    state = MouseState.from_json(legacy_device)
+    state = DeviceState.from_json(legacy_device)
     assert state.key_by_name("Side Button 1").index == 256
     assert state.key_by_name("DPI Button").index == 64
     assert state.battery is None and not state.wireless
@@ -32,7 +32,7 @@ def test_parse_legacy_generation(legacy_device):
 
 
 def test_keys_sorted_by_index(se_device):
-    state = MouseState.from_json(se_device)
+    state = DeviceState.from_json(se_device)
     assert [k.index for k in state.keys] == sorted(k.index for k in state.keys)
 
 
@@ -54,7 +54,7 @@ def test_validate_assignment_matches_server_rules(action_type, hold, release, ok
 
 
 def test_parse_lighting(se_device):
-    lighting = MouseState.from_json(se_device).lighting
+    lighting = DeviceState.from_json(se_device).lighting
     assert lighting.effect == "colorshift"
     assert "static" in lighting.effects and "mouse" in lighting.effects
     assert lighting.brightness == 30
@@ -62,14 +62,16 @@ def test_parse_lighting(se_device):
     assert all(z.color.startswith("#") and len(z.color) == 7 for z in lighting.zones)
 
 
-def test_parse_settings(se_device, legacy_device):
-    se = MouseState.from_json(se_device).settings
-    assert se.polling_rates == {}  # not offered over the Slipstream dongle
-    assert list(se.sleep_modes) == [1, 5, 10, 15, 30, 60]
-    assert se.lift_heights[6] == "Calibrated"
-    legacy = MouseState.from_json(legacy_device).settings
-    assert list(legacy.polling_rates) == [1, 2, 4, 8]  # "Not Set" (0) is left out
-    assert legacy.polling_rate == 1
+def test_settings_from_device_json(se_device, legacy_device):
+    from olhclient.core.features.settings import SPECS_BY_KEY, build_item
+
+    se = DeviceState.from_json(se_device)
+    assert build_item(SPECS_BY_KEY["pollingRate"], se) is None  # not offered over the Slipstream dongle
+    assert [o["value"] for o in build_item(SPECS_BY_KEY["sleepMode"], se)["options"]] == [1, 5, 10, 15, 30, 60]
+    assert {"value": 6, "text": "Calibrated"} in build_item(SPECS_BY_KEY["liftHeight"], se)["options"]
+    legacy = build_item(SPECS_BY_KEY["pollingRate"], DeviceState.from_json(legacy_device))
+    assert [o["value"] for o in legacy["options"]] == [1, 2, 4, 8]  # "Not Set" (0) is left out
+    assert legacy["value"] == 1
 
 
 @pytest.mark.parametrize("name, ok", [("game", True), ("Raid25", True), ("ab", False), ("my game", False),
