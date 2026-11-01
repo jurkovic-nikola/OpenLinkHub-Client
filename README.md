@@ -1,4 +1,7 @@
 # OpenLinkHub Client
+NOTE! This is fully created with Claude, I only tested the devices I use myself, please report any issues for other devices or just to report if it works for your devices. Also make sure you also test in OpenLinkHub itself to confirm if its client side (this repo) or api side (OpenlinkHub). Feel free to create merge request to add more device images for other mouses.
+
+Claude's readme:
 
 A desktop client for [OpenLinkHub](https://github.com/jurkovic-nikola/OpenLinkHub), the open source
 Linux service for Corsair devices. It gives OpenLinkHub an iCUE-style interface: device artwork
