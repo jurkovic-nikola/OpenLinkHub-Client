@@ -23,6 +23,8 @@ What a device gets depends on what OpenLinkHub reports for it.
 - **Key remapping** for mice, headsets, controllers and keyboards: keyboard keys, media keys,
   mouse buttons, macros, DPI and sniper actions, press-and-hold, trigger-on-release, and
   modifier keys on keyboards. On devices with artwork you pick the button on the picture.
+- **Keyboards are drawn** from the key layout OpenLinkHub sends, with every key where
+  OpenLinkHub's own keyboard page puts it and in its own colour; click a key to remap it.
 - **Keyboard profiles**: the per-key layouts of a keyboard: switch, create, delete.
 - **DPI**: stage values and stage colours.
 - **Lighting**: effect, brightness (slider or steps, depending on the device), zone colours, RGB
@@ -43,11 +45,13 @@ What a device gets depends on what OpenLinkHub reports for it.
   what the client does not cover.
 - **Login** for OpenLinkHub instances with dashboard authentication enabled.
 
-| Headset | Fans & pumps |
+| Keyboard | Headset |
 |---|---|
-| ![Headset settings](docs/screenshots/headset.png) | ![Fans and pumps on a Commander Core](docs/screenshots/fans.png) |
-| **Lighting** | **Slipstream receiver** |
-| ![Lighting](docs/screenshots/lighting.png) | ![Slipstream receiver](docs/screenshots/slipstream-receiver.png) |
+| ![Remapping a key on a K70 Core, drawn from OpenLinkHub's layout](docs/screenshots/keyboard.png) | ![Headset settings](docs/screenshots/headset.png) |
+| **Fans & pumps** | **Lighting** |
+| ![Fans and pumps on a Commander Core](docs/screenshots/fans.png) | ![Lighting](docs/screenshots/lighting.png) |
+| **Slipstream receiver** | |
+| ![Slipstream receiver](docs/screenshots/slipstream-receiver.png) | |
 
 ## Supported devices
 
@@ -141,10 +145,9 @@ memory only; no password is stored.
 
 ## Known limitations
 
-- **Tested hardware**: the client is used with a Scimitar Elite Wireless SE and a Slipstream
-  receiver; a Virtuoso Max headset was checked without changing its settings. Keyboards, hubs and
-  AIO coolers are built from OpenLinkHub's source and tested against fixtures only; please report
-  what does not work.
+- **Tested hardware**: the client is used with a Scimitar Elite Wireless SE, a Virtuoso Max
+  headset and a Slipstream receiver. Keyboards, hubs and AIO coolers are built from OpenLinkHub's
+  source and tested against fixtures only; please report what does not work.
 - **A setting can be refused**: OpenLinkHub sometimes lists options for a setting the device's
   driver cannot change. The client then shows OpenLinkHub's error and the real value again.
 - **Not covered** (use "Open in OpenLinkHub"): LCD and Xeneon screens, per-key and per-area
@@ -158,8 +161,11 @@ memory only; no password is stored.
   (`GET /api/devices/{serial}` answers with an empty body). The client reads its state from the
   dashboard page `/device/{serial}` instead, so it depends on that page's layout. The polling rate
   can only be changed on receivers whose OpenLinkHub driver supports it (product ids 7132, 11008
-  and 11035 at the time of writing); other receivers refuse the change. Changing it restarts the
-  receiver, and its devices are gone for 5–8 seconds.
+  and 11035 at the time of writing); other receivers refuse the change. OpenLinkHub answers "OK"
+  as soon as it has sent the command and does not check that the receiver took it, so neither can
+  the client. A receiver that takes the change restarts: its devices drop out and OpenLinkHub
+  lists it again about 9 seconds later. A Slipstream receiver (product id 11008) once got into a
+  state where it ignored most changes; unplugging and replugging it fixed that.
 - The top view still draws a cable for the wireless Scimitars.
 
 ## How it works
@@ -181,6 +187,12 @@ equalizer. Each **feature** (a controller plus a list and an editor panel in QML
 come from one table (`core/features/settings.py`): OpenLinkHub pairs an options map in the device
 JSON (`SleepModes`) with the current value in `DeviceProfile` (`SleepMode`), and writes go to
 `/api/<kind>/<setting>`.
+
+Keyboards need no artwork: `api/keyboard_grid.py` ports the CSS grid OpenLinkHub's keyboard page
+uses (`UIKeyboardRow` columns, keys spanning cells, ISO Enter, LED bars) and places every key of
+the device's layout the way that page does. It was checked key by key against OpenLinkHub's page
+for all 74 layouts it ships; only a few decorative LED bars that the page positions on their own are
+left out (they are colour-only and cannot be remapped).
 
 A **device module** is optional. It adds artwork, hotspots and button labels, which buttons
 cannot be remapped (`locked_buttons`) and which buttons OpenLinkHub reports but the model does not
@@ -238,7 +250,9 @@ Fixtures in `tests/fixtures/`, with serials and paths anonymised:
 - captured from real devices: Scimitar Elite SE, Virtuoso Max headset, `GET /api/`;
 - derived: the legacy Scimitar (bitmasks of the `scimitarrgbelite` driver);
 - built from OpenLinkHub's driver structs: Commander Core, iCUE Link hub, K70 Core keyboard, and
-  the Slipstream page (`web/slipstream.html`).
+  the Slipstream page (`web/slipstream.html`);
+- copied from OpenLinkHub: three keyboard layouts, with where its page draws each key
+  (`tests/fixtures/keyboards/`).
 
 ### Notes on the OpenLinkHub API
 
