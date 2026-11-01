@@ -8,7 +8,7 @@ from typing import Any
 from PySide6.QtCore import QObject, Property, QUrl, Signal, Slot
 
 from olhclient.api.client import ApiClient, ApiError
-from olhclient.api.models import ActionType, KeyAssignment, MouseState
+from olhclient.api.models import ActionType, KeyAssignment, MouseState, valid_profile_name
 from olhclient.core.features import CONTROLLERS, FeatureController
 from olhclient.core.worker import Worker
 from olhclient.devices.base import DeviceModule
@@ -23,6 +23,7 @@ def file_url(path: Path) -> str:
 class DeviceSession(QObject):
     stateChanged = Signal()
     selectedButtonChanged = Signal()
+    profileBusyChanged = Signal()
     #: text, is_error
     message = Signal(str, bool)
 
@@ -36,6 +37,8 @@ class DeviceSession(QObject):
         self._macros: dict[int, str] = dict(macros or {})
         self._selected = ""
         self._reloading = False
+        self._reload_again = False
+        self._profile_busy = False
         self._controllers: dict[str, FeatureController] = {
             feature.id: CONTROLLERS[feature](self) for feature in CONTROLLERS if feature in module.features
         }
@@ -53,6 +56,8 @@ class DeviceSession(QObject):
     def reload(self) -> None:
         """Fetch the device again (after a save, or on the poll timer)."""
         if self._reloading:
+            # A fetch is in flight and may predate a write; fetch once more afterwards.
+            self._reload_again = True
             return
         self._reloading = True
         serial = self.serial
@@ -71,10 +76,17 @@ class DeviceSession(QObject):
         self._reloading = False
         state, self._macros = result
         self._apply(state)
+        self._maybe_reload_again()
 
     def _reload_failed(self, exc: Exception) -> None:
         self._reloading = False
         self.report_error(exc)
+        self._maybe_reload_again()
+
+    def _maybe_reload_again(self) -> None:
+        if self._reload_again:
+            self._reload_again = False
+            self.reload()
 
     def _apply(self, state: MouseState) -> None:
         self.state = state
@@ -231,3 +243,62 @@ class DeviceSession(QObject):
     @Slot()
     def refresh(self) -> None:
         self.reload()
+
+    # -- user profiles -----------------------------------------------------
+
+    @Property(bool, notify=profileBusyChanged)
+    def profileBusy(self) -> bool:
+        return self._profile_busy
+
+    def _set_profile_busy(self, value: bool) -> None:
+        if value != self._profile_busy:
+            self._profile_busy = value
+            self.profileBusyChanged.emit()
+
+    def _profile_call(self, call: Any, success: str) -> None:
+        self._set_profile_busy(True)
+
+        def finished(_: Any) -> None:
+            self._set_profile_busy(False)
+            self.report_message(success)
+            self.reload()
+
+        def failed(exc: Exception) -> None:
+            self._set_profile_busy(False)
+            self.report_error(exc)
+            self.reload()
+
+        self.worker.submit(call, on_done=finished, on_error=failed, owner=self)
+
+    @Slot(str, result=str)
+    def profileNameProblem(self, name: str) -> str:
+        """Why ``name`` cannot be used for a new profile, or an empty string."""
+        if name in self.state.profiles:
+            return "A profile with this name already exists"
+        return valid_profile_name(name) or ""
+
+    @Slot(str, result=bool)
+    def canDeleteProfile(self, name: str) -> bool:
+        return name in self.state.profiles and name != "default" and name != self.state.active_profile
+
+    @Slot(str)
+    def switchProfile(self, name: str) -> None:
+        if name == self.state.active_profile or name not in self.state.profiles:
+            return
+        self._profile_call(lambda: self.api.switch_user_profile(self.serial, name), f"Switched to profile {name}")
+
+    @Slot(str)
+    def createProfile(self, name: str) -> None:
+        """Save the current settings as a new profile (it does not become active)."""
+        problem = self.profileNameProblem(name)
+        if problem:
+            self.report_message(problem, error=True)
+            return
+        self._profile_call(lambda: self.api.save_user_profile(self.serial, name), f"Profile {name} created")
+
+    @Slot(str)
+    def deleteProfile(self, name: str) -> None:
+        if not self.canDeleteProfile(name):
+            self.report_message("The active and the default profile cannot be deleted", error=True)
+            return
+        self._profile_call(lambda: self.api.delete_user_profile(self.serial, name), f"Profile {name} deleted")

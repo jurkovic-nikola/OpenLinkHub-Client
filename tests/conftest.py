@@ -11,6 +11,8 @@ import pytest
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 FIXTURES = Path(__file__).parent / "fixtures"
+SE = "SE0000000000TEST"
+LEGACY = "RGBELITE00TEST"
 
 
 def load_fixture(name: str) -> Any:
@@ -77,6 +79,80 @@ class FakeApi:
         for index, value in stages.items():
             self.devices[serial]["DeviceProfile"]["Profiles"][str(index)]["Value"] = value
 
+    def save_dpi_colors(self, serial: str, colors: dict[int, str]) -> None:
+        self._check()
+        self.calls.append(("save_dpi_colors", serial, dict(colors)))
+        for index, color in colors.items():
+            self.devices[serial]["DeviceProfile"]["Profiles"][str(index)]["Color"]["Hex"] = color
+
+    # -- lighting
+
+    def _profile(self, serial: str) -> dict[str, Any]:
+        return self.devices[serial]["DeviceProfile"]
+
+    def set_rgb_effect(self, serial: str, effect: str) -> None:
+        self._check()
+        self.calls.append(("set_rgb_effect", serial, effect))
+        self._profile(serial)["RGBProfile"] = effect
+
+    def set_brightness(self, serial: str, percent: int) -> None:
+        self._check()
+        self.calls.append(("set_brightness", serial, percent))
+        self._profile(serial)["BrightnessSlider"] = percent
+
+    def save_zone_colors(self, serial: str, colors: dict[int, str]) -> None:
+        self._check()
+        self.calls.append(("save_zone_colors", serial, dict(colors)))
+        for index, color in colors.items():
+            self._profile(serial)["ZoneColors"][str(index)]["Color"]["Hex"] = color
+
+    def set_rgb_cluster(self, serial: str, enabled: bool) -> None:
+        self._check()
+        self.calls.append(("set_rgb_cluster", serial, enabled))
+        self._profile(serial)["RGBCluster"] = enabled
+
+    def set_openrgb(self, serial: str, enabled: bool) -> None:
+        self._check()
+        self.calls.append(("set_openrgb", serial, enabled))
+        self._profile(serial)["OpenRGBIntegration"] = enabled
+
+    # -- settings
+
+    FIELDS = {
+        "pollingRate": "PollingRate",
+        "liftHeight": "LiftHeight",
+        "sleepMode": "SleepMode",
+        "angleSnapping": "AngleSnapping",
+        "buttonOptimization": "ButtonOptimization",
+    }
+
+    def set_mouse_setting(self, serial: str, setting: str, value: int) -> None:
+        self._check()
+        self.calls.append(("set_mouse_setting", serial, setting, value))
+        self._profile(serial)[self.FIELDS[setting]] = value
+
+    # -- user profiles
+
+    def switch_user_profile(self, serial: str, name: str) -> None:
+        self._check()
+        self.calls.append(("switch_user_profile", serial, name))
+        for profile_name, profile in self.devices[serial]["userProfiles"].items():
+            profile["Active"] = profile_name == name
+
+    def save_user_profile(self, serial: str, name: str) -> None:
+        self._check()
+        self.calls.append(("save_user_profile", serial, name))
+        device = self.devices[serial]
+        device["userProfiles"][name] = {"Active": False}
+        device["profileOrder"].append(name)
+
+    def delete_user_profile(self, serial: str, name: str) -> None:
+        self._check()
+        self.calls.append(("delete_user_profile", serial, name))
+        device = self.devices[serial]
+        del device["userProfiles"][name]
+        device["profileOrder"].remove(name)
+
     def login(self, username: str, password: str) -> None:
         self.calls.append(("login", username))
         self.fail_with = None
@@ -85,3 +161,29 @@ class FakeApi:
 @pytest.fixture
 def fake_api(se_device, legacy_device) -> FakeApi:
     return FakeApi([se_device, legacy_device])
+
+
+@pytest.fixture(scope="session")
+def registry():
+    from olhclient.devices.registry import Registry
+
+    return Registry.discover()
+
+
+@pytest.fixture
+def make_session(qtbot, fake_api, registry):
+    """Build a DeviceSession on the fake API; ``session.messages`` collects its messages."""
+    from olhclient.api.models import MouseState
+    from olhclient.core.session import DeviceSession
+    from olhclient.core.worker import Worker
+
+    def make(serial=SE):
+        device = fake_api.get_device(serial)
+        worker = Worker(synchronous=True)
+        session = DeviceSession(fake_api, worker, registry.match(device), MouseState.from_json(device), {1: "DPI"})
+        messages = []
+        session.message.connect(lambda text, error: messages.append((text, error)))
+        session.messages = messages
+        return session
+
+    return make

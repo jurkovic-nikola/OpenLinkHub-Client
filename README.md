@@ -5,8 +5,15 @@ PySide6 and QML. It talks to the OpenLinkHub HTTP API only: no direct USB access
 to OpenLinkHub itself. The UI follows the iCUE layout (device artwork with clickable buttons,
 an action list and a settings panel) but uses its own artwork.
 
-**Status:** first version. It supports the Scimitar family and does two things: **key remapping**
-and **DPI stages**.
+**Status:** it supports the Scimitar family with:
+
+- **Key remapping** for every remappable button.
+- **DPI**: stage values and stage colours.
+- **Lighting**: effect, brightness, zone colours, RGB cluster and OpenRGB integration.
+- **Device settings**: polling rate, lift-off distance, sleep timer, angle snapping and button
+  response optimization, as far as the model and connection mode support them.
+- **Profiles**: switch the active OpenLinkHub user profile, create one from the current
+  settings, delete one.
 
 | Module | Devices (USB product id) |
 |---|---|
@@ -87,6 +94,8 @@ themselves.
    `keypad` (a grid) and `button_list`.
 3. Put the artwork in `assets/`. A `side.png` next to `side.svg` is used instead of the SVG, and
    `assets/<module id>/` overrides the shared images. That is where real renders go.
+4. Declare `features`, and in `settings` the device settings the hardware supports
+   (`pollingRate`, `liftHeight`, `sleepMode`, `angleSnapping`, `buttonOptimization`).
 
 The registry discovers modules automatically. Modules can also ship in another package through
 the `olhclient.devices` entry-point group.
@@ -116,7 +125,15 @@ paths anonymised. The legacy fixture is derived from it using the bitmasks of th
 - Key indexes are bitmasks that differ between Scimitar generations. Button names do not, which
   is why layouts are keyed by name.
 - `POST /api/mouse/dpi` answers with an error when nothing changed, so the client only sends
-  stages that differ.
+  stages that differ. Colours (DPI and zones) are only sent for stages and zones that changed.
+- Zone colours are only shown by the `mouse` effect. The DPI LED always shows the colour of the
+  active stage.
+- Which device settings appear follows the OpenLinkHub web UI: the polling rate only when the
+  driver lists `PollingRates` (not over the Slipstream dongle), the sleep timer only for
+  wireless models on the dongle. The polling rate "Not Set" (0) is left out because the server
+  refuses it.
+- User profile names must be letters and numbers only. The active and the `default` profile
+  cannot be deleted. Creating a profile copies the current settings; it does not switch to it.
 
 ## Licence
 

@@ -1,6 +1,8 @@
 """Load the real QML against a fake API and fail on any QML warning."""
 
 import pytest
+
+from olhclient.api.client import ApiError
 from PySide6.QtCore import QUrl
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtQuickControls2 import QQuickStyle
@@ -63,3 +65,30 @@ def test_disconnected_state(ui, qtbot, fake_api):
     settle(qtbot)
     assert not backend.connected
     assert warnings == []
+
+
+def test_every_feature_panel_on_every_device(ui, qtbot, fake_api):
+    backend, window, warnings = ui
+    backend.refresh()
+    settle(qtbot)
+    for serial in ("RGBELITE00TEST", "SE0000000000TEST"):
+        backend.selectDevice(serial)
+        settle(qtbot)
+        for feature in backend.session.features:
+            window.setProperty("featureId", feature["id"])
+            settle(qtbot)
+    # writes (and a failing one) while the lighting and settings editors are shown
+    session = backend.session
+    window.setProperty("featureId", "lighting")
+    settle(qtbot)
+    session.controller("lighting").setEffect("static")
+    fake_api.fail_with = ApiError("Unable to change")
+    session.controller("lighting").setOpenRgb(True)
+    fake_api.fail_with = None
+    window.setProperty("featureId", "settings")
+    settle(qtbot)
+    session.controller("settings").apply("angleSnapping", 1)
+    session.switchProfile("dbts")
+    settle(qtbot)
+    assert warnings == []
+

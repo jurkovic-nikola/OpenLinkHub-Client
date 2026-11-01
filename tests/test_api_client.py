@@ -121,3 +121,60 @@ def test_login_uses_configured_origin():
     respx.post("https://localhost:27003/auth/login").respond(401, text="Invalid credentials")
     with pytest.raises(ApiError, match="Invalid credentials"):
         client.login("admin", "wrong")
+
+
+OK = {"code": 200, "status": 1, "message": "ok"}
+
+
+@respx.mock
+def test_color_maps_are_sent_as_rgb(api):
+    route = respx.post(f"{BASE}/api/mouse/dpiColors").respond(json=OK)
+    api.save_dpi_colors("SER", {0: "#ff8000", 5: "#00FF7f"})
+    assert json.loads(route.calls.last.request.content) == {
+        "deviceId": "SER",
+        "colorZones": {"0": {"red": 255, "green": 128, "blue": 0}, "5": {"red": 0, "green": 255, "blue": 127}},
+    }
+    with pytest.raises(ValueError):
+        api.save_zone_colors("SER", {0: "#fff"})
+
+
+@respx.mock
+@pytest.mark.parametrize(
+    "setting, path",
+    [("pollingRate", "pollingRate"), ("liftHeight", "liftHeight"), ("sleepMode", "sleep"),
+     ("angleSnapping", "angleSnapping"), ("buttonOptimization", "buttonOptimization")],
+)
+def test_mouse_settings_endpoints(api, setting, path):
+    route = respx.post(f"{BASE}/api/mouse/{path}").respond(json=OK)
+    api.set_mouse_setting("SER", setting, 3)
+    assert json.loads(route.calls.last.request.content) == {"deviceId": "SER", setting: 3}
+
+
+@respx.mock
+def test_lighting_calls(api):
+    color = respx.post(f"{BASE}/api/color").respond(json=OK)
+    brightness = respx.post(f"{BASE}/api/brightness/gradual").respond(json=OK)
+    cluster = respx.post(f"{BASE}/api/color/setCluster").respond(json=OK)
+    openrgb = respx.post(f"{BASE}/api/color/setOpenRgbIntegration").respond(json=OK)
+    api.set_rgb_effect("SER", "static")
+    api.set_brightness("SER", 40)
+    api.set_rgb_cluster("SER", True)
+    api.set_openrgb("SER", False)
+    assert json.loads(color.calls.last.request.content) == {"deviceId": "SER", "channelId": 0, "profile": "static"}
+    assert json.loads(brightness.calls.last.request.content) == {"deviceId": "SER", "brightness": 40}
+    assert json.loads(cluster.calls.last.request.content) == {"deviceId": "SER", "mode": 1}
+    assert json.loads(openrgb.calls.last.request.content) == {"deviceId": "SER", "mode": 0}
+
+
+@respx.mock
+def test_user_profile_calls_use_put_and_delete(api):
+    change = respx.post(f"{BASE}/api/userProfile/change").respond(json=OK)
+    save = respx.put(f"{BASE}/api/userProfile").respond(json=OK)
+    delete = respx.delete(f"{BASE}/api/userProfile/delete").respond(json=OK)
+    api.switch_user_profile("SER", "game")
+    api.save_user_profile("SER", "game")
+    api.delete_user_profile("SER", "game")
+    for route in (change, save, delete):
+        request = route.calls.last.request
+        assert json.loads(request.content) == {"deviceId": "SER", "userProfileName": "game"}
+        assert request.headers["Origin"] == BASE

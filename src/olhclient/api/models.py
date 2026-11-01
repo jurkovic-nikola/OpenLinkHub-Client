@@ -64,6 +64,49 @@ class DpiStage:
     sniper: bool
 
 
+@dataclass(frozen=True)
+class Zone:
+    index: int
+    name: str
+    color: str
+
+
+@dataclass(frozen=True)
+class Lighting:
+    effect: str
+    effects: tuple[str, ...]
+    brightness: int  # 0-100
+    zones: tuple[Zone, ...]
+    rgb_cluster: bool
+    openrgb: bool
+
+
+@dataclass(frozen=True)
+class DeviceSettings:
+    """Sensor and power settings of the active profile, with their choices."""
+
+    polling_rate: int
+    polling_rates: dict[int, str]
+    lift_height: int
+    lift_heights: dict[int, str]
+    sleep_mode: int
+    sleep_modes: dict[int, str]
+    angle_snapping: bool
+    button_optimization: bool
+
+
+def _hex(color: dict[str, Any]) -> str:
+    return color.get("Hex") or "#{:02x}{:02x}{:02x}".format(
+        int(color.get("red", 0)), int(color.get("green", 0)), int(color.get("blue", 0))
+    )
+
+
+def _choices(data: dict[str, Any] | None, *, skip: tuple[int, ...] = ()) -> dict[int, str]:
+    """Map with string keys from the device JSON -> sorted ``{int: label}``."""
+    items = sorted((int(k), v) for k, v in (data or {}).items())
+    return {k: v for k, v in items if k not in skip}
+
+
 @dataclass
 class MouseState:
     serial: str
@@ -81,6 +124,8 @@ class MouseState:
     stages: list[DpiStage]
     keys: list[KeyAssignment]
     assignment_types: dict[int, str]
+    lighting: Lighting | None = None
+    settings: DeviceSettings | None = None
     raw: dict[str, Any] = field(repr=False, default_factory=dict)
 
     @property
@@ -105,9 +150,7 @@ class MouseState:
                     index=int(index),
                     name=stage.get("name", f"Stage {int(index) + 1}"),
                     value=int(stage.get("Value", 0)),
-                    color=color.get("Hex") or "#{:02x}{:02x}{:02x}".format(
-                        int(color.get("red", 0)), int(color.get("green", 0)), int(color.get("blue", 0))
-                    ),
+                    color=_hex(color),
                     sniper=bool(stage.get("Sniper", False)),
                 )
             )
@@ -120,6 +163,33 @@ class MouseState:
         user_profiles = data.get("userProfiles") or {}
         active_profile = next(
             (name for name, p in user_profiles.items() if (p or {}).get("Active")), "default"
+        )
+
+        zones = tuple(
+            Zone(index=int(index), name=zone.get("Name", f"Zone {int(index) + 1}"), color=_hex(zone.get("Color") or {}))
+            for index, zone in sorted((profile.get("ZoneColors") or {}).items(), key=lambda kv: int(kv[0]))
+        )
+        lighting = None
+        if "RGBProfile" in profile:
+            lighting = Lighting(
+                effect=profile.get("RGBProfile", ""),
+                effects=tuple(data.get("RGBModes") or ()),
+                brightness=int(profile.get("BrightnessSlider") or 0),
+                zones=zones,
+                rgb_cluster=bool(profile.get("RGBCluster", False)),
+                openrgb=bool(profile.get("OpenRGBIntegration", False)),
+            )
+
+        settings = DeviceSettings(
+            polling_rate=int(profile.get("PollingRate", 0)),
+            # 0 is "Not Set", which the server refuses (1..10).
+            polling_rates=_choices(data.get("PollingRates"), skip=(0,)),
+            lift_height=int(profile.get("LiftHeight", 0)),
+            lift_heights=_choices(data.get("LiftHeights")),
+            sleep_mode=int(profile.get("SleepMode", 0)),
+            sleep_modes=_choices(data.get("SleepModes")),
+            angle_snapping=bool(profile.get("AngleSnapping", 0)),
+            button_optimization=bool(profile.get("ButtonOptimization", 0)),
         )
 
         battery = data.get("BatteryLevel")
@@ -141,8 +211,19 @@ class MouseState:
             assignment_types={
                 int(k): v for k, v in sorted((data.get("KeyAssignmentTypes") or {}).items(), key=lambda kv: int(kv[0]))
             },
+            lighting=lighting,
+            settings=settings,
             raw=data,
         )
+
+
+def valid_profile_name(name: str) -> str | None:
+    """Mirror the server rules for user profile names; returns an error message or ``None``."""
+    if len(name) < 3:
+        return "Use at least 3 characters"
+    if not name.isascii() or not name.isalnum():
+        return "Only letters and numbers are allowed"
+    return None
 
 
 def validate_assignment(action_type: int, *, press_and_hold: bool, on_release: bool) -> str | None:

@@ -4,30 +4,44 @@ import QtQuick.Layouts
 import "../theme"
 import "../components"
 
-// Edit all DPI stages at once; only changed stages are sent on Save.
+// Edit all DPI stages (value and LED colour) at once; only changed stages are sent on Save.
 Item {
     id: root
     property var controller
     property var session
 
     property var draft: []
+    property var colorDraft: []
     readonly property var stages: controller ? controller.stages : null
 
     readonly property bool dirty: {
         if (!stages)
             return false
-        for (let i = 0; i < stages.count; ++i)
+        for (let i = 0; i < stages.count; ++i) {
             if (draft[i] !== undefined && draft[i] !== stages.get(i).value)
                 return true
+            if (colorDraft[i] !== undefined && colorDraft[i] !== stages.get(i).color.toLowerCase())
+                return true
+        }
         return false
     }
 
     function revert() {
         const values = []
+        const colors = []
         if (stages)
-            for (let i = 0; i < stages.count; ++i)
+            for (let i = 0; i < stages.count; ++i) {
                 values.push(stages.get(i).value)
+                colors.push(stages.get(i).color.toLowerCase())
+            }
         draft = values
+        colorDraft = colors
+    }
+
+    function setColor(i, color) {
+        const copy = colorDraft.slice()
+        copy[i] = color
+        colorDraft = copy
     }
 
     function setValue(i, value) {
@@ -44,6 +58,11 @@ Item {
         // pick up values saved elsewhere, but never clobber unsaved edits
         function onDataChanged() { if (!root.dirty) root.revert() }
         function onModelReset() { root.revert() }
+    }
+
+    ColorPicker {
+        id: picker
+        anchors.centerIn: parent
     }
 
     ColumnLayout {
@@ -83,7 +102,7 @@ Item {
                     accent: true
                     text: root.controller && root.controller.saving ? "Saving…" : "Save"
                     enabled: root.dirty && !(root.controller && root.controller.saving)
-                    onClicked: root.controller.save(root.draft)
+                    onClicked: root.controller.save(root.draft, root.colorDraft)
                 }
             }
         }
@@ -105,22 +124,21 @@ Item {
                         id: stageRow
                         required property int index
                         required property string name
-                        required property string color
                         required property bool active
                         required property bool sniper
                         readonly property int draftValue: root.draft[index] !== undefined ? root.draft[index] : 0
+                        readonly property string draftColor: root.colorDraft[index] !== undefined ? root.colorDraft[index] : "#000000"
                         Layout.fillWidth: true
                         Layout.leftMargin: 24
                         Layout.rightMargin: 24
                         spacing: 14
 
-                        Rectangle {
-                            implicitWidth: 14
-                            implicitHeight: 14
-                            radius: 7
-                            color: stageRow.color
-                            border.color: stageRow.active ? Theme.accent : "#000000"
-                            border.width: stageRow.active ? 2 : 1
+                        ColorSwatch {
+                            implicitWidth: 22
+                            implicitHeight: 22
+                            color: stageRow.draftColor
+                            selected: stageRow.active
+                            onClicked: picker.pick(stageRow.draftColor, c => root.setColor(stageRow.index, c))
                         }
                         Text {
                             Layout.preferredWidth: 90
@@ -150,7 +168,7 @@ Item {
                 Text {
                     Layout.leftMargin: 24
                     Layout.topMargin: 6
-                    text: "Stage colours belong to lighting and are shown read-only."
+                    text: "Click a colour to change it. The DPI LED shows the colour of the active stage."
                     color: Theme.textMuted
                     font.pixelSize: Theme.fontSmall
                 }

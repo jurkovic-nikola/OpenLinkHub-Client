@@ -1,33 +1,10 @@
 import pytest
 
 from olhclient.api.client import ApiError
-from olhclient.api.models import MouseState
 from olhclient.core.backend import Backend
-from olhclient.core.session import DeviceSession
 from olhclient.core.worker import Worker
-from olhclient.devices.registry import Registry
 
-SE = "SE0000000000TEST"
-LEGACY = "RGBELITE00TEST"
-
-
-@pytest.fixture(scope="module")
-def registry():
-    return Registry.discover()
-
-
-@pytest.fixture
-def make_session(qtbot, fake_api, registry):
-    def make(serial=SE):
-        device = fake_api.get_device(serial)
-        worker = Worker(synchronous=True)
-        session = DeviceSession(fake_api, worker, registry.match(device), MouseState.from_json(device), {1: "DPI"})
-        messages = []
-        session.message.connect(lambda text, error: messages.append((text, error)))
-        session.messages = messages
-        return session
-
-    return make
+from tests.conftest import LEGACY, SE
 
 
 # -- session ---------------------------------------------------------------

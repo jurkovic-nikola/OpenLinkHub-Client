@@ -24,7 +24,7 @@
    "OpenRGBIntegration": false,
    "OriginalBrightness": 100,
    "Path": "/opt/OpenLinkHub/database/profiles/SE0000000000TEST-Guildwars2.json",
-   "PollingRate": 4,
+   "PollingRate": 1,
    "Product": "SCIMITAR RGB ELITE",
    "Profile": 2,
    "Profiles": {
@@ -571,8 +571,7 @@
   "LiftHeights": {
    "2": "Low",
    "3": "Medium",
-   "4": "High",
-   "6": "Calibrated"
+   "4": "High"
   },
   "MacroTracker": {},
   "MaxDPI": 18000,
@@ -614,7 +613,6 @@
    "1": "Enabled"
   },
   "Template": "scimitarrgbelite.html",
-  "Usb": true,
   "VendorId": 6940,
   "ZoneAmount": 4,
   "devices": null,
@@ -818,6 +816,13 @@
      }
     }
    }
+  },
+  "PollingRates": {
+   "0": "Not Set",
+   "8": "125 Hz / 8 msec",
+   "4": "250 Hz / 4 msec",
+   "2": "500 Hz / 2 msec",
+   "1": "1000 Hz / 1 msec"
   }
  },
  "status": 0

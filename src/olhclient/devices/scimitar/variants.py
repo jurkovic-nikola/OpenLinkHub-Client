@@ -11,6 +11,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+# Wireless models also have a sleep timer and button response optimization.
+WIRELESS_SETTINGS = ("pollingRate", "liftHeight", "angleSnapping", "sleepMode", "buttonOptimization")
+
 
 @dataclass(frozen=True)
 class Variant:
@@ -20,6 +23,7 @@ class Variant:
     templates: tuple[str, ...]
     dpi_step: int
     locked_buttons: tuple[str, ...] = ("Left Button",)
+    settings: tuple[str, ...] = ("pollingRate", "liftHeight", "angleSnapping")
 
 
 VARIANTS = (
@@ -36,6 +40,7 @@ VARIANTS = (
         ("scimitarEliteW.html",),
         dpi_step=100,
         locked_buttons=("Left Button", "Profile Switch"),
+        settings=WIRELESS_SETTINGS,
     ),
     Variant(
         "scimitar-elite-se",
@@ -44,5 +49,6 @@ VARIANTS = (
         ("scimitarEliteWSE.html",),
         dpi_step=50,
         locked_buttons=("Left Button", "Profile Switch"),
+        settings=WIRELESS_SETTINGS,
     ),
 )

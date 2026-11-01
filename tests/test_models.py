@@ -1,6 +1,6 @@
 import pytest
 
-from olhclient.api.models import ActionType, MouseState, validate_assignment
+from olhclient.api.models import ActionType, MouseState, valid_profile_name, validate_assignment
 
 
 def test_parse_wireless_se(se_device):
@@ -51,3 +51,28 @@ def test_keys_sorted_by_index(se_device):
 )
 def test_validate_assignment_matches_server_rules(action_type, hold, release, ok):
     assert (validate_assignment(action_type, press_and_hold=hold, on_release=release) is None) == ok
+
+
+def test_parse_lighting(se_device):
+    lighting = MouseState.from_json(se_device).lighting
+    assert lighting.effect == "colorshift"
+    assert "static" in lighting.effects and "mouse" in lighting.effects
+    assert lighting.brightness == 30
+    assert [(z.index, z.name) for z in lighting.zones] == [(0, "Side"), (1, "Logo")]
+    assert all(z.color.startswith("#") and len(z.color) == 7 for z in lighting.zones)
+
+
+def test_parse_settings(se_device, legacy_device):
+    se = MouseState.from_json(se_device).settings
+    assert se.polling_rates == {}  # not offered over the Slipstream dongle
+    assert list(se.sleep_modes) == [1, 5, 10, 15, 30, 60]
+    assert se.lift_heights[6] == "Calibrated"
+    legacy = MouseState.from_json(legacy_device).settings
+    assert list(legacy.polling_rates) == [1, 2, 4, 8]  # "Not Set" (0) is left out
+    assert legacy.polling_rate == 1
+
+
+@pytest.mark.parametrize("name, ok", [("game", True), ("Raid25", True), ("ab", False), ("my game", False),
+                                      ("dash-name", False), ("héllo", False)])
+def test_valid_profile_name(name, ok):
+    assert (valid_profile_name(name) is None) is ok

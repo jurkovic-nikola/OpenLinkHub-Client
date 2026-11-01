@@ -58,6 +58,14 @@ class DpiController(FeatureController):
     def saving(self) -> bool:
         return self._saving
 
+    def changed_colors(self, colors: list[Any]) -> dict[int, str]:
+        """Map of stage index -> new ``#rrggbb`` for every stage whose colour differs."""
+        return {
+            stage["stageIndex"]: str(color).lower()
+            for stage, color in zip(self._stages.items(), colors)
+            if str(color).lower() != stage["color"].lower()
+        }
+
     def changed_stages(self, values: list[Any]) -> dict[int, int]:
         """Map of stage index -> new value for every stage that differs from the device."""
         current = self._stages.items()
@@ -67,11 +75,12 @@ class DpiController(FeatureController):
             if int(value) != stage["value"]
         }
 
-    @Slot("QVariantList")
-    def save(self, values: list[Any]) -> None:
-        """Save stage values, given in model order. Unchanged stages are not sent."""
+    @Slot("QVariantList", "QVariantList")
+    def save(self, values: list[Any], colors: list[Any] | None = None) -> None:
+        """Save stage values and colours, given in model order. Unchanged stages are not sent."""
         changes = self.changed_stages(values)
-        if not changes:
+        color_changes = self.changed_colors(colors or [])
+        if not changes and not color_changes:
             # The server answers "unable to change" when nothing changed; skip the round trip.
             self.session.report_message("No DPI changes to save")
             return
@@ -79,22 +88,17 @@ class DpiController(FeatureController):
         if out_of_range:
             self.session.report_message(f"DPI must be between {self._min} and {self._max}", error=True)
             return
+        api, serial = self.session.api, self.session.serial
+
+        def call() -> None:
+            if changes:
+                api.save_dpi(serial, changes)
+            if color_changes:
+                api.save_dpi_colors(serial, color_changes)
+
+        what = " and ".join(part for part, changed in (("stages", changes), ("colours", color_changes)) if changed)
         self._set_saving(True)
-        self.session.worker.submit(
-            lambda: self.session.api.save_dpi(self.session.serial, changes),
-            on_done=lambda _: self._saved(),
-            on_error=self._save_failed,
-            owner=self,
-        )
-
-    def _saved(self) -> None:
-        self._set_saving(False)
-        self.session.report_message("DPI stages saved")
-        self.session.reload()
-
-    def _save_failed(self, exc: Exception) -> None:
-        self._set_saving(False)
-        self.session.report_error(exc)
+        self.write(call, f"DPI {what} saved", done=lambda ok: self._set_saving(False))
 
     def _set_saving(self, value: bool) -> None:
         if value != self._saving:

@@ -22,6 +22,8 @@ class FeatureInfo:
 class Feature(Enum):
     KEY_REMAP = FeatureInfo("Key remapping", "features/KeyRemapList.qml", "features/KeyRemapEditor.qml")
     DPI = FeatureInfo("DPI", "features/DpiList.qml", "features/DpiEditor.qml")
+    LIGHTING = FeatureInfo("Lighting", "features/LightingList.qml", "features/LightingEditor.qml")
+    SETTINGS = FeatureInfo("Device settings", "features/SettingsList.qml", "features/SettingsEditor.qml")
 
     @property
     def id(self) -> str:

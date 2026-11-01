@@ -107,6 +107,9 @@ class DeviceModule:
     # Buttons that are shown but cannot be remapped (e.g. left click).
     locked_buttons: frozenset[str] = frozenset()
     dpi_step: int = 50
+    # Device settings (see core/features/settings.py) the hardware supports.
+    # Choice settings are only shown when the device JSON lists their options.
+    settings: frozenset[str] = frozenset()
 
     def __init__(self, layout: Layout):
         self.layout = layout

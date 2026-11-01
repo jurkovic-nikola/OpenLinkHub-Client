@@ -14,6 +14,15 @@ import httpx
 
 INPUT_KINDS = ("media", "keyboard", "mouse")
 
+#: request field -> endpoint under /api/mouse/ for single-value mouse settings
+MOUSE_SETTINGS = {
+    "pollingRate": "pollingRate",
+    "liftHeight": "liftHeight",
+    "sleepMode": "sleep",
+    "angleSnapping": "angleSnapping",
+    "buttonOptimization": "buttonOptimization",
+}
+
 
 class ApiError(Exception):
     """Raised when the server rejects a request or cannot be reached."""
@@ -161,3 +170,54 @@ class ApiClient:
             "/api/mouse/dpi",
             {"deviceId": serial, "stages": {str(index): value for index, value in stages.items()}},
         )
+
+    def save_dpi_colors(self, serial: str, colors: dict[int, str]) -> None:
+        """Set the LED colour per DPI stage; ``colors`` maps stage index -> ``#rrggbb``."""
+        self._call("POST", "/api/mouse/dpiColors", {"deviceId": serial, "colorZones": _rgb_map(colors)})
+
+    # -- lighting ----------------------------------------------------------
+
+    def set_rgb_effect(self, serial: str, effect: str) -> None:
+        self._call("POST", "/api/color", {"deviceId": serial, "channelId": 0, "profile": effect})
+
+    def set_brightness(self, serial: str, percent: int) -> None:
+        self._call("POST", "/api/brightness/gradual", {"deviceId": serial, "brightness": percent})
+
+    def save_zone_colors(self, serial: str, colors: dict[int, str]) -> None:
+        """Set the colour per lighting zone; ``colors`` maps zone index -> ``#rrggbb``."""
+        self._call("POST", "/api/mouse/zoneColors", {"deviceId": serial, "colorZones": _rgb_map(colors)})
+
+    def set_rgb_cluster(self, serial: str, enabled: bool) -> None:
+        self._call("POST", "/api/color/setCluster", {"deviceId": serial, "mode": int(enabled)})
+
+    def set_openrgb(self, serial: str, enabled: bool) -> None:
+        self._call("POST", "/api/color/setOpenRgbIntegration", {"deviceId": serial, "mode": int(enabled)})
+
+    # -- device settings ---------------------------------------------------
+
+    def set_mouse_setting(self, serial: str, setting: str, value: int) -> None:
+        """Change one of :data:`MOUSE_SETTINGS` (``pollingRate``, ``liftHeight``...)."""
+        endpoint = MOUSE_SETTINGS[setting]
+        self._call("POST", f"/api/mouse/{endpoint}", {"deviceId": serial, setting: int(value)})
+
+    # -- user profiles -----------------------------------------------------
+
+    def switch_user_profile(self, serial: str, name: str) -> None:
+        self._call("POST", "/api/userProfile/change", {"deviceId": serial, "userProfileName": name})
+
+    def save_user_profile(self, serial: str, name: str) -> None:
+        """Store the current settings as a new user profile called ``name``."""
+        self._call("PUT", "/api/userProfile", {"deviceId": serial, "userProfileName": name})
+
+    def delete_user_profile(self, serial: str, name: str) -> None:
+        self._call("DELETE", "/api/userProfile/delete", {"deviceId": serial, "userProfileName": name})
+
+
+def _rgb_map(colors: dict[int, str]) -> dict[str, dict[str, int]]:
+    result = {}
+    for index, color in colors.items():
+        value = color.lstrip("#")
+        if len(value) != 6:
+            raise ValueError(f"invalid colour {color!r}")
+        result[str(index)] = {"red": int(value[0:2], 16), "green": int(value[2:4], 16), "blue": int(value[4:6], 16)}
+    return result

@@ -13,7 +13,7 @@ HERE = Path(__file__).parent
 
 
 class ScimitarMouse(DeviceModule):
-    features = frozenset({Feature.KEY_REMAP, Feature.DPI})
+    features = frozenset({Feature.KEY_REMAP, Feature.DPI, Feature.LIGHTING, Feature.SETTINGS})
 
     def __init__(self, variant: Variant, layout: Layout):
         super().__init__(layout)
@@ -22,6 +22,7 @@ class ScimitarMouse(DeviceModule):
         self.name = variant.name
         self.dpi_step = variant.dpi_step
         self.locked_buttons = frozenset(variant.locked_buttons)
+        self.settings = frozenset(variant.settings)
 
     def match_score(self, device: dict[str, Any]) -> int:
         if device.get("ProductId") not in self.variant.product_ids:
