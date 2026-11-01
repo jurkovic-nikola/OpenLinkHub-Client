@@ -22,6 +22,7 @@ class ScimitarMouse(DeviceModule):
         self.name = variant.name
         self.dpi_step = variant.dpi_step
         self.locked_buttons = frozenset(variant.locked_buttons)
+        self.missing_buttons = frozenset(variant.missing_buttons)
         self.settings = frozenset(variant.settings)
 
     def match_score(self, device: dict[str, Any]) -> int:

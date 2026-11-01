@@ -43,7 +43,11 @@ def test_keypad_is_3x4_with_all_g_keys():
 def test_locked_buttons():
     by_id = {m.id: m for m in SCIMITARS}
     assert by_id["scimitar-elite"].locked_buttons == {"Left Button"}
-    assert by_id["scimitar-elite-se"].locked_buttons == {"Left Button", "Profile Switch"}
+    assert by_id["scimitar-elite-se"].locked_buttons == {"Left Button"}
+    # the wireless models have only the DPI button on top
+    assert by_id["scimitar-elite-se"].missing_buttons == {"Profile Switch"}
+    assert by_id["scimitar-elite-wireless"].missing_buttons == {"Profile Switch"}
+    assert by_id["scimitar-rgb-elite"].missing_buttons == set()
 
 
 def test_resolve_image_prefers_raster_and_variant_dir(tmp_path):

@@ -23,6 +23,7 @@ class Variant:
     templates: tuple[str, ...]
     dpi_step: int
     locked_buttons: tuple[str, ...] = ("Left Button",)
+    missing_buttons: tuple[str, ...] = ()
     settings: tuple[str, ...] = ("pollingRate", "liftHeight", "angleSnapping")
 
 
@@ -39,7 +40,7 @@ VARIANTS = (
         (7131,),
         ("scimitarEliteW.html",),
         dpi_step=100,
-        locked_buttons=("Left Button", "Profile Switch"),
+        missing_buttons=("Profile Switch",),  # only the DPI button on top
         settings=WIRELESS_SETTINGS,
     ),
     Variant(
@@ -48,7 +49,7 @@ VARIANTS = (
         (11042,),
         ("scimitarEliteWSE.html",),
         dpi_step=50,
-        locked_buttons=("Left Button", "Profile Switch"),
+        missing_buttons=("Profile Switch",),
         settings=WIRELESS_SETTINGS,
     ),
 )

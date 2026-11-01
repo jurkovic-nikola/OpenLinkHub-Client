@@ -44,7 +44,8 @@ class Layout:
     views: tuple[DeviceView, ...]
     thumbnail: Path
     button_labels: dict[str, str] = field(default_factory=dict)
-    # Grid callout (rows of button names), e.g. the 3x4 keypad of an MMO mouse.
+    # Rows of button names of a grid on the device, e.g. the 3x4 keypad of an MMO
+    # mouse. Its buttons are reached through hotspots, not through the callout.
     keypad: tuple[tuple[str, ...], ...] = ()
     # Vertical callout list of the remaining buttons.
     button_list: tuple[str, ...] = ()
@@ -106,6 +107,9 @@ class DeviceModule:
     features: frozenset[Feature] = frozenset()
     # Buttons that are shown but cannot be remapped (e.g. left click).
     locked_buttons: frozenset[str] = frozenset()
+    # Buttons OpenLinkHub reports that this model does not physically have. They are
+    # left out of every list, and artwork elements with class="button-<name>" are dropped.
+    missing_buttons: frozenset[str] = frozenset()
     dpi_step: int = 50
     # Device settings (see core/features/settings.py) the hardware supports.
     # Choice settings are only shown when the device JSON lists their options.

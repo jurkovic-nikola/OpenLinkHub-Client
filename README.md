@@ -100,8 +100,9 @@ themselves.
    `ProductId` and `Template` from `GET /api/devices/{serial}`.
 2. Add a `layout.json` with one entry per view. Each view has an image and hotspots. Hotspot
    rects are in the image's pixel space (`size`), and each hotspot is keyed by the button
-   **name** OpenLinkHub reports in `KeyAssignment`. Two optional callouts are available:
-   `keypad` (a grid) and `button_list`.
+   **name** OpenLinkHub reports in `KeyAssignment`. `button_list` names the buttons listed in
+   the callout next to the artwork; `keypad` holds the rows of a button grid (e.g. G1–G12),
+   which are only reached through their hotspots.
 3. Put the artwork in `assets/`. A `side.png` next to `side.svg` is used instead of the SVG, and
    `assets/<module id>/` overrides the shared images. That is where real renders go.
 4. Declare `features`, and in `settings` the device settings the hardware supports

@@ -13,7 +13,7 @@ from tests.conftest import LEGACY, SE
 def test_session_selects_first_unlocked_button(make_session):
     session = make_session()
     assert session.selectedButton == "Right Button"
-    assert session.isLocked("Left Button") and session.isLocked("Profile Switch")
+    assert session.isLocked("Left Button") and not session.isLocked("Right Button")
 
 
 def test_session_views_and_callouts(make_session):
@@ -21,7 +21,7 @@ def test_session_views_and_callouts(make_session):
     assert [v["id"] for v in session.views] == ["side", "top"]
     side = session.views[0]
     assert len(side["hotspots"]) == 12 and side["image"].startswith("file://")
-    assert [cell["label"] for cell in session.keypad[0]] == ["G3", "G6", "G9", "G12"]
+    assert "Side Button 3" not in [b["button"] for b in session.buttonList]  # keypad keys: hotspots only
     assert [b["button"] for b in session.buttonList][0] == "Left Button"
     assert session.connectionMode == "Wireless" and session.battery == 100
 
@@ -39,8 +39,8 @@ def test_describe_action(make_session):
 
 def test_key_list_order_and_labels(make_session):
     keys = make_session().controller("key_remap").keys.items()
-    assert [k["name"] for k in keys[:5]] == ["Left Button", "Right Button", "Middle Button", "Profile Switch", "DPI Button"]
-    assert [k["label"] for k in keys[5:8]] == ["G1", "G2", "G3"]
+    assert [k["name"] for k in keys[:4]] == ["Left Button", "Right Button", "Middle Button", "DPI Button"]
+    assert [k["label"] for k in keys[4:7]] == ["G1", "G2", "G3"]
     assert keys[0]["locked"]
 
 

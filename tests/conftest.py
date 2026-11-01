@@ -10,6 +10,10 @@ import pytest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
+from PySide6.QtCore import QStandardPaths  # noqa: E402
+
+QStandardPaths.setTestModeEnabled(True)  # lit artwork goes to ~/.qttest, not the real cache
+
 FIXTURES = Path(__file__).parent / "fixtures"
 SE = "SE0000000000TEST"
 LEGACY = "RGBELITE00TEST"

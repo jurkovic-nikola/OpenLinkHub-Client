@@ -8,6 +8,7 @@ from PySide6.QtCore import QObject, Property, QTimer, Signal, Slot
 
 from olhclient.api.client import ApiClient, ApiError
 from olhclient.api.models import MouseState, ReceiverState
+from olhclient.core.artwork import lit, zone_colors
 from olhclient.core.listmodel import DictListModel
 from olhclient.core.receiver import ReceiverSession
 from olhclient.core.session import QML_DIR, DeviceSession, file_url
@@ -38,6 +39,8 @@ class Backend(QObject):
         self.worker.busyChanged.connect(self.busyChanged)
         self._devices = DictListModel(DEVICE_ROLES, self)
         self._modules: dict[str, DeviceModule] = {}
+        # serial -> thumbnail in the mouse's lighting colours, as last seen
+        self._thumbnails: dict[str, str] = {}
         self._receivers: dict[str, str] = {}
         self._session: DeviceSession | None = None
         self._receiver: ReceiverSession | None = None
@@ -89,17 +92,21 @@ class Backend(QObject):
                 self._modules[serial] = self.registry.match(device)
             except LookupError:
                 continue
+            colors = zone_colors(MouseState.from_json(device))
+            module = self._modules[serial]
+            self._thumbnails[serial] = file_url(lit(module.layout.thumbnail, colors, module.missing_buttons))
             if self._session is None and self._receiver is None:
                 self._open_session(serial, device)
         for gone in set(self._modules) - set(mice):
             del self._modules[gone]
+            self._thumbnails.pop(gone, None)
 
         mouse_items = [
             {
                 "serial": serial,
                 "product": product,
                 "name": self._modules[serial].name,
-                "thumbnail": file_url(self._modules[serial].layout.thumbnail),
+                "thumbnail": self._thumbnails[serial],
                 "battery": result["battery"].get(serial, -1),
             }
             for serial, product in sorted(mice.items())
@@ -143,9 +150,19 @@ class Backend(QObject):
     def _open_session(self, serial: str, device: dict[str, Any], macros: dict[int, str] | None = None) -> None:
         session = DeviceSession(self.api, self.worker, self._modules[serial], MouseState.from_json(device), macros, self)
         session.message.connect(self.notify)
+        session.stateChanged.connect(lambda: self._update_thumbnail(serial, session.thumbnail))
         self._set_session(session)
         if macros is None:
             session.reload()  # also loads macro names
+
+    def _update_thumbnail(self, serial: str, thumbnail: str) -> None:
+        """Show the selected mouse's tile in its current lighting colours right away."""
+        if self._thumbnails.get(serial) == thumbnail or serial not in self._modules:
+            return
+        self._thumbnails[serial] = thumbnail
+        self._devices.set_items(
+            {**item, "thumbnail": thumbnail} if item["serial"] == serial else item for item in self._devices.items()
+        )
 
     def _open_receiver(self, data: dict[str, Any]) -> None:
         receiver = ReceiverSession(self.api, self.worker, ReceiverState.from_json(data), self)

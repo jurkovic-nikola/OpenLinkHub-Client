@@ -9,6 +9,7 @@ from PySide6.QtCore import QObject, Property, QUrl, Signal, Slot
 
 from olhclient.api.client import ApiClient, ApiError
 from olhclient.api.models import ActionType, KeyAssignment, MouseState, valid_profile_name
+from olhclient.core.artwork import lit, zone_colors
 from olhclient.core.features import CONTROLLERS, FeatureController
 from olhclient.core.worker import Worker
 from olhclient.devices.base import DeviceModule
@@ -39,11 +40,13 @@ class DeviceSession(QObject):
         self._reloading = False
         self._reload_again = False
         self._profile_busy = False
+        self._colors: dict[str, str] | None = None
+        self._images: dict[str, str] = {}  # view id (and "thumbnail") -> lit artwork URL
         self._controllers: dict[str, FeatureController] = {
             feature.id: CONTROLLERS[feature](self) for feature in CONTROLLERS if feature in module.features
         }
         self._apply(state)
-        selectable = [k for k in self._key_order() if k not in module.locked_buttons]
+        selectable = [k for k in self._key_order() if k not in module.locked_buttons | module.missing_buttons]
         if selectable:
             self._selected = selectable[0]
 
@@ -90,6 +93,13 @@ class DeviceSession(QObject):
 
     def _apply(self, state: MouseState) -> None:
         self.state = state
+        colors = zone_colors(state)
+        if colors != self._colors:
+            self._colors = colors
+            layout = self.module.layout
+            missing = self.module.missing_buttons
+            self._images = {view.id: file_url(lit(view.image, colors, missing)) for view in layout.views}
+            self._images["thumbnail"] = file_url(lit(layout.thumbnail, colors, missing))
         for controller in self._controllers.values():
             controller.update(state)
         self.stateChanged.emit()
@@ -155,18 +165,18 @@ class DeviceSession(QObject):
             return "Wired"
         return "USB cable" if self.state.usb else "Wireless"
 
-    @Property(str, constant=True)
+    @Property(str, notify=stateChanged)
     def thumbnail(self) -> str:
-        return file_url(self.module.layout.thumbnail)
+        return self._images["thumbnail"]
 
     @Property("QVariantList", notify=stateChanged)
     def views(self) -> list[dict[str, Any]]:
-        present = {k.name for k in self.state.keys}
+        present = {k.name for k in self.state.keys} - self.module.missing_buttons
         return [
             {
                 "id": view.id,
                 "title": view.title,
-                "image": file_url(view.image),
+                "image": self._images[view.id],
                 "hotspots": [
                     {
                         "button": spot.button,
@@ -195,17 +205,16 @@ class DeviceSession(QObject):
         }
 
     @Property("QVariantList", notify=stateChanged)
-    def keypad(self) -> list[list[dict[str, Any]]]:
-        return [[self._button(name) for name in row] for row in self.module.layout.keypad]
-
-    @Property("QVariantList", notify=stateChanged)
     def buttonList(self) -> list[dict[str, Any]]:
         layout = self.module.layout
         names = list(layout.button_list)
         if not names:  # generic module: every key the device reports, minus the keypad
             keypad = {name for row in layout.keypad for name in row}
             names = [k.name for k in self.state.keys if k.name not in keypad]
-        return [self._button(name) for name in names if self.state.key_by_name(name)]
+        return [
+            self._button(name) for name in names
+            if self.state.key_by_name(name) and name not in self.module.missing_buttons
+        ]
 
     @Property("QVariantList", constant=True)
     def features(self) -> list[dict[str, Any]]:

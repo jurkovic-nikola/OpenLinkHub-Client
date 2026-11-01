@@ -4,8 +4,8 @@ import QtQuick.Window
 import "../theme"
 import "../components"
 
-// The device "stage": artwork with clickable hotspots, a button list callout on
-// the left, a keypad grid callout on the right and carousel dots for the views.
+// The device "stage": artwork with clickable hotspots, a callout listing the
+// buttons on the left and carousel dots for the views.
 Rectangle {
     id: root
     property var session
@@ -15,6 +15,8 @@ Rectangle {
     readonly property var views: session ? session.views : []
     readonly property var view: views.length ? views[Math.min(viewIndex, views.length - 1)] : null
     readonly property string selected: session ? session.selectedButton : ""
+    // Largest size the artwork is drawn at; beyond that the stage just gets more room.
+    readonly property size maxArtworkSize: Qt.size(640, 320)
 
     gradient: Gradient {
         GradientStop { position: 0.0; color: Theme.stageTop }
@@ -121,60 +123,22 @@ Rectangle {
         }
     }
 
-    // -- right callout: keypad grid -----------------------------------------
-    Rectangle {
-        id: keypadCallout
-        anchors.right: parent.right
-        anchors.rightMargin: 16
-        anchors.verticalCenter: parent.verticalCenter
-        visible: root.session !== null && root.session.keypad.length > 0
-        width: keypadGrid.implicitWidth + 16
-        height: keypadGrid.implicitHeight + 16
-        color: "#1c1c1c"
-        border.color: "#2e2e2e"
-
-        Rectangle {
-            width: 3
-            height: parent.height
-            color: Theme.accent
-        }
-        Grid {
-            id: keypadGrid
-            anchors.centerIn: parent
-            columns: root.session && root.session.keypad.length ? root.session.keypad[0].length : 1
-            spacing: 6
-            Repeater {
-                model: {
-                    const cells = []
-                    if (root.session)
-                        for (const row of root.session.keypad)
-                            for (const cell of row)
-                                cells.push(cell)
-                    return cells
-                }
-                KeyBadge {
-                    required property var modelData
-                    label: modelData.label
-                    locked: modelData.locked
-                    selected: modelData.button === root.selected
-                    onClicked: root.activate(modelData.button)
-                }
-            }
-        }
-    }
-
     // -- artwork + hotspots ---------------------------------------------------
     Item {
         id: stage
         anchors.left: buttonCallout.right
-        anchors.right: keypadCallout.visible ? keypadCallout.left : parent.right
+        anchors.right: parent.right
         anchors.top: parent.top
         anchors.bottom: dots.top
         anchors.margins: 12
+        // as much room on the right as the button list takes on the left, to keep the artwork centred
+        anchors.rightMargin: buttonCallout.x + buttonCallout.width + anchors.margins
 
         Image {
             id: artwork
-            anchors.fill: parent
+            anchors.centerIn: parent
+            width: Math.min(parent.width, root.maxArtworkSize.width)
+            height: Math.min(parent.height, root.maxArtworkSize.height)
             source: root.view ? root.view.image : ""
             fillMode: Image.PreserveAspectFit
             sourceSize.width: Math.max(1, width * Screen.devicePixelRatio)
@@ -185,8 +149,8 @@ Rectangle {
 
         Item {
             id: painted
-            x: (artwork.width - artwork.paintedWidth) / 2
-            y: (artwork.height - artwork.paintedHeight) / 2
+            x: artwork.x + (artwork.width - artwork.paintedWidth) / 2
+            y: artwork.y + (artwork.height - artwork.paintedHeight) / 2
             width: artwork.paintedWidth
             height: artwork.paintedHeight
 
@@ -217,26 +181,6 @@ Rectangle {
                 }
             }
         }
-    }
-
-    // Connector from the selected keypad hotspot to the keypad callout.
-    Rectangle {
-        readonly property var spot: root.hotspotIn(root.view, root.selected)
-        readonly property bool inKeypad: {
-            if (!root.session)
-                return false
-            for (const row of root.session.keypad)
-                for (const cell of row)
-                    if (cell.button === root.selected)
-                        return true
-            return false
-        }
-        visible: spot !== null && inKeypad && keypadCallout.visible
-        x: spot ? stage.x + painted.x + (spot.x + spot.w) * painted.width : 0
-        y: spot ? stage.y + painted.y + (spot.y + spot.h / 2) * painted.height : 0
-        width: Math.max(0, keypadCallout.x - x)
-        height: 1
-        color: Theme.accent
     }
 
     CarouselDots {

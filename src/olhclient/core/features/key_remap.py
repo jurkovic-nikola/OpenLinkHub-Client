@@ -44,7 +44,8 @@ class KeyRemapController(FeatureController):
     # -- data --------------------------------------------------------------
 
     def update(self, state: MouseState) -> None:
-        self._keys.set_items(self._row(key) for key in self._ordered(state.keys))
+        missing = self.session.module.missing_buttons
+        self._keys.set_items(self._row(key) for key in self._ordered(state.keys) if key.name not in missing)
         options = [{"value": value, "text": text} for value, text in state.assignment_types.items()]
         if options != self._type_options:
             self._type_options = options
