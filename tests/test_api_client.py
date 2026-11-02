@@ -111,6 +111,55 @@ def test_input_actions_and_macros(api):
 
 
 @respx.mock
+def test_macro_profiles(api):
+    from olhclient.api.models import MacroStep
+
+    respx.get(f"{BASE}/api/macro/").respond(json=load_fixture("macro.json"))
+    [macro] = api.macro_profiles()
+    assert (macro.id, macro.name, macro.repeat) == (1, "DPI", 0)
+    assert macro.ordered[0].action_type == MacroStep.KEYBOARD
+    assert macro.ordered[0].command == 77
+
+
+@respx.mock
+def test_macro_writes(api):
+    from olhclient.api.models import MacroAction, MacroStep
+
+    ok = {"code": 200, "status": 1, "message": "OK"}
+    routes = {
+        ("PUT", "/api/macro/new"): respx.put(f"{BASE}/api/macro/new").respond(json=ok),
+        ("DELETE", "/api/macro/profile"): respx.delete(f"{BASE}/api/macro/profile").respond(json=ok),
+        ("POST", "/api/macro/updateSettings"): respx.post(f"{BASE}/api/macro/updateSettings").respond(json=ok),
+        ("POST", "/api/macro/newValue"): respx.post(f"{BASE}/api/macro/newValue").respond(json=ok),
+        ("POST", "/api/macro/updateValue"): respx.post(f"{BASE}/api/macro/updateValue").respond(json=ok),
+        ("DELETE", "/api/macro/value"): respx.delete(f"{BASE}/api/macro/value").respond(json=ok),
+    }
+
+    def sent(method: str, path: str) -> dict:
+        return json.loads(routes[(method, path)].calls.last.request.content)
+
+    move = MacroAction(MacroStep.MOUSE_MOVE, x=10, y=20, absolute=True, repeat=2, repeat_delay=5)
+    api.new_macro("Combo")
+    assert sent("PUT", "/api/macro/new") == {"macroName": "Combo"}
+    api.delete_macro(3)
+    assert sent("DELETE", "/api/macro/profile") == {"macroId": 3}
+    api.update_macro_settings(3, -1, 250)
+    assert sent("POST", "/api/macro/updateSettings") == {"macroId": 3, "macroRepeat": -1, "macroRepeatDelay": 250}
+    api.add_macro_action(3, move)
+    assert sent("POST", "/api/macro/newValue") == {
+        "macroId": 3, "macroType": 20, "macroValue": 0, "macroDelay": 0, "macroText": "",
+        "mousePositionX": 10, "mousePositionY": 20, "mousePositionAbsolute": True,
+    }
+    api.update_macro_action(3, 1, move)
+    assert sent("POST", "/api/macro/updateValue") == {
+        "macroId": 3, "macroIndex": 1, "pressAndHold": False, "actionRepeatValue": 2, "actionRepeatDelay": 5,
+        "mousePositionX": 10, "mousePositionY": 20, "mousePositionAbsolute": True,
+    }
+    api.delete_macro_action(3, 1)
+    assert sent("DELETE", "/api/macro/value") == {"macroId": 3, "macroIndex": 1}
+
+
+@respx.mock
 def test_battery_levels(api):
     respx.get(f"{BASE}/api/batteryStats").respond(json=load_fixture("batteryStats.json"))
     assert api.battery_levels() == {"SE0000000000TEST": 100}

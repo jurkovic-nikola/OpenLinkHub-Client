@@ -6,6 +6,9 @@ Rectangle {
     id: root
     property var backend
     property var updater: null
+    // "devices" or "macros"
+    property string page: "devices"
+    signal pageSelected(string page)
     implicitHeight: 40
     color: Theme.topBar
 
@@ -30,16 +33,31 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
             }
         }
-        Text {
-            text: "DEVICES"
-            color: Theme.accent
-            font.pixelSize: Theme.fontNormal
-            Rectangle {
-                anchors.top: parent.bottom
-                anchors.topMargin: 6
-                width: parent.width
-                height: 2
-                color: Theme.accent
+        Repeater {
+            model: [{ page: "devices", title: "DEVICES" }, { page: "macros", title: "MACROS" }]
+            Text {
+                id: tab
+                required property var modelData
+                readonly property bool current: root.page === modelData.page
+                text: modelData.title
+                color: current || tabArea.containsMouse ? Theme.accent : Theme.textDim
+                font.pixelSize: Theme.fontNormal
+                Rectangle {
+                    anchors.top: parent.bottom
+                    anchors.topMargin: 6
+                    width: parent.width
+                    height: 2
+                    color: Theme.accent
+                    visible: tab.current
+                }
+                MouseArea {
+                    id: tabArea
+                    anchors.fill: parent
+                    anchors.margins: -6
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.pageSelected(tab.modelData.page)
+                }
             }
         }
         Item { Layout.fillWidth: true }

@@ -16,6 +16,8 @@ ApplicationWindow {
     // A Slipstream receiver is selected instead of a mouse.
     readonly property var receiver: backend.receiver
     property string featureId: ""
+    // top bar tab: "devices" or "macros"
+    property string page: "devices"
     readonly property var feature: {
         if (!session)
             return null
@@ -44,11 +46,17 @@ ApplicationWindow {
     minimumWidth: 1120
     minimumHeight: 700
     visible: true
-    title: session ? session.product + " — OpenLinkHub"
+    title: page === "macros" ? "Macros — OpenLinkHub"
+        : session ? session.product + " — OpenLinkHub"
         : receiver ? receiver.product + " — OpenLinkHub" : "OpenLinkHub"
     color: Theme.window
 
-    header: TopBar { backend: window.backend; updater: window.updater }
+    header: TopBar {
+        backend: window.backend
+        updater: window.updater
+        page: window.page
+        onPageSelected: page => window.page = page
+    }
     footer: StatusBar { backend: window.backend }
 
     Connections {
@@ -60,6 +68,7 @@ ApplicationWindow {
         anchors.fill: parent
         anchors.margins: Theme.gap
         spacing: Theme.gap
+        visible: window.page === "devices"
         enabled: window.session !== null || window.receiver !== null
 
         // -- left column ---------------------------------------------------
@@ -169,10 +178,18 @@ ApplicationWindow {
         }
     }
 
+    Loader {
+        anchors.fill: parent
+        anchors.margins: Theme.gap
+        active: window.page === "macros"
+        sourceComponent: MacrosView { library: window.backend.macros }
+    }
+
     // -- empty / error states ------------------------------------------------
     Rectangle {
         anchors.fill: parent
-        visible: window.session === null && window.receiver === null && !window.backend.authRequired
+        visible: !window.backend.authRequired && (window.page === "macros" ? !window.backend.connected
+                 : window.session === null && window.receiver === null)
         color: Qt.rgba(0.08, 0.08, 0.08, 0.92)
         Column {
             anchors.centerIn: parent

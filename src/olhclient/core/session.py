@@ -67,6 +67,11 @@ class DeviceSession(QObject):
     def serial(self) -> str:
         return self.state.serial
 
+    @property
+    def macro_names(self) -> dict[int, str]:
+        """Macro id -> name, as of the last reload."""
+        return dict(self._macros)
+
     def reload(self) -> None:
         """Fetch the device again (after a save, or on the poll timer)."""
         if self._reloading:

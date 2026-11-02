@@ -93,6 +93,36 @@ def test_every_feature_panel_on_every_device(ui, qtbot, fake_api):
     assert warnings == []
 
 
+def test_macros_page(ui, qtbot, fake_api):
+    from olhclient.api.models import MacroAction, MacroStep
+    from olhclient.core.macros import action_to_qml
+
+    backend, window, warnings = ui
+    backend.refresh()
+    settle(qtbot)
+    window.setProperty("page", "macros")
+    settle(qtbot)
+    library = backend.macros
+    assert library.current["name"] == "DPI"
+    assert window.property("title") == "Macros — OpenLinkHub"
+    actions = [MacroAction(MacroStep.KEYBOARD, command=10, hold=True), MacroAction(MacroStep.DELAY, delay=40),
+               MacroAction(MacroStep.TEXT, text="gg"), MacroAction(MacroStep.MOUSE, command=91),
+               MacroAction(MacroStep.MOUSE_MOVE, x=5, y=6, repeat=2)]
+    library.save(1, -1, 100, [action_to_qml(a) for a in actions])
+    settle(qtbot)
+    assert len(library.current["actions"]) == 5
+    library.create("Combo")
+    settle(qtbot)
+    library.deleteMacro(library.current["id"])
+    fake_api.fail_with = ApiError("Cannot reach OpenLinkHub")
+    backend.refresh()
+    settle(qtbot)
+    fake_api.fail_with = None
+    window.setProperty("page", "devices")
+    settle(qtbot)
+    assert warnings == []
+
+
 def test_receiver_page(ui, qtbot, fake_api):
     backend, window, warnings = ui
     backend.refresh()

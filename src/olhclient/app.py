@@ -65,7 +65,7 @@ def main(argv: list[str] | None = None) -> int:
     engine = create_engine(backend, updater, config.username)
     if not engine.rootObjects():
         return 1
-    tray = create_tray(app, engine.rootObjects()[0], updater.check)  # noqa: F841 - keep the tray alive
+    tray = create_tray(app, engine.rootObjects()[0], updater.check, backend.devices)  # noqa: F841 - keep alive
     backend.start()
     if config.check_updates:
         updater.checkQuietly()

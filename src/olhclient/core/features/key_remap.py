@@ -124,14 +124,15 @@ class KeyRemapController(FeatureController):
             source = None
         if source is None:
             return [{"value": 0, "text": "None"}]
+        if source == "macro":  # reloaded with the device, so new macros show up
+            return self._sorted(self.session.macro_names)
         if action_type in self._options:
             return self._options[action_type]
         if action_type not in self._loading:
             self._loading.add(action_type)
             api = self.session.api
-            fetch = api.macros if source == "macro" else (lambda: api.input_actions(source))
             self.session.worker.submit(
-                fetch,
+                lambda: api.input_actions(source),
                 on_done=lambda result: self._options_loaded(action_type, result),
                 on_error=lambda exc: self._options_failed(action_type, exc),
                 owner=self,
@@ -141,9 +142,12 @@ class KeyRemapController(FeatureController):
 
     def _options_loaded(self, action_type: int, result: dict[int, str]) -> None:
         self._loading.discard(action_type)
-        options = sorted(({"value": v, "text": t} for v, t in result.items()), key=lambda o: _natural(o["text"]))
-        self._options[action_type] = options
+        self._options[action_type] = self._sorted(result)
         self.optionsLoaded.emit(action_type)
+
+    @staticmethod
+    def _sorted(names: dict[int, str]) -> list[dict[str, Any]]:
+        return sorted(({"value": v, "text": t} for v, t in names.items()), key=lambda o: _natural(o["text"]))
 
     def _options_failed(self, action_type: int, exc: Exception) -> None:
         self._loading.discard(action_type)

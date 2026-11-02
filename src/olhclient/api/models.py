@@ -508,6 +508,134 @@ class ReceiverState:
         )
 
 
+class MacroStep(IntEnum):
+    """``actionType`` of a macro action (OpenLinkHub's macros page offers all but MEDIA)."""
+
+    MEDIA = 1
+    KEYBOARD = 3
+    DELAY = 5
+    TEXT = 6
+    MOUSE = 9
+    MOUSE_MOVE = 20
+
+    @property
+    def title(self) -> str:
+        return {
+            MacroStep.MEDIA: "Media key",
+            MacroStep.KEYBOARD: "Keyboard",
+            MacroStep.DELAY: "Delay",
+            MacroStep.TEXT: "Text",
+            MacroStep.MOUSE: "Mouse",
+            MacroStep.MOUSE_MOVE: "Mouse position",
+        }[self]
+
+    @property
+    def value_source(self) -> str | None:
+        """The ``/api/input/*`` list the action's key comes from, if any."""
+        return {MacroStep.MEDIA: "media", MacroStep.KEYBOARD: "keyboard", MacroStep.MOUSE: "mouse"}.get(self)
+
+
+#: steps that can be added: the server refuses types below 3, so no media keys
+NEW_MACRO_STEPS = (MacroStep.KEYBOARD, MacroStep.MOUSE, MacroStep.DELAY, MacroStep.TEXT, MacroStep.MOUSE_MOVE)
+
+
+@dataclass(frozen=True)
+class MacroAction:
+    """One action of a macro. ``/api/macro/newValue`` sets the type, key, delay, text and
+    mouse position; ``/api/macro/updateValue`` only hold, repeat and mouse position."""
+
+    action_type: int
+    command: int = 0
+    delay: int = 0
+    text: str = ""
+    hold: bool = False
+    repeat: int = 0
+    repeat_delay: int = 0
+    x: int = 0
+    y: int = 0
+    absolute: bool = False
+
+    @classmethod
+    def from_json(cls, data: dict[str, Any]) -> MacroAction:
+        return cls(
+            action_type=int(data.get("actionType", 0)),
+            command=int(data.get("actionCommand", 0)),
+            delay=int(data.get("actionDelay", 0)),
+            text=data.get("actionText") or "",
+            hold=bool(data.get("actionHold", False)),
+            repeat=int(data.get("actionRepeat", 0)),
+            repeat_delay=int(data.get("actionRepeatDelay", 0)),
+            x=int(data.get("mousePositionX", 0)),
+            y=int(data.get("mousePositionY", 0)),
+            absolute=bool(data.get("mousePositionAbsolute", False)),
+        )
+
+    def created_as(self) -> MacroAction:
+        """The action as ``newValue`` creates it, before ``updateValue`` sets the rest."""
+        moves = self.action_type == MacroStep.MOUSE_MOVE
+        return MacroAction(self.action_type, self.command, self.delay, self.text,
+                           x=self.x if moves else 0, y=self.y if moves else 0, absolute=moves and self.absolute)
+
+
+@dataclass(frozen=True)
+class Macro:
+    """A macro of ``GET /api/macro/``. ``actions`` maps the action index to the action.
+
+    Drivers play actions 0, 1, 2... up to the number of actions and skip missing
+    indexes, so an action after a gap never plays.
+    """
+
+    id: int
+    name: str
+    repeat: int  # -1: loop until the button is pressed again
+    repeat_delay: int
+    actions: dict[int, MacroAction]
+
+    @classmethod
+    def from_json(cls, data: dict[str, Any]) -> Macro:
+        return cls(
+            id=int(data.get("id", 0)),
+            name=data.get("name", ""),
+            repeat=int(data.get("repeat", 0)),
+            repeat_delay=int(data.get("repeatDelay", 0)),
+            actions={int(index): MacroAction.from_json(action or {})
+                     for index, action in (data.get("actions") or {}).items()},
+        )
+
+    @property
+    def ordered(self) -> list[MacroAction]:
+        return [action for _, action in sorted(self.actions.items())]
+
+
+def validate_macro_action(action: MacroAction) -> str | None:
+    """Mirror the server-side checks of ``newValue`` and ``updateValue``; an error message or ``None``."""
+    if action.action_type == MacroStep.KEYBOARD and not action.command:
+        return "Choose a key"
+    if action.action_type == MacroStep.DELAY and not 1 <= action.delay <= 0xFFFF:
+        return "A delay is 1 to 65535 ms"
+    if action.action_type == MacroStep.TEXT and not action.text:
+        return "Enter the text to type"
+    if not 0 <= action.repeat <= 100:
+        return "Repeat is 0 to 100 times"
+    if not 0 <= action.repeat_delay <= 10000:
+        return "The repeat delay is 0 to 10000 ms"
+    if action.x < 0 or action.y < 0:
+        return "OpenLinkHub only accepts positive mouse positions"
+    return None
+
+
+def validate_macro(actions: list[MacroAction]) -> str | None:
+    """Every action valid, and not every key held (``updateValue`` refuses that)."""
+    for number, action in enumerate(actions, 1):
+        problem = validate_macro_action(action)
+        if problem:
+            return f"Action {number}: {problem}"
+    pressed = [a for a in actions if a.action_type != MacroStep.DELAY]
+    if pressed and all(a.hold for a in pressed):
+        return "At least one action must not be press and hold"
+    return None
+
+
 def valid_profile_name(name: str) -> str | None:
     """Mirror the server rules for user profile names; returns an error message or ``None``."""
     if len(name) < 3:

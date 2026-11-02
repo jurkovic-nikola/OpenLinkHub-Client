@@ -52,6 +52,16 @@
     </screenshots>
     <content_rating type="oars-1.1"/>
     <releases>
+        <release version="0.2.0" date="2026-11-02">
+            <description>
+                <ul>
+                    <li>Macros tab: create, edit and delete macros of keys, mouse buttons, delays, text and mouse moves, and reorder their actions</li>
+                    <li>Saving a macro closes gaps in its actions that kept the later actions from playing</li>
+                    <li>New macros show up in Key remapping without selecting the device again</li>
+                    <li>Battery levels in the tray menu and tooltip, with a notification when a battery runs low</li>
+                </ul>
+            </description>
+        </release>
         <release version="0.1.1" date="2026-11-02">
             <description>
                 <ul>

@@ -12,7 +12,7 @@ from urllib.parse import urlsplit
 
 import httpx
 
-from olhclient.api.models import DeviceInfo
+from olhclient.api.models import DeviceInfo, Macro, MacroAction
 from olhclient.api.receiver_page import parse_receiver_page
 
 INPUT_KINDS = ("media", "keyboard", "mouse")
@@ -155,6 +155,11 @@ class ApiClient:
         data = self._call("GET", "/api/macro/").get("data") or {}
         return {int(macro_id): macro.get("name", str(macro_id)) for macro_id, macro in data.items()}
 
+    def macro_profiles(self) -> list[Macro]:
+        """Every macro with its actions, by id."""
+        data = self._call("GET", "/api/macro/").get("data") or {}
+        return sorted((Macro.from_json(macro or {}) for macro in data.values()), key=lambda m: m.id)
+
     def temperature_profiles(self) -> list[str]:
         """Names of the fan/pump speed profiles (this endpoint answers with status 0)."""
         data = self._request("GET", "/api/temperatures/").get("data") or {}
@@ -271,6 +276,49 @@ class ApiClient:
 
     def delete_user_profile(self, serial: str, name: str) -> None:
         self._call("DELETE", "/api/userProfile/delete", {"deviceId": serial, "userProfileName": name})
+
+    # -- macros ------------------------------------------------------------
+
+    def new_macro(self, name: str) -> None:
+        """An empty macro; the server picks its id."""
+        self._call("PUT", "/api/macro/new", {"macroName": name})
+
+    def delete_macro(self, macro_id: int) -> None:
+        self._call("DELETE", "/api/macro/profile", {"macroId": macro_id})
+
+    def update_macro_settings(self, macro_id: int, repeat: int, repeat_delay: int) -> None:
+        """``repeat`` -1 loops the macro until its button is pressed again."""
+        self._call("POST", "/api/macro/updateSettings",
+                   {"macroId": macro_id, "macroRepeat": repeat, "macroRepeatDelay": repeat_delay})
+
+    def add_macro_action(self, macro_id: int, action: MacroAction) -> None:
+        """Append an action; the server gives it the index ``len(actions)``."""
+        self._call("POST", "/api/macro/newValue", {
+            "macroId": macro_id,
+            "macroType": action.action_type,
+            "macroValue": action.command,
+            "macroDelay": action.delay,
+            "macroText": action.text,
+            "mousePositionX": action.x,
+            "mousePositionY": action.y,
+            "mousePositionAbsolute": action.absolute,
+        })
+
+    def update_macro_action(self, macro_id: int, index: int, action: MacroAction) -> None:
+        """Hold, repeat and mouse position of an action; its type, key, delay and text stay."""
+        self._call("POST", "/api/macro/updateValue", {
+            "macroId": macro_id,
+            "macroIndex": index,
+            "pressAndHold": action.hold,
+            "actionRepeatValue": action.repeat,
+            "actionRepeatDelay": action.repeat_delay,
+            "mousePositionX": action.x,
+            "mousePositionY": action.y,
+            "mousePositionAbsolute": action.absolute,
+        })
+
+    def delete_macro_action(self, macro_id: int, index: int) -> None:
+        self._call("DELETE", "/api/macro/value", {"macroId": macro_id, "macroIndex": index})
 
 
 def _rgb_map(colors: dict[int, str]) -> dict[str, dict[str, int]]:

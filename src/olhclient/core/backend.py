@@ -10,6 +10,7 @@ from olhclient.api.client import RECEIVER_PRODUCTS, ApiClient, ApiError
 from olhclient.api.models import DeviceInfo, DeviceKind, DeviceState, ReceiverState
 from olhclient.core.artwork import lit, zone_colors
 from olhclient.core.listmodel import DictListModel
+from olhclient.core.macros import MacroLibrary
 from olhclient.core.receiver import ReceiverSession
 from olhclient.core.session import QML_DIR, DeviceSession, file_url, kind_icon
 from olhclient.core.worker import Worker
@@ -54,6 +55,8 @@ class Backend(QObject):
         # serial -> thumbnail (in the device's lighting colours when it has artwork), as last seen
         self._thumbnails: dict[str, str] = {}
         self._receivers: dict[str, str] = {}
+        self._macros = MacroLibrary(api, self.worker, self)
+        self._macros.message.connect(self.notify)
         self._session: DeviceSession | None = None
         self._receiver: ReceiverSession | None = None
         self._connected = False
@@ -253,6 +256,10 @@ class Backend(QObject):
     @Property(QObject, constant=True)
     def devices(self) -> DictListModel:
         return self._devices
+
+    @Property(QObject, constant=True)
+    def macros(self) -> MacroLibrary:
+        return self._macros
 
     @Property(QObject, notify=sessionChanged)
     def session(self) -> DeviceSession | None:

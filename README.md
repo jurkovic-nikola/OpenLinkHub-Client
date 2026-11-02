@@ -41,6 +41,10 @@ What a device gets depends on what OpenLinkHub reports for it.
   debounce time, keyboard layout, automatic brightness and controller vibration.
 - **User profiles**: switch the active OpenLinkHub profile, create one from the current settings,
   delete one.
+- **Macros**: the MACROS tab lists OpenLinkHub's macros: create, delete and edit them. A macro
+  is a list of keyboard keys, mouse buttons, delays, typed text and mouse moves, in the order
+  they play; keys can be held, text and mouse moves repeated, and the whole macro played several
+  times or looped until its button is pressed again. Assign it to a button with Key remapping.
 - **Slipstream receiver**: the USB dongle gets its own page, like the receiver card in iCUE's
   Device Settings. It shows the firmware, the paired devices and the USB receiver polling rate,
   which applies to every device on the dongle.
@@ -49,7 +53,8 @@ What a device gets depends on what OpenLinkHub reports for it.
 - **Login** for OpenLinkHub instances with dashboard authentication enabled.
 - **Tray icon**: closing the window hides it to the system tray; right-click the icon for
   Show, Check for Updates and Quit, or click it to show or hide the window. Without a system tray,
-  closing the window quits.
+  closing the window quits. The tray menu and tooltip show the battery level of every device that
+  reports one, and a notification tells when a battery drops to 15% or lower.
 - **Updates**: at startup the client checks GitHub for a new release. The Flatpak downloads and
   installs it and restarts; other installs get a link to the release page.
 
@@ -58,8 +63,8 @@ What a device gets depends on what OpenLinkHub reports for it.
 | ![Remapping a key on a K70 Core, drawn from OpenLinkHub's layout](docs/screenshots/keyboard.png) | ![Headset settings](docs/screenshots/headset.png) |
 | **Fans & pumps** | **Lighting** |
 | ![Fans and pumps on a Commander Core](docs/screenshots/fans.png) | ![Lighting](docs/screenshots/lighting.png) |
-| **Slipstream receiver** | |
-| ![Slipstream receiver](docs/screenshots/slipstream-receiver.png) | |
+| **Slipstream receiver** | **Macros** |
+| ![Slipstream receiver](docs/screenshots/slipstream-receiver.png) | ![Editing a macro: keys, delays, a mouse move and text](docs/screenshots/macros.png) |
 
 ## Supported devices
 
@@ -200,7 +205,8 @@ memory only; no password is stored.
 src/olhclient/
   api/        ApiClient (httpx), typed models of the device JSON, Slipstream page parser
   core/       Worker (thread pool), Backend (polling, device list), DeviceSession and
-              ReceiverSession, feature controllers (core/features/*), artwork lighting
+              ReceiverSession, feature controllers (core/features/*), MacroLibrary (macros page),
+              artwork lighting
   devices/    device modules: base.py, registry.py, generic/, scimitar/
   qml/        Main.qml, theme/, components/, layout/, features/
 ```
@@ -321,6 +327,13 @@ GitHub release whose description is that `<release>` entry (converted by
   polling rate), the sleep timer only for wireless models on the dongle. The polling rate
   "Not Set" (0) is left out because the server refuses it.
 - The receiver's polling rate is set with `POST /api/mouse/pollingRate` and the receiver's serial.
+- Macros: `/api/macro/newValue` gives a new action the index `len(actions)`, and drivers play
+  indexes 0 up to that length, skipping missing ones. Deleting an action other than the last
+  therefore leaves a gap: the actions after it never play and the next new action overwrites
+  the last one. The client never deletes in the middle: it deletes every action from the first
+  change on and adds them again in their new order. `updateValue` only changes hold, repeat and
+  mouse position, and refuses a macro whose keys would all be held. Macro names follow the
+  profile name rules and must be unique ignoring case (the file is `<lowercase name>.json`).
 - User profile names must be letters and numbers only. The active and the `default` profile
   cannot be deleted. Creating a profile copies the current settings; it does not switch to it.
 

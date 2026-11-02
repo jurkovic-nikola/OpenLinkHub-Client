@@ -67,6 +67,9 @@ class FakeApi:
         self.unreadable: dict[str, str] = {}
         self.calls: list[tuple] = []
         self.fail_with: Exception | None = None
+        #: macro id -> macro JSON, as GET /api/macro/ returns it
+        self.macro_data: dict[int, dict[str, Any]] = {
+            int(k): v for k, v in copy.deepcopy(load_fixture("macro.json")["data"]).items()}
 
     def _check(self) -> None:
         if self.fail_with is not None:
@@ -103,7 +106,60 @@ class FakeApi:
         return {s: d["BatteryLevel"] for s, d in self.devices.items() if "BatteryLevel" in d}
 
     def macros(self) -> dict[int, str]:
-        return {1: "DPI"}
+        return {macro_id: macro["name"] for macro_id, macro in self.macro_data.items()}
+
+    # -- macros, with OpenLinkHub's indexing: a new action gets index len(actions)
+
+    def macro_profiles(self) -> list[Any]:
+        from olhclient.api.models import Macro
+
+        self._check()
+        return [Macro.from_json(copy.deepcopy(m)) for _, m in sorted(self.macro_data.items())]
+
+    def new_macro(self, name: str) -> None:
+        self._check()
+        self.calls.append(("new_macro", name))
+        macro_id = max(self.macro_data, default=0) + 1
+        self.macro_data[macro_id] = {"id": macro_id, "name": name, "repeat": 0, "repeatDelay": 0, "actions": {}}
+
+    def delete_macro(self, macro_id: int) -> None:
+        self._check()
+        self.calls.append(("delete_macro", macro_id))
+        del self.macro_data[macro_id]
+
+    def update_macro_settings(self, macro_id: int, repeat: int, repeat_delay: int) -> None:
+        self._check()
+        self.calls.append(("update_macro_settings", macro_id, repeat, repeat_delay))
+        self.macro_data[macro_id].update(repeat=repeat, repeatDelay=repeat_delay)
+
+    def add_macro_action(self, macro_id: int, action: Any) -> None:
+        self._check()
+        self.calls.append(("add_macro_action", macro_id, action))
+        actions = self.macro_data[macro_id]["actions"]
+        actions[str(len(actions))] = {
+            "actionType": action.action_type, "actionCommand": action.command, "actionDelay": action.delay,
+            "actionHold": False, "actionRepeat": 0, "actionRepeatDelay": 0, "actionText": action.text,
+            "mousePositionX": action.x, "mousePositionY": action.y, "mousePositionAbsolute": action.absolute,
+        }
+
+    def update_macro_action(self, macro_id: int, index: int, action: Any) -> None:
+        from olhclient.api.client import ApiError
+
+        self._check()
+        self.calls.append(("update_macro_action", macro_id, index, action))
+        actions = self.macro_data[macro_id]["actions"]
+        if action.hold:  # the server refuses holding every non-delay action
+            pressed = [i for i, a in actions.items() if a["actionType"] != 5]
+            if all(i == str(index) or actions[i]["actionHold"] for i in pressed):
+                raise ApiError("Unable to update macro value: press and hold")
+        actions[str(index)].update(
+            actionHold=action.hold, actionRepeat=action.repeat, actionRepeatDelay=action.repeat_delay,
+            mousePositionX=action.x, mousePositionY=action.y, mousePositionAbsolute=action.absolute)
+
+    def delete_macro_action(self, macro_id: int, index: int) -> None:
+        self._check()
+        self.calls.append(("delete_macro_action", macro_id, index))
+        del self.macro_data[macro_id]["actions"][str(index)]
 
     def input_actions(self, kind: str) -> dict[int, str]:
         self.calls.append(("input_actions", kind))
