@@ -47,6 +47,8 @@ What a device gets depends on what OpenLinkHub reports for it.
 - **Open in OpenLinkHub**: every device page links to OpenLinkHub's own page for the device, for
   what the client does not cover.
 - **Login** for OpenLinkHub instances with dashboard authentication enabled.
+- **Tray icon**: closing the window hides it to the system tray; right-click the icon for
+  Show and Quit, or click it to show or hide the window. Without a system tray, closing the window quits.
 
 | Keyboard | Headset |
 |---|---|

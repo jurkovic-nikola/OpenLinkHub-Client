@@ -8,9 +8,10 @@ import sys
 from pathlib import Path
 
 from PySide6.QtCore import QUrl
-from PySide6.QtGui import QGuiApplication, QIcon
+from PySide6.QtGui import QIcon
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtQuickControls2 import QQuickStyle
+from PySide6.QtWidgets import QApplication
 
 from olhclient import __version__
 from olhclient.api.client import ApiClient
@@ -18,6 +19,7 @@ from olhclient.config import Config, default_path
 from olhclient.core.backend import Backend
 from olhclient.core.session import QML_DIR
 from olhclient.devices.registry import Registry
+from olhclient.tray import create_tray
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
@@ -48,7 +50,8 @@ def main(argv: list[str] | None = None) -> int:
         config.verify_tls, config.ca_file = False, ""
 
     QQuickStyle.setStyle("Basic")
-    app = QGuiApplication(sys.argv[:1])
+    # QApplication (not QGuiApplication): the tray menu is a QMenu.
+    app = QApplication(sys.argv[:1])
     app.setApplicationName("OpenLinkHub Client")
     app.setOrganizationName("olh-client")
     app.setWindowIcon(QIcon(str(QML_DIR / "icons" / "app.svg")))
@@ -58,6 +61,7 @@ def main(argv: list[str] | None = None) -> int:
     engine = create_engine(backend, config.username)
     if not engine.rootObjects():
         return 1
+    tray = create_tray(app, engine.rootObjects()[0])  # noqa: F841 - keep the tray alive
     backend.start()
     try:
         return app.exec()
