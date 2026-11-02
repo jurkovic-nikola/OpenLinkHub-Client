@@ -52,6 +52,14 @@
     </screenshots>
     <content_rating type="oars-1.1"/>
     <releases>
+        <release version="0.1.1" date="2026-11-02">
+            <description>
+                <ul>
+                    <li>Show the app icon in the application menu right after installing (KDE Plasma)</li>
+                    <li>GitHub releases now carry these release notes</li>
+                </ul>
+            </description>
+        </release>
         <release version="0.1.0" date="2026-11-02">
             <description>
                 <p>First release, as a Flatpak with built-in updates.</p>

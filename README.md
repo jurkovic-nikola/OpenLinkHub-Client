@@ -291,10 +291,11 @@ flatpak/build-and-run.sh     # build, install (--user) and run this checkout
 flatpak/build-bundle.sh      # build OpenLinkHub-Client-v<version>.flatpak
 ```
 
-To release: bump `__version__` in `src/olhclient/__init__.py`, add a `<release>` to the metainfo,
-commit, and push a tag `v<version>`. The workflow in `.github/workflows/flatpak.yml` checks that the
-tag, `__version__` and the metainfo agree, builds the bundle and attaches it to a GitHub release
-(tags ending in `-dev` become prereleases, which the updater skips). The updater
+To release: bump `__version__` in `src/olhclient/__init__.py`, add a `<release>` with its notes to
+the metainfo, commit, and push a tag `v<version>`. The workflow in `.github/workflows/flatpak.yml`
+checks that the tag, `__version__` and the metainfo agree, builds the bundle and attaches it to a
+GitHub release whose description is that `<release>` entry (converted by
+`.github/scripts/release_notes.py`). Tags ending in `-dev` become prereleases, which the updater skips. The updater
 (`update.py`, `core/updater.py`) looks for the asset `OpenLinkHub-Client-<tag>.flatpak`.
 
 ### Notes on the OpenLinkHub API
