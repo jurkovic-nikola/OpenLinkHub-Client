@@ -5,6 +5,7 @@ import "../theme"
 Rectangle {
     id: root
     property var backend
+    property var updater: null
     implicitHeight: 40
     color: Theme.topBar
 
@@ -42,6 +43,20 @@ Rectangle {
             }
         }
         Item { Layout.fillWidth: true }
+        Text {
+            visible: root.updater !== null && root.updater.updateAvailable
+            text: root.updater ? "Update " + root.updater.latestVersion + " available" : ""
+            color: Theme.accent
+            font.pixelSize: Theme.fontSmall
+            font.underline: updateArea.containsMouse
+            MouseArea {
+                id: updateArea
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.updater.open()
+            }
+        }
         Row {
             spacing: 8
             Rectangle {

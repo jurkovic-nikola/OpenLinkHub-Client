@@ -48,7 +48,10 @@ What a device gets depends on what OpenLinkHub reports for it.
   what the client does not cover.
 - **Login** for OpenLinkHub instances with dashboard authentication enabled.
 - **Tray icon**: closing the window hides it to the system tray; right-click the icon for
-  Show and Quit, or click it to show or hide the window. Without a system tray, closing the window quits.
+  Show, Check for Updates and Quit, or click it to show or hide the window. Without a system tray,
+  closing the window quits.
+- **Updates**: at startup the client checks GitHub for a new release. The Flatpak downloads and
+  installs it and restarts; other installs get a link to the release page.
 
 | Keyboard | Headset |
 |---|---|
@@ -87,6 +90,23 @@ Adding artwork for a device is a layout file and an SVG; see [Adding a device](#
 - PySide6 6.8 or newer and httpx
 
 ## Installation
+
+### Flatpak (recommended)
+
+Download the latest `OpenLinkHub-Client-vX.Y.Z.flatpak` from
+[Releases](https://github.com/mdmatthias/OpenLinkHub-Client/releases), then:
+
+```sh
+flatpak install --user OpenLinkHub-Client-vX.Y.Z.flatpak -y
+flatpak run io.github.mdmatthias.OpenLinkHub-Client
+```
+
+Flatpak pulls the KDE runtime and the PySide base app from Flathub. Later versions install
+themselves from within the client (see Updates above). The Flatpak reads its config from
+`~/.var/app/io.github.mdmatthias.OpenLinkHub-Client/config/olh-client/config.toml` and can read
+OpenLinkHub's certificate in `/opt/OpenLinkHub/certificates`.
+
+### From source
 
 Clone the repository and install it in a virtual environment.
 
@@ -138,6 +158,7 @@ All settings are optional. They live in `~/.config/olh-client/config.toml`
 ```toml
 base_url = "http://127.0.0.1:27003"
 poll_interval = 5            # seconds
+check_updates = true         # look for a new release at startup
 
 # Only needed when OpenLinkHub's dashboard authentication is enabled (HTTPS):
 # origin   = "https://127.0.0.1:27003"   # must equal authOrigin in dashboard.json
@@ -258,6 +279,23 @@ Fixtures in `tests/fixtures/`, with serials and paths anonymised:
   the Slipstream page (`web/slipstream.html`);
 - copied from OpenLinkHub: three keyboard layouts, with where its page draws each key
   (`tests/fixtures/keyboards/`).
+
+### Flatpak and releases
+
+The Flatpak files live in `flatpak/`: the manifest (KDE runtime with the `io.qt.PySide.BaseApp`
+base app), the httpx wheels in `python-dependencies.json` (keep it in sync with `pyproject.toml`),
+the desktop file, the metainfo and the launcher.
+
+```sh
+flatpak/build-and-run.sh     # build, install (--user) and run this checkout
+flatpak/build-bundle.sh      # build OpenLinkHub-Client-v<version>.flatpak
+```
+
+To release: bump `__version__` in `src/olhclient/__init__.py`, add a `<release>` to the metainfo,
+commit, and push a tag `v<version>`. The workflow in `.github/workflows/flatpak.yml` checks that the
+tag, `__version__` and the metainfo agree, builds the bundle and attaches it to a GitHub release
+(tags ending in `-dev` become prereleases, which the updater skips). The updater
+(`update.py`, `core/updater.py`) looks for the asset `OpenLinkHub-Client-<tag>.flatpak`.
 
 ### Notes on the OpenLinkHub API
 

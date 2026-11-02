@@ -1,0 +1,49 @@
+name: Build and Release Flatpak
+
+on:
+  push:
+    tags:
+      - 'v*'
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:kde-6.11
+      options: --privileged
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v7
+
+    # The in-app updater compares the release tag with __version__, so they must match.
+    - name: Check version
+      run: |
+        version="$(sed -n 's/^__version__ = "\(.*\)"/\1/p' src/olhclient/__init__.py)"
+        tag="${GITHUB_REF_NAME#v}"
+        if [ "${tag%-dev}" != "$version" ]; then
+          echo "::error::Tag $GITHUB_REF_NAME does not match __version__ $version"
+          exit 1
+        fi
+        grep -q "<release version=\"$version\"" flatpak/io.github.mdmatthias.OpenLinkHub-Client.metainfo.xml || {
+          echo "::error::No <release version=\"$version\"> in the metainfo"
+          exit 1
+        }
+
+    - name: Build Flatpak
+      uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+      with:
+        bundle: OpenLinkHub-Client-${{ github.ref_name }}.flatpak
+        manifest-path: flatpak/io.github.mdmatthias.OpenLinkHub-Client.yaml
+        cache-key: flatpak-builder-${{ github.sha }}
+
+    - name: Release
+      uses: softprops/action-gh-release@v3
+      with:
+        prerelease: ${{ endsWith(github.ref_name, '-dev') }}
+        generate_release_notes: true
+        files: OpenLinkHub-Client-${{ github.ref_name }}.flatpak
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

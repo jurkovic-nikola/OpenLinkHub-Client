@@ -18,8 +18,10 @@ from olhclient.api.client import ApiClient
 from olhclient.config import Config, default_path
 from olhclient.core.backend import Backend
 from olhclient.core.session import QML_DIR
+from olhclient.core.updater import Updater
 from olhclient.devices.registry import Registry
 from olhclient.tray import create_tray
+from olhclient.update import APP_ID
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
@@ -32,9 +34,9 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def create_engine(backend: Backend, username: str = "") -> QQmlApplicationEngine:
+def create_engine(backend: Backend, updater: Updater | None = None, username: str = "") -> QQmlApplicationEngine:
     engine = QQmlApplicationEngine()
-    engine.setInitialProperties({"backend": backend, "defaultUsername": username})
+    engine.setInitialProperties({"backend": backend, "updater": updater, "defaultUsername": username})
     engine.load(QUrl.fromLocalFile(str(QML_DIR / "Main.qml")))
     return engine
 
@@ -54,15 +56,19 @@ def main(argv: list[str] | None = None) -> int:
     app = QApplication(sys.argv[:1])
     app.setApplicationName("OpenLinkHub Client")
     app.setOrganizationName("olh-client")
+    app.setDesktopFileName(APP_ID)  # lets Wayland compositors find the icon of the installed app
     app.setWindowIcon(QIcon(str(QML_DIR / "icons" / "app.svg")))
 
     api = ApiClient(config.base_url, origin=config.origin or None, verify=config.verify)
     backend = Backend(api, Registry.discover(), poll_interval=config.poll_interval)
-    engine = create_engine(backend, config.username)
+    updater = Updater()
+    engine = create_engine(backend, updater, config.username)
     if not engine.rootObjects():
         return 1
-    tray = create_tray(app, engine.rootObjects()[0])  # noqa: F841 - keep the tray alive
+    tray = create_tray(app, engine.rootObjects()[0], updater.check)  # noqa: F841 - keep the tray alive
     backend.start()
+    if config.check_updates:
+        updater.checkQuietly()
     try:
         return app.exec()
     finally:

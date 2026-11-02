@@ -1,6 +1,8 @@
-"""System tray icon with a Show / Quit menu."""
+"""System tray icon with a Show / Check for Updates / Quit menu."""
 
 from __future__ import annotations
+
+from typing import Callable
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QWindow
@@ -25,13 +27,15 @@ def toggle_window(window: QWindow) -> None:
 class TrayIcon(QSystemTrayIcon):
     """Tray icon for the main window. Closing the window hides it to the tray; Quit exits."""
 
-    def __init__(self, app: QApplication, window: QWindow):
+    def __init__(self, app: QApplication, window: QWindow, check_updates: Callable[[], None] | None = None):
         super().__init__(app.windowIcon(), app)
         self.window = window
         self.setToolTip(app.applicationName())
         # QMenu cannot take a non-widget parent, so the tray keeps the reference.
         self.menu = QMenu()
         self.menu.addAction("Show", lambda: show_window(window))
+        if check_updates is not None:
+            self.menu.addAction("Check for Updates", lambda: (show_window(window), check_updates()))
         self.menu.addSeparator()
         self.menu.addAction("Quit", app.quit)
         self.setContextMenu(self.menu)
@@ -42,11 +46,12 @@ class TrayIcon(QSystemTrayIcon):
             toggle_window(self.window)
 
 
-def create_tray(app: QApplication, window: QWindow) -> TrayIcon | None:
+def create_tray(app: QApplication, window: QWindow,
+                check_updates: Callable[[], None] | None = None) -> TrayIcon | None:
     """Show a tray icon and keep running when the window is closed; None without a system tray."""
     if not QSystemTrayIcon.isSystemTrayAvailable():
         return None
-    tray = TrayIcon(app, window)
+    tray = TrayIcon(app, window, check_updates)
     tray.show()
     app.setQuitOnLastWindowClosed(False)
     return tray

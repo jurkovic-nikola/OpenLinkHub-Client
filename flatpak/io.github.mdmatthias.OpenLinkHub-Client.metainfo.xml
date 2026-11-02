@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+    <id>io.github.mdmatthias.OpenLinkHub-Client</id>
+    <metadata_license>CC0-1.0</metadata_license>
+    <project_license>GPL-3.0-only</project_license>
+    <name>OpenLinkHub Client</name>
+    <summary>Configure Corsair devices through OpenLinkHub</summary>
+    <developer id="io.github.mdmatthias">
+        <name>mdmatthias</name>
+    </developer>
+    <description>
+        <p>
+            A desktop client for OpenLinkHub, the open source Linux service for Corsair devices. It gives
+            OpenLinkHub an iCUE-style interface: device artwork with clickable buttons, an action list and a
+            settings panel. The client only talks to OpenLinkHub's HTTP API; OpenLinkHub must be running.
+        </p>
+        <p>Features:</p>
+        <ul>
+            <li>Key remapping for mice, headsets, controllers and keyboards</li>
+            <li>Keyboards drawn from the key layout OpenLinkHub sends</li>
+            <li>DPI stages, lighting, fans and pumps, equalizer and device settings</li>
+            <li>OpenLinkHub user profiles and the Slipstream receiver</li>
+            <li>Login for OpenLinkHub instances with dashboard authentication</li>
+            <li>Tray icon and built-in updates</li>
+        </ul>
+        <p>Not affiliated with or endorsed by Corsair.</p>
+    </description>
+    <launchable type="desktop-id">io.github.mdmatthias.OpenLinkHub-Client.desktop</launchable>
+    <url type="homepage">https://github.com/mdmatthias/OpenLinkHub-Client</url>
+    <url type="bugtracker">https://github.com/mdmatthias/OpenLinkHub-Client/issues</url>
+    <screenshots>
+        <screenshot type="default">
+            <image>https://raw.githubusercontent.com/mdmatthias/OpenLinkHub-Client/main/docs/screenshots/key-remapping.png</image>
+            <caption>Key remapping</caption>
+        </screenshot>
+        <screenshot>
+            <image>https://raw.githubusercontent.com/mdmatthias/OpenLinkHub-Client/main/docs/screenshots/keyboard.png</image>
+            <caption>Keyboard</caption>
+        </screenshot>
+        <screenshot>
+            <image>https://raw.githubusercontent.com/mdmatthias/OpenLinkHub-Client/main/docs/screenshots/lighting.png</image>
+            <caption>Lighting</caption>
+        </screenshot>
+        <screenshot>
+            <image>https://raw.githubusercontent.com/mdmatthias/OpenLinkHub-Client/main/docs/screenshots/fans.png</image>
+            <caption>Fans and pumps</caption>
+        </screenshot>
+        <screenshot>
+            <image>https://raw.githubusercontent.com/mdmatthias/OpenLinkHub-Client/main/docs/screenshots/headset.png</image>
+            <caption>Headset</caption>
+        </screenshot>
+    </screenshots>
+    <content_rating type="oars-1.1"/>
+    <releases>
+        <release version="0.1.0" date="2026-11-02">
+            <description>
+                <p>First release, as a Flatpak with built-in updates.</p>
+            </description>
+        </release>
+    </releases>
+</component>

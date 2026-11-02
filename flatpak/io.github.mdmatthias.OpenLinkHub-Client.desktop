@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=OpenLinkHub Client
+Comment=Configure Corsair devices through OpenLinkHub
+Exec=olh-client
+Icon=io.github.mdmatthias.OpenLinkHub-Client
+Terminal=false
+Type=Application
+Categories=Settings;HardwareSettings;
+Keywords=Corsair;mouse;keyboard;headset;RGB;iCUE;
+StartupWMClass=io.github.mdmatthias.OpenLinkHub-Client

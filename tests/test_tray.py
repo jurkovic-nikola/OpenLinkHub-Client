@@ -9,6 +9,18 @@ def test_menu_has_show_and_quit(qapp):
     assert [a.text() for a in tray.menu.actions() if not a.isSeparator()] == ["Show", "Quit"]
 
 
+def test_menu_checks_for_updates(qapp):
+    window = QWindow()
+    checks = []
+    tray = TrayIcon(qapp, window, lambda: checks.append(True))
+    actions = [a for a in tray.menu.actions() if not a.isSeparator()]
+    assert [a.text() for a in actions] == ["Show", "Check for Updates", "Quit"]
+    actions[1].trigger()
+    assert checks == [True]
+    assert window.isVisible()
+    window.close()
+
+
 def test_show_restores_hidden_window(qapp):
     window = QWindow()
     window.hide()

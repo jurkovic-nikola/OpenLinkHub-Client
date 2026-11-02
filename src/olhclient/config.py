@@ -10,6 +10,7 @@ Example::
     verify_tls = true
     username = "admin"
     poll_interval = 5
+    check_updates = true   # look for a new release at startup
 """
 
 from __future__ import annotations
@@ -33,6 +34,7 @@ class Config:
     verify_tls: bool = True
     username: str = ""
     poll_interval: float = 5.0
+    check_updates: bool = True
 
     @property
     def verify(self) -> bool | str:

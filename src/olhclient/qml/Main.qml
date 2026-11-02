@@ -9,6 +9,8 @@ ApplicationWindow {
     id: window
     required property var backend
     property string defaultUsername: ""
+    // core/updater.py; null when the client runs without one (tests)
+    property var updater: null
 
     readonly property var session: backend.session
     // A Slipstream receiver is selected instead of a mouse.
@@ -46,7 +48,7 @@ ApplicationWindow {
         : receiver ? receiver.product + " — OpenLinkHub" : "OpenLinkHub"
     color: Theme.window
 
-    header: TopBar { backend: window.backend }
+    header: TopBar { backend: window.backend; updater: window.updater }
     footer: StatusBar { backend: window.backend }
 
     Connections {
@@ -198,6 +200,11 @@ ApplicationWindow {
         visible: window.backend.authRequired
         username: window.defaultUsername
         onLogin: (user, password) => window.backend.login(user, password)
+    }
+
+    UpdateDialog {
+        anchors.centerIn: parent
+        updater: window.updater
     }
 
     Toast {

@@ -6,3 +6,8 @@ build/
 *.egg-info/
 .pytest_cache/
 .idea/
+# Flatpak builds
+.flatpak-builder/
+build-dir/
+repo/
+*.flatpak

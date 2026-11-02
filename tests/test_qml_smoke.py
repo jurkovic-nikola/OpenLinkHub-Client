@@ -158,3 +158,29 @@ def test_every_feature_on_every_device_kind(every_ui, qtbot, every_api):
     backend.session.controller("keyboard_keys").switchKeyboardProfile("gaming")
     settle(qtbot)
     assert warnings == []
+
+
+def test_update_dialog(qtbot, fake_api, monkeypatch):
+    from olhclient.core.updater import Updater
+
+    backend = Backend(fake_api, Registry.discover(), worker=Worker(synchronous=True))
+    updater = Updater(Worker(synchronous=True))
+    engine = QQmlApplicationEngine()
+    warnings = []
+    engine.warnings.connect(lambda ws: warnings.extend(w.toString() for w in ws))
+    engine.setInitialProperties({"backend": backend, "updater": updater})
+    engine.load(QUrl.fromLocalFile(str(QML_DIR / "Main.qml")))
+    assert engine.rootObjects(), warnings
+    window = engine.rootObjects()[0]
+    monkeypatch.setenv("FLATPAK_ID", "test")
+    updater._release = {"tag_name": "v99.0.0", "html_url": "https://example.invalid", "assets": []}
+    updater.open()
+    for state in ("checking", "upToDate", "available", "downloading", "installing", "installed", "error"):
+        updater._set_state(state, "message")
+        updater._set_progress(5, 10)
+        settle(qtbot)
+    updater.close()
+    settle(qtbot)
+    window.close()
+    engine.deleteLater()
+    assert warnings == []

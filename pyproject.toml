@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "olh-client"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Desktop client for the OpenLinkHub API"
 readme = "README.md"
 license = "GPL-3.0-only"
@@ -23,6 +23,9 @@ dev = [
 
 [project.scripts]
 olh-client = "olhclient.app:main"
+
+[tool.hatch.version]
+path = "src/olhclient/__init__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/olhclient"]
