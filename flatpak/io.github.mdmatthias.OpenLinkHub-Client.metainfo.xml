@@ -52,6 +52,16 @@
     </screenshots>
     <content_rating type="oars-1.1"/>
     <releases>
+        <release version="0.3.0" date="2026-11-03">
+            <description>
+                <p>Released as three apps from now on: OpenLinkHub Client (Corsair devices through OpenLinkHub), OpenLinkHub Client Plus (Corsair devices and non-Corsair devices) and OpenDeviceHub (non-Corsair devices only, no OpenLinkHub needed).</p>
+                <ul>
+                    <li>Non-Corsair devices, driven by the app itself: Keychron V3 Ultra 8K keyboards (ANSI, ISO, JIS), by cable or the Ultra-Link 8K receiver (OpenLinkHub Client Plus and OpenDeviceHub)</li>
+                    <li>Keychron: remap every key and the knob on each layer, lighting effect, brightness, speed and colour, USB and 2.4 GHz polling rate, debounce and the idle and sleep timers</li>
+                    <li>Each app updates itself to its own bundle</li>
+                </ul>
+            </description>
+        </release>
         <release version="0.2.0" date="2026-11-02">
             <description>
                 <ul>
