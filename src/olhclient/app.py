@@ -20,8 +20,9 @@ from olhclient.core.backend import Backend
 from olhclient.core.session import QML_DIR
 from olhclient.core.updater import Updater
 from olhclient.devices.registry import Registry
+from olhclient.edition import EDITIONS, current
+from olhclient.keychron.device import scan as scan_keychron
 from olhclient.tray import create_tray
-from olhclient.update import APP_ID
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
@@ -29,6 +30,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--url", help="OpenLinkHub base URL (default from config, else http://127.0.0.1:27003)")
     parser.add_argument("--config", type=Path, default=None, help=f"config file (default {default_path()})")
     parser.add_argument("--insecure", action="store_true", help="do not verify the server's TLS certificate")
+    parser.add_argument("--edition", choices=sorted(EDITIONS),
+                        help="which devices to drive (default: all; a Flatpak knows its own)")
     parser.add_argument("--debug", action="store_true")
     parser.add_argument("--version", action="version", version=__version__)
     return parser.parse_args(argv)
@@ -45,6 +48,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(sys.argv[1:] if argv is None else argv)
     logging.basicConfig(level=logging.DEBUG if args.debug else logging.WARNING)
 
+    edition = current(args.edition)
     config = Config.load(args.config)
     if args.url:
         config.base_url = args.url
@@ -54,14 +58,15 @@ def main(argv: list[str] | None = None) -> int:
     QQuickStyle.setStyle("Basic")
     # QApplication (not QGuiApplication): the tray menu is a QMenu.
     app = QApplication(sys.argv[:1])
-    app.setApplicationName("OpenLinkHub Client")
+    app.setApplicationName(edition.name)
     app.setOrganizationName("olh-client")
-    app.setDesktopFileName(APP_ID)  # lets Wayland compositors find the icon of the installed app
+    app.setDesktopFileName(edition.app_id)  # lets Wayland compositors find the icon of the installed app
     app.setWindowIcon(QIcon(str(QML_DIR / "icons" / "app.svg")))
 
-    api = ApiClient(config.base_url, origin=config.origin or None, verify=config.verify)
-    backend = Backend(api, Registry.discover(), poll_interval=config.poll_interval)
-    updater = Updater()
+    api = ApiClient(config.base_url, origin=config.origin or None, verify=config.verify) if edition.openlinkhub else None
+    backend = Backend(api, Registry.discover(), poll_interval=config.poll_interval,
+                      keychron_scan=scan_keychron if edition.keychron else None, brand=edition.brand)
+    updater = Updater(edition=edition)
     engine = create_engine(backend, updater, config.username)
     if not engine.rootObjects():
         return 1
@@ -72,7 +77,8 @@ def main(argv: list[str] | None = None) -> int:
     try:
         return app.exec()
     finally:
-        api.close()
+        if api is not None:
+            api.close()
 
 
 if __name__ == "__main__":

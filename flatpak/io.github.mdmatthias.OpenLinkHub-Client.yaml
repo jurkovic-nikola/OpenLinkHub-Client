@@ -1,3 +1,5 @@
+# OpenLinkHub Client: Corsair devices through OpenLinkHub. Keep in sync with the other two
+# manifests (see src/olhclient/edition.py); tests/test_edition.py checks they only differ here.
 app-id: io.github.mdmatthias.OpenLinkHub-Client
 runtime: org.kde.Platform
 runtime-version: '6.11'
@@ -45,7 +47,10 @@ modules:
       - find /app/share/olh-client -name __pycache__ -prune -exec rm -rf {} +
       - install -Dm755 flatpak/olh-client.sh /app/bin/olh-client
       - install -Dm644 flatpak/${FLATPAK_ID}.desktop /app/share/applications/${FLATPAK_ID}.desktop
-      - install -Dm644 flatpak/${FLATPAK_ID}.metainfo.xml /app/share/metainfo/${FLATPAK_ID}.metainfo.xml
+      # the release notes are written once, in OpenLinkHub Client's metainfo
+      - mkdir -p /app/share/metainfo
+      - python3 flatpak/copy_releases.py flatpak/io.github.mdmatthias.OpenLinkHub-Client.metainfo.xml
+        flatpak/${FLATPAK_ID}.metainfo.xml /app/share/metainfo/${FLATPAK_ID}.metainfo.xml
       - install -Dm644 src/olhclient/qml/icons/app.svg /app/share/icons/hicolor/scalable/apps/${FLATPAK_ID}.svg
       # PNGs too: Plasma only sees icon dirs that existed at login, and 256x256 usually does already
       - install -Dm644 flatpak/icons/128x128.png /app/share/icons/hicolor/128x128/apps/${FLATPAK_ID}.png

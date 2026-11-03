@@ -24,7 +24,7 @@ Rectangle {
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.margins: 10
-        visible: root.session !== null
+        visible: root.session !== null && root.session.hasWebPage
         text: "Open in OpenLinkHub"
         onClicked: root.session.openInBrowser()
     }
@@ -106,5 +106,19 @@ Rectangle {
                 }
             }
         }
+    }
+
+    // Wireless keyboards stay listed while switched off or asleep.
+    Rectangle {
+        anchors.fill: parent
+        visible: root.session !== null && !root.session.connected
+        color: Qt.rgba(0, 0, 0, 0.65)
+        Text {
+            anchors.centerIn: parent
+            text: "Device is offline"
+            color: Theme.text
+            font.pixelSize: Theme.fontHeader
+        }
+        MouseArea { anchors.fill: parent }
     }
 }

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=OpenLinkHub Client Plus
+Comment=Configure Corsair devices through OpenLinkHub, and Keychron keyboards
+Exec=olh-client
+Icon=io.github.mdmatthias.OpenLinkHub-Client-Plus
+Terminal=false
+Type=Application
+Categories=Settings;HardwareSettings;
+Keywords=Corsair;Keychron;mouse;keyboard;headset;RGB;iCUE;ZMK;
+StartupWMClass=io.github.mdmatthias.OpenLinkHub-Client-Plus

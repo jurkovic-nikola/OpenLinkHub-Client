@@ -8,12 +8,8 @@ permissions:
   contents: write
 
 jobs:
-  build-and-release:
+  check:
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/flathub-infra/flatpak-github-actions:kde-6.11
-      options: --privileged
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v7
@@ -32,18 +28,61 @@ jobs:
     - name: Extract release notes from metainfo
       run: python3 .github/scripts/release_notes.py "${GITHUB_REF_NAME%-dev}" release-notes.md
 
+    - uses: actions/upload-artifact@v5
+      with:
+        name: release-notes
+        path: release-notes.md
+
+  # One bundle per app (src/olhclient/edition.py); the in-app updater looks for <bundle>-<tag>.flatpak.
+  build:
+    needs: check
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:kde-6.11
+      options: --privileged
+    strategy:
+      matrix:
+        include:
+          - app-id: io.github.mdmatthias.OpenLinkHub-Client
+            bundle: OpenLinkHub-Client
+          - app-id: io.github.mdmatthias.OpenLinkHub-Client-Plus
+            bundle: OpenLinkHub-Client-Plus
+          - app-id: io.github.mdmatthias.OpenDeviceHub
+            bundle: OpenDeviceHub
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v7
+
     - name: Build Flatpak
       uses: flatpak/flatpak-github-actions/flatpak-builder@v6
       with:
-        bundle: OpenLinkHub-Client-${{ github.ref_name }}.flatpak
-        manifest-path: flatpak/io.github.mdmatthias.OpenLinkHub-Client.yaml
-        cache-key: flatpak-builder-${{ github.sha }}
+        bundle: ${{ matrix.bundle }}-${{ github.ref_name }}.flatpak
+        manifest-path: flatpak/${{ matrix.app-id }}.yaml
+        cache-key: flatpak-builder-${{ matrix.app-id }}-${{ github.sha }}
+        upload-artifact: false
+
+    - uses: actions/upload-artifact@v5
+      with:
+        name: bundle-${{ matrix.bundle }}
+        path: ${{ matrix.bundle }}-${{ github.ref_name }}.flatpak
+        if-no-files-found: error
+
+  # A single job makes the release, so the three builds do not race to create it.
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/download-artifact@v6
+      with:
+        path: artifacts
+        merge-multiple: true
 
     - name: Release
       uses: softprops/action-gh-release@v3
       with:
         prerelease: ${{ endsWith(github.ref_name, '-dev') }}
-        body_path: release-notes.md
-        files: OpenLinkHub-Client-${{ github.ref_name }}.flatpak
+        body_path: artifacts/release-notes.md
+        files: artifacts/*.flatpak
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

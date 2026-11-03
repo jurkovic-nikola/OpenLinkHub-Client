@@ -46,9 +46,9 @@ ApplicationWindow {
     minimumWidth: 1120
     minimumHeight: 700
     visible: true
-    title: page === "macros" ? "Macros — OpenLinkHub"
-        : session ? session.product + " — OpenLinkHub"
-        : receiver ? receiver.product + " — OpenLinkHub" : "OpenLinkHub"
+    title: page === "macros" ? "Macros — " + backend.brand
+        : session ? session.product + " — " + backend.brand
+        : receiver ? receiver.product + " — " + backend.brand : backend.brand
     color: Theme.window
 
     header: TopBar {
@@ -181,7 +181,7 @@ ApplicationWindow {
     Loader {
         anchors.fill: parent
         anchors.margins: Theme.gap
-        active: window.page === "macros"
+        active: window.page === "macros" && window.backend.openLinkHub
         sourceComponent: MacrosView { library: window.backend.macros }
     }
 
@@ -196,14 +196,18 @@ ApplicationWindow {
             spacing: 10
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: !window.backend.connected ? "Cannot reach OpenLinkHub"
+                text: !window.backend.openLinkHub
+                    ? (window.backend.devices.count === 0 ? "No keyboards found" : "Loading keyboard…")
+                    : !window.backend.connected ? "Cannot reach OpenLinkHub"
                     : window.backend.devices.count === 0 ? "No devices found" : "Loading device…"
                 color: Theme.text
                 font.pixelSize: Theme.fontHeader + 3
             }
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: window.backend.connected ? "Connect a device; the list refreshes automatically."
+                text: !window.backend.openLinkHub
+                    ? "Connect a supported Keychron keyboard by cable or its 2.4 GHz receiver;\nthe list refreshes automatically."
+                    : window.backend.connected ? "Connect a device; the list refreshes automatically."
                     : window.backend.status + "\nRetrying every few seconds."
                 horizontalAlignment: Text.AlignHCenter
                 color: Theme.textDim

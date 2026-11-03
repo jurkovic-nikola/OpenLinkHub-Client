@@ -9,6 +9,7 @@ from PySide6.QtCore import QCoreApplication, QObject, Property, Signal, Slot
 
 from olhclient import __version__, update
 from olhclient.core.worker import Worker
+from olhclient.edition import Edition, current
 
 # idle -> checking -> upToDate | available -> downloading -> installing -> installed; any step may end in error
 
@@ -22,9 +23,10 @@ class Updater(QObject):
     #: emitted from the download thread once the bundle is downloaded
     _installing = Signal()
 
-    def __init__(self, worker: Worker | None = None, parent: QObject | None = None):
+    def __init__(self, worker: Worker | None = None, edition: Edition | None = None, parent: QObject | None = None):
         super().__init__(parent)
         self.worker = worker or Worker(self)
+        self.edition = edition or current()
         self._state = "idle"
         self._message = ""
         self._release: dict[str, Any] | None = None
@@ -61,7 +63,7 @@ class Updater(QObject):
         self._release = release
         if not update.is_newer(release):
             self._set_state("upToDate", f"You are on the latest version ({__version__}).")
-        elif self.canInstall and update.update_asset(release) is None:
+        elif self.canInstall and update.update_asset(release, self.edition) is None:
             self._set_state("error", f"Version {self.latestVersion} has no Flatpak bundle; "
                                      "download it from the release page.")
         else:
@@ -72,7 +74,7 @@ class Updater(QObject):
 
     @Slot()
     def install(self) -> None:
-        asset = update.update_asset(self._release or {})
+        asset = update.update_asset(self._release or {}, self.edition)
         if self._state != "available" or not self.canInstall or asset is None:
             return
         self._cancel = False
@@ -99,7 +101,7 @@ class Updater(QObject):
         if self._state != "installed":
             return
         try:
-            update.restart()
+            update.restart(self.edition)
         except OSError as exc:
             self._set_state("error", f"Cannot start the new version: {exc}")
             return

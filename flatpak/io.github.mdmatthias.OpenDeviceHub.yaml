@@ -1,0 +1,68 @@
+# OpenDeviceHub: Keychron keyboards, no OpenLinkHub. Keep in sync with the other two
+# manifests (see src/olhclient/edition.py); tests/test_edition.py checks they only differ here.
+app-id: io.github.mdmatthias.OpenDeviceHub
+runtime: org.kde.Platform
+runtime-version: '6.11'
+sdk: org.kde.Sdk
+base: io.qt.PySide.BaseApp
+base-version: '6.11'
+command: olh-client
+separate-locales: false
+
+finish-args:
+  # GitHub for updates
+  - --share=network
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --device=dri
+  # Tray icon
+  - --talk-name=org.kde.StatusNotifierWatcher
+  # The updater installs a new release on the host (flatpak-spawn --host flatpak install)
+  - --talk-name=org.freedesktop.Flatpak
+  # Keychron keyboards are driven over /dev/hidraw* (there is no narrower device permission)
+  - --device=all
+
+# The PySide base app ships QtWebEngine, numpy and the shiboken generator (LLVM); the client needs
+# none of them. cleanup-BaseApp.sh drops what these variables ask for, the rest goes by hand.
+build-options:
+  env:
+    BASEAPP_REMOVE_WEBENGINE: '1'
+    BASEAPP_DISABLE_NUMPY: '1'
+cleanup-commands:
+  - /app/cleanup-BaseApp.sh
+  - rm -f /app/cleanup-BaseApp.sh
+  - pip3 uninstall -y shiboken6_generator pyopengl
+  - rm -f /app/lib/libLLVM*.so* /app/lib/libclang*.so*
+  - rm -rf /app/share/locale /app/translations /app/resources
+
+modules:
+  - python-dependencies.json
+
+  - name: olh-client
+    buildsystem: simple
+    build-commands:
+      - mkdir -p /app/share/olh-client
+      - cp -r src/olhclient /app/share/olh-client/
+      - find /app/share/olh-client -name __pycache__ -prune -exec rm -rf {} +
+      - install -Dm755 flatpak/olh-client.sh /app/bin/olh-client
+      - install -Dm644 flatpak/${FLATPAK_ID}.desktop /app/share/applications/${FLATPAK_ID}.desktop
+      # the release notes are written once, in OpenLinkHub Client's metainfo
+      - mkdir -p /app/share/metainfo
+      - python3 flatpak/copy_releases.py flatpak/io.github.mdmatthias.OpenLinkHub-Client.metainfo.xml
+        flatpak/${FLATPAK_ID}.metainfo.xml /app/share/metainfo/${FLATPAK_ID}.metainfo.xml
+      - install -Dm644 src/olhclient/qml/icons/app.svg /app/share/icons/hicolor/scalable/apps/${FLATPAK_ID}.svg
+      # PNGs too: Plasma only sees icon dirs that existed at login, and 256x256 usually does already
+      - install -Dm644 flatpak/icons/128x128.png /app/share/icons/hicolor/128x128/apps/${FLATPAK_ID}.png
+      - install -Dm644 flatpak/icons/256x256.png /app/share/icons/hicolor/256x256/apps/${FLATPAK_ID}.png
+    sources:
+      - type: dir
+        path: ..
+        skip:
+          - .git
+          - .venv
+          - .flatpak-builder
+          - build-dir
+          - repo
+          - tests
+          - docs

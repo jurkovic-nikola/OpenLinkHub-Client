@@ -5,6 +5,8 @@ the release's ``.flatpak`` bundle the way the README does::
 
     flatpak install --user OpenLinkHub-Client-vX.Y.Z.flatpak -y
 
+One release carries a bundle per edition (see edition.py); each app installs its own.
+
 Inside the Flatpak sandbox the install runs on the host through ``flatpak-spawn --host``. Other
 installs (pip, from source) only get a link to the release page.
 """
@@ -19,12 +21,12 @@ from typing import Any, Callable
 import httpx
 
 from olhclient import __version__
+from olhclient.edition import OPENLINKHUB, Edition
 
-APP_ID = "io.github.mdmatthias.OpenLinkHub-Client"
 GITHUB_REPO = "mdmatthias/OpenLinkHub-Client"
 LATEST_RELEASE_URL = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 RELEASES_PAGE = f"https://github.com/{GITHUB_REPO}/releases"
-ASSET_NAME = "OpenLinkHub-Client-{tag}.flatpak"
+ASSET_NAME = "{bundle}-{tag}.flatpak"
 
 REQUEST_TIMEOUT = 15
 INSTALL_TIMEOUT = 600
@@ -87,12 +89,12 @@ def latest_release(timeout: float = REQUEST_TIMEOUT) -> dict[str, Any]:
     return response.json()
 
 
-def update_asset(release: dict[str, Any]) -> dict[str, Any] | None:
-    """The release's ``.flatpak`` bundle, or None."""
+def update_asset(release: dict[str, Any], edition: Edition = OPENLINKHUB) -> dict[str, Any] | None:
+    """The release's ``.flatpak`` bundle of ``edition``, or None."""
     tag = release.get("tag_name", "")
     if not tag:
         return None
-    name = ASSET_NAME.format(tag=tag)
+    name = ASSET_NAME.format(bundle=edition.bundle, tag=tag)
     return next((asset for asset in release.get("assets", []) if asset.get("name") == name), None)
 
 
@@ -153,6 +155,6 @@ def install(bundle: Path) -> None:
     bundle.unlink(missing_ok=True)
 
 
-def restart() -> None:
+def restart(edition: Edition = OPENLINKHUB) -> None:
     """Start the installed version; the caller quits this one."""
-    subprocess.Popen(host_command("flatpak", "run", APP_ID), start_new_session=True)
+    subprocess.Popen(host_command("flatpak", "run", edition.app_id), start_new_session=True)

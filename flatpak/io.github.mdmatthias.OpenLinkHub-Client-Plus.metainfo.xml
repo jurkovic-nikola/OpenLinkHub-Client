@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+    <id>io.github.mdmatthias.OpenLinkHub-Client-Plus</id>
+    <metadata_license>CC0-1.0</metadata_license>
+    <project_license>GPL-3.0-only</project_license>
+    <name>OpenLinkHub Client Plus</name>
+    <summary>Configure Corsair devices through OpenLinkHub, and Keychron keyboards</summary>
+    <developer id="io.github.mdmatthias">
+        <name>mdmatthias</name>
+    </developer>
+    <description>
+        <p>
+            OpenLinkHub Client with support for Keychron keyboards added. Corsair devices are configured through
+            OpenLinkHub, the open source Linux service for Corsair devices, with an iCUE-style interface. Keychron
+            keyboards with Keychron's open source ZMK firmware are configured by the app itself; OpenLinkHub does
+            not support them and is not involved.
+        </p>
+        <p>Features:</p>
+        <ul>
+            <li>Everything OpenLinkHub Client does: key remapping, DPI, lighting, fans and pumps, equalizer, device settings, macros and profiles</li>
+            <li>Keychron V3 Ultra 8K over USB or the Ultra-Link 8K receiver: keys and knob on every layer, lighting, polling rate, debounce and sleep timers</li>
+            <li>Tray icon and built-in updates</li>
+        </ul>
+        <p>Keychron keyboards need a udev rule for /dev/hidraw access; see the project page.</p>
+        <p>Not affiliated with or endorsed by Corsair or Keychron.</p>
+    </description>
+    <launchable type="desktop-id">io.github.mdmatthias.OpenLinkHub-Client-Plus.desktop</launchable>
+    <url type="homepage">https://github.com/mdmatthias/OpenLinkHub-Client</url>
+    <url type="bugtracker">https://github.com/mdmatthias/OpenLinkHub-Client/issues</url>
+    <screenshots>
+        <screenshot type="default">
+            <image>https://raw.githubusercontent.com/mdmatthias/OpenLinkHub-Client/main/docs/screenshots/key-remapping.png</image>
+            <caption>Key remapping</caption>
+        </screenshot>
+        <screenshot>
+            <image>https://raw.githubusercontent.com/mdmatthias/OpenLinkHub-Client/main/docs/screenshots/keyboard.png</image>
+            <caption>Keyboard</caption>
+        </screenshot>
+        <screenshot>
+            <image>https://raw.githubusercontent.com/mdmatthias/OpenLinkHub-Client/main/docs/screenshots/lighting.png</image>
+            <caption>Lighting</caption>
+        </screenshot>
+        <screenshot>
+            <image>https://raw.githubusercontent.com/mdmatthias/OpenLinkHub-Client/main/docs/screenshots/fans.png</image>
+            <caption>Fans and pumps</caption>
+        </screenshot>
+        <screenshot>
+            <image>https://raw.githubusercontent.com/mdmatthias/OpenLinkHub-Client/main/docs/screenshots/headset.png</image>
+            <caption>Headset</caption>
+        </screenshot>
+    </screenshots>
+    <content_rating type="oars-1.1"/>
+    <!-- copied from io.github.mdmatthias.OpenLinkHub-Client.metainfo.xml at build time (copy_releases.py) -->
+    <releases/>
+</component>

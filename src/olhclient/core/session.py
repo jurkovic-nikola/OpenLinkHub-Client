@@ -198,6 +198,11 @@ class DeviceSession(QObject):
         """A keyboard whose key layout OpenLinkHub sends, so it can be drawn."""
         return "keyboard_keys" in self._controllers and bool(self.state.keyboard and self.state.keyboard.layout)
 
+    @Property(bool, constant=True)
+    def hasWebPage(self) -> bool:
+        """OpenLinkHub has a page for the device (see openInBrowser)."""
+        return True
+
     @Slot()
     def openInBrowser(self) -> None:
         """OpenLinkHub's own page for this device, for what the client does not cover."""

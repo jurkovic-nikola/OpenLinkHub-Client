@@ -8,23 +8,27 @@ import respx
 from olhclient import __version__, update
 from olhclient.core.updater import Updater
 from olhclient.core.worker import Worker
+from olhclient.edition import DEVICES, EDITIONS, OPENLINKHUB
 
 ASSET_URL = "https://github.com/mdmatthias/OpenLinkHub-Client/releases/download/v99.0.0/x.flatpak"
 BUNDLE = b"flatpak bundle" * 1000
 
 
 def release(tag: str = "v99.0.0", assets: bool = True) -> dict:
-    name = f"OpenLinkHub-Client-{tag}.flatpak"
+    """A release with the bundle of every edition; OpenLinkHub Client's downloads from ASSET_URL."""
+    bundles = [(f"{e.bundle}-{tag}.flatpak", ASSET_URL if e is OPENLINKHUB else ASSET_URL + e.key)
+               for e in EDITIONS.values()]
     return {
         "tag_name": tag,
         "html_url": f"https://github.com/mdmatthias/OpenLinkHub-Client/releases/tag/{tag}",
-        "assets": [{"name": name, "size": len(BUNDLE), "browser_download_url": ASSET_URL}] if assets else [],
+        "assets": [{"name": name, "size": len(BUNDLE), "browser_download_url": url}
+                   for name, url in bundles] if assets else [],
     }
 
 
 @pytest.fixture
 def flatpak(monkeypatch, tmp_path):
-    monkeypatch.setenv("FLATPAK_ID", update.APP_ID)
+    monkeypatch.setenv("FLATPAK_ID", OPENLINKHUB.app_id)
     monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
     runs = []
 
@@ -89,6 +93,7 @@ def test_latest_release_http_error():
 
 def test_update_asset():
     assert update.update_asset(release())["browser_download_url"] == ASSET_URL
+    assert update.update_asset(release(), DEVICES)["name"] == "OpenDeviceHub-v99.0.0.flatpak"
     assert update.update_asset(release(assets=False)) is None
     assert update.update_asset({}) is None
 
@@ -138,7 +143,7 @@ def test_download_dir_is_under_the_cache(flatpak, tmp_path):
 
 @pytest.fixture
 def updater(qapp):
-    return Updater(Worker(synchronous=True))
+    return Updater(Worker(synchronous=True), OPENLINKHUB)
 
 
 @respx.mock
@@ -223,5 +228,5 @@ def test_restart_starts_the_new_version_and_quits(updater, flatpak, monkeypatch)
     assert started == []
     updater._set_state("installed")
     updater.restart()
-    assert started == [["flatpak-spawn", "--host", "flatpak", "run", update.APP_ID]]
+    assert started == [["flatpak-spawn", "--host", "flatpak", "run", OPENLINKHUB.app_id]]
     assert quit == [True]

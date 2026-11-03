@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+    <id>io.github.mdmatthias.OpenDeviceHub</id>
+    <metadata_license>CC0-1.0</metadata_license>
+    <project_license>GPL-3.0-only</project_license>
+    <name>OpenDeviceHub</name>
+    <summary>Configure Keychron keyboards: keys, lighting and settings</summary>
+    <developer id="io.github.mdmatthias">
+        <name>mdmatthias</name>
+    </developer>
+    <description>
+        <p>
+            Configure Keychron keyboards that run Keychron's open source ZMK firmware, without a browser or a
+            background service. OpenDeviceHub talks to the keyboard directly, like Keychron Launcher does.
+        </p>
+        <p>Features:</p>
+        <ul>
+            <li>Keychron V3 Ultra 8K (ANSI, ISO, JIS) over USB or the Ultra-Link 8K 2.4 GHz receiver</li>
+            <li>Remap every key and the knob on each layer: keys with modifiers, media and mouse keys, layers, lighting and Keychron keys</li>
+            <li>Lighting effect, brightness, speed and colour</li>
+            <li>Polling rate (USB and 2.4 GHz), debounce and the idle and sleep timers</li>
+            <li>Tray icon and built-in updates</li>
+        </ul>
+        <p>Needs a udev rule for /dev/hidraw access; see the project page.</p>
+        <p>Not affiliated with or endorsed by Keychron.</p>
+    </description>
+    <launchable type="desktop-id">io.github.mdmatthias.OpenDeviceHub.desktop</launchable>
+    <url type="homepage">https://github.com/mdmatthias/OpenLinkHub-Client</url>
+    <url type="bugtracker">https://github.com/mdmatthias/OpenLinkHub-Client/issues</url>
+    <content_rating type="oars-1.1"/>
+    <!-- copied from io.github.mdmatthias.OpenLinkHub-Client.metainfo.xml at build time (copy_releases.py) -->
+    <releases/>
+</component>

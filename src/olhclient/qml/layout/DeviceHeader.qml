@@ -60,6 +60,7 @@ Rectangle {
         }
 
         AccentButton {
+            visible: root.session !== null && root.session.hasWebPage
             text: "Open in OpenLinkHub"
             enabled: root.session !== null
             onClicked: root.session.openInBrowser()

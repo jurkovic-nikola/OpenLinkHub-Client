@@ -12,8 +12,14 @@ LED hubs, AIO coolers and more. Like OpenLinkHub's own pages, it shows what each
 read from the device data. Devices with artwork (the Scimitar family, for now) get clickable
 buttons on a picture of the device; everything else gets the same controls without the picture.
 
-The client only talks to OpenLinkHub's HTTP API. It needs no USB access or root rights, and
-OpenLinkHub itself stays untouched. Built with Python, PySide6 and QML.
+For Corsair devices the client only talks to OpenLinkHub's HTTP API. It needs no USB access or
+root rights, and OpenLinkHub itself stays untouched.
+
+The same interface also drives **non-Corsair devices**, which OpenLinkHub does not support, by
+talking to them directly. That part is released on its own as **OpenDeviceHub** (and together with
+the Corsair support as OpenLinkHub Client Plus; see [Editions](#editions)). Keychron keyboards are
+the first non-Corsair devices it supports; more can be added (see
+[Non-Corsair devices](#non-corsair-devices-opendevicehub)). Built with Python, PySide6 and QML.
 
 ![Key remapping on a Scimitar Elite Wireless SE](docs/screenshots/key-remapping.png)
 
@@ -55,6 +61,10 @@ What a device gets depends on what OpenLinkHub reports for it.
   Show, Check for Updates and Quit, or click it to show or hide the window. Without a system tray,
   closing the window quits. The tray menu and tooltip show the battery level of every device that
   reports one, and a notification tells when a battery drops to 15% or lower.
+- **Non-Corsair devices** (OpenDeviceHub and OpenLinkHub Client Plus): the client drives these
+  itself; OpenLinkHub has no part in it. The first are Keychron keyboards (V3 Ultra 8K): remap keys and the knob on every layer, lighting
+  effect, brightness, speed and colour, USB and 2.4 GHz polling rate, debounce and the idle and
+  sleep timers. See [Non-Corsair devices](#non-corsair-devices-opendevicehub).
 - **Updates**: at startup the client checks GitHub for a new release. The Flatpak downloads and
   installs it and restarts; other installs get a link to the release page.
 
@@ -66,7 +76,7 @@ What a device gets depends on what OpenLinkHub reports for it.
 | **Slipstream receiver** | **Macros** |
 | ![Slipstream receiver](docs/screenshots/slipstream-receiver.png) | ![Editing a macro: keys, delays, a mouse move and text](docs/screenshots/macros.png) |
 
-## Supported devices
+## Supported Corsair devices
 
 Every device OpenLinkHub lists, recognised by the kind OpenLinkHub gives it (mouse, keyboard,
 headset, controller, hub, AIO cooler, mousepad, memory, PSU, display, ...). Devices whose data
@@ -87,19 +97,88 @@ Devices with artwork and clickable buttons:
 Slipstream receivers (`SLIPSTREAM` and `SLIPSTREAM V2`) are listed as their own device.
 Adding artwork for a device is a layout file and an SVG; see [Adding a device](#adding-a-device).
 
+## Non-Corsair devices (OpenDeviceHub)
+
+OpenDeviceHub is the part of the client for devices that are not Corsair's, and so not driven by
+OpenLinkHub. It talks to each device directly, using the device's own protocol, and needs no
+background service. It has the same interface as the Corsair side: a drawn keyboard, a key list
+and editors for keys, lighting and settings.
+
+Supported so far:
+
+| Vendor | Devices |
+|---|---|
+| Keychron | V3 Ultra 8K keyboards (ANSI, ISO, JIS), by cable or the Ultra-Link 8K receiver; see [Keychron keyboards](#keychron-keyboards) |
+
+Devices with an open protocol or open source firmware are the easiest to add; requests and pull
+requests for other vendors are welcome. Each vendor gets its own package next to
+`src/olhclient/keychron/` and a session with the QML API of `DeviceSession` (see
+[How it works](#how-it-works)).
+
+### Keychron keyboards
+
+Keychron's "Ultra 8K" keyboards run Keychron's fork of the open source
+[ZMK firmware](https://github.com/Keychron/zmk) (branch `rtl8762g`). Its raw HID interface speaks
+the VIA protocol (keymap, knob, lighting) plus a few Keychron commands (polling rate, debounce,
+idle and sleep timers), the same as [Keychron Launcher](https://launcher.keychron.com). The client
+itself speaks this protocol to the keyboard. OpenLinkHub does not support Keychron keyboards and
+plays no part here; in OpenLinkHub Client Plus it is only used for the Corsair devices.
+
+| Keyboard | USB product id |
+|---|---|
+| Keychron V3 Ultra 8K ANSI | 3434:0c30 |
+| Keychron V3 Ultra 8K ISO | 3434:0c31 |
+| Keychron V3 Ultra 8K JIS | 3434:0c32 |
+| Keychron Ultra-Link 8K 2.4 GHz receiver, with one of the above | 3434:d028 |
+
+Connect the keyboard with the USB cable or the Ultra-Link 8K receiver; Bluetooth is not supported.
+The receiver does not say which keyboard it serves, so the client tells the model apart by which
+matrix positions hold keys (ANSI, ISO and JIS differ). A keyboard that sleeps behind the receiver
+shows as offline until it wakes up.
+
+Opening `/dev/hidraw*` needs a udev rule (Keychron Launcher in the browser needs the same):
+
+```sh
+sudo cp udev/70-keychron-hidraw.rules /etc/udev/rules.d/
+sudo udevadm control --reload && sudo udevadm trigger
+```
+
+Then replug the keyboard. Other Ultra 8K boards use the same firmware and only need a board
+definition in `src/olhclient/keychron/boards.py` (matrix size and key positions, from the board's
+shield in Keychron/zmk).
+
 ## Requirements
 
-- Linux with a running [OpenLinkHub](https://github.com/jurkovic-nikola/OpenLinkHub), by default
-  on `http://127.0.0.1:27003`
+- Linux
+- For Corsair devices (OpenLinkHub Client and Plus): a running
+  [OpenLinkHub](https://github.com/jurkovic-nikola/OpenLinkHub), by default on
+  `http://127.0.0.1:27003`. OpenDeviceHub does not need it.
 - Python 3.11 or newer
 - PySide6 6.8 or newer and httpx
 
 ## Installation
 
+### Editions
+
+The same code is released as three apps. Pick the one for the devices you have; they install side
+by side.
+
+| App | For | Bundle | App id |
+|---|---|---|---|
+| **OpenLinkHub Client** | Corsair devices through OpenLinkHub | `OpenLinkHub-Client-vX.Y.Z.flatpak` | `io.github.mdmatthias.OpenLinkHub-Client` |
+| **OpenLinkHub Client Plus** | Corsair devices through OpenLinkHub, and non-Corsair devices | `OpenLinkHub-Client-Plus-vX.Y.Z.flatpak` | `io.github.mdmatthias.OpenLinkHub-Client-Plus` |
+| **OpenDeviceHub** | Non-Corsair devices only (so far Keychron keyboards); no OpenLinkHub needed | `OpenDeviceHub-vX.Y.Z.flatpak` | `io.github.mdmatthias.OpenDeviceHub` |
+
+OpenLinkHub Client needs no device access at all. The other two talk to non-Corsair devices
+directly (Keychron keyboards over `/dev/hidraw*`), so their Flatpaks have `--device=all` (Flatpak
+has no narrower permission for it), and Keychron keyboards need the
+[udev rule](#keychron-keyboards). From source, `--edition openlinkhub|plus|devices`
+picks one; the default is everything (`plus`).
+
 ### Flatpak (recommended)
 
-Download the latest `OpenLinkHub-Client-vX.Y.Z.flatpak` from
-[Releases](https://github.com/mdmatthias/OpenLinkHub-Client/releases), then:
+Download the bundle of your edition from
+[Releases](https://github.com/mdmatthias/OpenLinkHub-Client/releases), then, for example:
 
 ```sh
 flatpak install --user OpenLinkHub-Client-vX.Y.Z.flatpak -y
@@ -107,9 +186,9 @@ flatpak run io.github.mdmatthias.OpenLinkHub-Client
 ```
 
 Flatpak pulls the KDE runtime and the PySide base app from Flathub. Later versions install
-themselves from within the client (see Updates above). The Flatpak reads its config from
-`~/.var/app/io.github.mdmatthias.OpenLinkHub-Client/config/olh-client/config.toml` and can read
-OpenLinkHub's certificate in `/opt/OpenLinkHub/certificates`.
+themselves from within the app (see Updates above); each edition updates to its own bundle. A
+Flatpak reads its config from `~/.var/app/<app id>/config/olh-client/config.toml`; the two
+OpenLinkHub editions can read OpenLinkHub's certificate in `/opt/OpenLinkHub/certificates`.
 
 ### From source
 
@@ -198,6 +277,12 @@ memory only; no password is stored.
   lists it again about 9 seconds later. A Slipstream receiver (product id 11008) once got into a
   state where it ignored most changes; unplugging and replugging it fixed that.
 - The top view still draws a cable for the wireless Scimitars.
+- **Keychron keyboards**: written from Keychron's firmware source and tested against an emulation
+  of it. Reading was checked on a V3 Ultra 8K ANSI (firmware v1.0.3) over the 2.4 GHz receiver;
+  writing keys, lighting and settings has not been tried on a real keyboard yet. Not covered:
+  Bluetooth, macros stored on the keyboard, per-key colours, resetting the keymap. The JIS key positions use
+  the common JIS key sizes and may be off by a little. Settings are read again on every poll, so
+  changes made with Fn shortcuts show up; the keymap is read once when the keyboard is opened.
 
 ## How it works
 
@@ -208,6 +293,7 @@ src/olhclient/
               ReceiverSession, feature controllers (core/features/*), MacroLibrary (macros page),
               artwork lighting
   devices/    device modules: base.py, registry.py, generic/, scimitar/
+  keychron/   Keychron keyboards over raw HID: hidraw access, protocol, keycodes, boards
   qml/        Main.qml, theme/, components/, layout/, features/
 ```
 
@@ -234,6 +320,16 @@ the data offers.
 
 API calls run on a thread pool; results come back on the GUI thread. After every write the
 client reloads the device, so the UI always shows what OpenLinkHub really stored.
+
+Keychron keyboards have nothing to do with OpenLinkHub, which does not support them; the client
+drives them itself. `keychron/hidraw.py` finds them in sysfs
+(`/sys/class/hidraw`, vendor 3434, the VIA usage page 0xFF60 in the report descriptor) and reads
+and writes `/dev/hidrawN` directly, so no native HID library is needed. `keychron/protocol.py`
+sends 32-byte reports; the keyboard answers each with the same report, values filled in.
+`core/keychron.py` has a `KeychronSession` with the QML API of `DeviceSession`, so the main window,
+the keyboard view and the lighting and settings panels work unchanged; its controllers are in
+`core/features/keychron.py`. Every write (a key, a lighting value, a setting) is stored on the
+keyboard at once, as Keychron Launcher does.
 
 ### Adding a device
 
@@ -288,21 +384,28 @@ Fixtures in `tests/fixtures/`, with serials and paths anonymised:
 
 ### Flatpak and releases
 
-The Flatpak files live in `flatpak/`: the manifest (KDE runtime with the `io.qt.PySide.BaseApp`
-base app), the httpx wheels in `python-dependencies.json` (keep it in sync with `pyproject.toml`),
-the desktop file, the metainfo and the launcher.
+The Flatpak files live in `flatpak/`, one manifest, desktop file and metainfo per
+[edition](#editions) (`<app id>.yaml`, ...; the editions are defined in `src/olhclient/edition.py`).
+The manifests use the KDE runtime with the `io.qt.PySide.BaseApp` base app and the httpx wheels in
+`python-dependencies.json` (keep it in sync with `pyproject.toml`). They are identical except for
+the app id and the permissions; `tests/test_edition.py` checks that. The release notes are written
+once, in `io.github.mdmatthias.OpenLinkHub-Client.metainfo.xml`; `flatpak/copy_releases.py` copies
+them into the other two apps' metainfo at build time.
 
 ```sh
-flatpak/build-and-run.sh     # build, install (--user) and run this checkout
-flatpak/build-bundle.sh      # build OpenLinkHub-Client-v<version>.flatpak
+flatpak/build-and-run.sh [edition]   # build, install (--user) and run this checkout
+flatpak/build-bundle.sh [edition]    # build <bundle>-v<version>.flatpak
 ```
 
+`edition` is `openlinkhub` (default), `plus` or `devices`.
+
 To release: bump `__version__` in `src/olhclient/__init__.py`, add a `<release>` with its notes to
-the metainfo, commit, and push a tag `v<version>`. The workflow in `.github/workflows/flatpak.yml`
-checks that the tag, `__version__` and the metainfo agree, builds the bundle and attaches it to a
-GitHub release whose description is that `<release>` entry (converted by
-`.github/scripts/release_notes.py`). Tags ending in `-dev` become prereleases, which the updater skips. The updater
-(`update.py`, `core/updater.py`) looks for the asset `OpenLinkHub-Client-<tag>.flatpak`.
+`io.github.mdmatthias.OpenLinkHub-Client.metainfo.xml`, commit, and push a tag `v<version>`. The
+workflow in `.github/workflows/flatpak.yml` checks that the tag, `__version__` and the metainfo
+agree, builds the three bundles and attaches them to one GitHub release whose description is that
+`<release>` entry (converted by `.github/scripts/release_notes.py`). Tags ending in `-dev` become
+prereleases, which the updater skips. The updater (`update.py`, `core/updater.py`) looks for its
+own edition's asset, `<bundle>-<tag>.flatpak`.
 
 ### Notes on the OpenLinkHub API
 

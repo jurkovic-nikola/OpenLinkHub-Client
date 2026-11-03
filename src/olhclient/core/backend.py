@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
-from typing import Any
+import logging
+from typing import Any, Callable
 
 from PySide6.QtCore import QObject, Property, QTimer, Signal, Slot
 
 from olhclient.api.client import RECEIVER_PRODUCTS, ApiClient, ApiError
 from olhclient.api.models import DeviceInfo, DeviceKind, DeviceState, ReceiverState
 from olhclient.core.artwork import lit, zone_colors
+from olhclient.core.keychron import KeychronSession
 from olhclient.core.listmodel import DictListModel
 from olhclient.core.macros import MacroLibrary
 from olhclient.core.receiver import ReceiverSession
@@ -16,6 +18,11 @@ from olhclient.core.session import QML_DIR, DeviceSession, file_url, kind_icon
 from olhclient.core.worker import Worker
 from olhclient.devices.base import DeviceModule
 from olhclient.devices.registry import Registry
+from olhclient.keychron.boards import RECEIVERS
+from olhclient.keychron.device import KeychronDevice, connect, read_state
+from olhclient.keychron.protocol import KeychronClient
+
+log = logging.getLogger(__name__)
 
 DEVICE_ROLES = ("serial", "product", "name", "thumbnail", "battery")
 RECEIVER_THUMBNAIL = QML_DIR / "images" / "slipstream.svg"
@@ -41,8 +48,14 @@ class Backend(QObject):
     #: text, is_error
     notify = Signal(str, bool)
 
-    def __init__(self, api: ApiClient, registry: Registry, *, poll_interval: float = 5.0,
-                 worker: Worker | None = None, parent: QObject | None = None):
+    def __init__(self, api: ApiClient | None, registry: Registry, *, poll_interval: float = 5.0,
+                 worker: Worker | None = None,
+                 keychron_scan: Callable[[], dict[str, KeychronDevice]] | None = None,
+                 keychron_connect: Callable[[KeychronDevice], KeychronClient] = connect,
+                 brand: str = "OpenLinkHub",
+                 parent: QObject | None = None):
+        """``api`` None leaves OpenLinkHub out (OpenDeviceHub); ``keychron_scan`` finds Keychron
+        keyboards (keychron.device.scan), without it there are none. ``brand`` names the app in the UI."""
         super().__init__(parent)
         self.api = api
         self.registry = registry
@@ -55,12 +68,27 @@ class Backend(QObject):
         # serial -> thumbnail (in the device's lighting colours when it has artwork), as last seen
         self._thumbnails: dict[str, str] = {}
         self._receivers: dict[str, str] = {}
-        self._macros = MacroLibrary(api, self.worker, self)
-        self._macros.message.connect(self.notify)
-        self._session: DeviceSession | None = None
+        # Keychron keyboards, found on USB rather than through OpenLinkHub
+        self._keychron_scan = keychron_scan
+        self._keychron_connect = keychron_connect
+        self._keychron: dict[str, KeychronDevice] = {}
+        self._identified: dict[str, str] = {}  # receiver serial -> model of the keyboard behind it
+        self._scanning = False
+        self._opening_keychron = False
+        # OpenLinkHub answered (or failed) once: until then a scan does not pick a keyboard to show,
+        # so OpenLinkHub's devices come first as before
+        self._polled_once = api is None
+        # device list rows: OpenLinkHub devices, then receivers
+        self._olh_items: list[dict[str, Any]] = []
+        self._receiver_items: list[dict[str, Any]] = []
+        self._brand = brand
+        self._macros = MacroLibrary(api, self.worker, self) if api is not None else None
+        if self._macros is not None:
+            self._macros.message.connect(self.notify)
+        self._session: DeviceSession | KeychronSession | None = None
         self._receiver: ReceiverSession | None = None
         self._connected = False
-        self._status = "Connecting…"
+        self._status = "Connecting…" if api is not None else "Looking for keyboards…"
         self._auth_required = False
         self._refreshing = False
         self._timer = QTimer(self)
@@ -75,7 +103,8 @@ class Backend(QObject):
 
     @Slot()
     def refresh(self) -> None:
-        if self._refreshing or self._auth_required:
+        self._scan_keychron()
+        if self.api is None or self._refreshing or self._auth_required:
             return
         self._refreshing = True
         known = set(self._modules)
@@ -97,6 +126,7 @@ class Backend(QObject):
 
     def _polled(self, result: dict[str, Any]) -> None:
         self._refreshing = False
+        self._polled_once = True
         self._set_connected(True, f"Connected to {self.api.base_url}")
         self._infos = result["devices"]
         self._receivers = result["receivers"]
@@ -122,7 +152,7 @@ class Backend(QObject):
             for serial, info in sorted(self._infos.items(), key=lambda kv: self._order(kv[0]))
             if serial in self._modules
         ]
-        receiver_items = [
+        self._receiver_items = [
             {
                 "serial": serial,
                 "product": f"{product} RECEIVER",
@@ -132,9 +162,12 @@ class Backend(QObject):
             }
             for serial, product in sorted(self._receivers.items())
         ]
-        self._devices.set_items(device_items + receiver_items)
+        self._olh_items = device_items
+        self._publish()
 
-        if self._session is not None:
+        if isinstance(self._session, KeychronSession):
+            pass  # the Keychron scan looks after it
+        elif self._session is not None:
             if self._session.serial in self._modules:
                 self._session.reload()
             else:
@@ -144,8 +177,88 @@ class Backend(QObject):
                 self._receiver.reload()
             elif not self._receiver.may_be_restarting:  # a receiver may restart after a new polling rate
                 self._select_first()
-        elif self._devices.count:  # no session was opened, e.g. only a receiver is connected
+        elif self._devices.count and not self._opening_keychron:  # e.g. only a receiver is connected
             self.selectDevice(self._devices.get(0)["serial"])
+
+    def _publish(self) -> None:
+        keychron_items = [
+            {
+                "serial": serial,
+                "product": f"KEYCHRON {self._keychron_model(serial, device).upper()}",
+                "name": device.board.title if device.board else "Keychron keyboard",
+                "thumbnail": file_url(kind_icon(DeviceKind.KEYBOARD)),
+                "battery": -1,
+            }
+            for serial, device in sorted(self._keychron.items())
+        ]
+        self._devices.set_items(self._olh_items + keychron_items + self._receiver_items)
+
+    # -- Keychron keyboards ----------------------------------------------------
+
+    def _keychron_model(self, serial: str, device: KeychronDevice) -> str:
+        if device.board is not None:
+            return device.board.model
+        return self._identified.get(serial) or RECEIVERS[device.interface.product_id]
+
+    def _scan_keychron(self) -> None:
+        if self._keychron_scan is None or self._scanning:
+            return
+        self._scanning = True
+        self.worker.submit(self._keychron_scan, on_done=self._scanned, on_error=self._scan_failed)
+
+    def _scanned(self, devices: dict[str, KeychronDevice]) -> None:
+        self._scanning = False
+        if devices != self._keychron:
+            self._keychron = devices
+            self._publish()
+        if self.api is None:  # nothing else to report in the status bar
+            count = len(devices)
+            self._set_connected(True, f"{count} keyboard{'s' if count != 1 else ''} found" if count
+                                else "No keyboards found")
+        if isinstance(self._session, KeychronSession):
+            if self._session.serial in devices:
+                self._session.reload()
+            else:
+                self._select_first()
+        elif self._polled_once and not self._olh_items:
+            self._open_first_keychron()
+
+    def _open_first_keychron(self) -> None:
+        """Show a Keychron keyboard when nothing else is shown."""
+        if self._session is None and self._receiver is None and self._keychron and not self._opening_keychron:
+            self.selectDevice(next(iter(sorted(self._keychron))))
+
+    def _scan_failed(self, exc: Exception) -> None:
+        self._scanning = False
+        log.debug("Keychron scan failed: %s", exc)
+
+    def _open_keychron(self, device: KeychronDevice) -> None:
+        connect_to = self._keychron_connect
+
+        def open_keyboard() -> tuple[KeychronClient, Any]:
+            client = connect_to(device)
+            try:
+                return client, read_state(client, device)
+            except Exception:
+                client.close()
+                raise
+
+        def opened(result: tuple[KeychronClient, Any]) -> None:
+            self._opening_keychron = False
+            client, state = result
+            if device.board is None and self._identified.get(device.serial) != state.board.model:
+                self._identified[device.serial] = state.board.model
+                self._publish()
+            session = KeychronSession(client, self.worker, state, self)
+            session.message.connect(self.notify)
+            self._set_session(session)
+
+        def failed(exc: Exception) -> None:
+            self._opening_keychron = False
+            self._report_error(exc)
+
+        self._opening_keychron = True
+        self.worker.submit(open_keyboard, on_done=opened, on_error=failed)
 
     def _order(self, serial: str) -> tuple[int, str]:
         """Devices are listed by kind (mice first), then by name."""
@@ -160,6 +273,8 @@ class Backend(QObject):
 
     def _poll_failed(self, exc: Exception) -> None:
         self._refreshing = False
+        self._polled_once = True
+        self._open_first_keychron()  # Keychron keyboards work without OpenLinkHub
         if isinstance(exc, ApiError) and exc.auth_required:
             self._set_auth_required(True)
             self._set_connected(False, "Login required")
@@ -191,9 +306,13 @@ class Backend(QObject):
         receiver.message.connect(self.notify)
         self._set_session(None, receiver)
 
-    def _set_session(self, session: DeviceSession | None, receiver: ReceiverSession | None = None) -> None:
+    def _set_session(self, session: DeviceSession | KeychronSession | None,
+                     receiver: ReceiverSession | None = None) -> None:
         """Show ``session`` (a device) or ``receiver``; at most one is selected."""
         for old in (self._session, self._receiver):
+            if isinstance(old, KeychronSession):
+                # on the worker: the close waits for a request in flight, up to its timeout
+                self.worker.submit(old.client.close)
             if old is not None:
                 old.deleteLater()
         self._session = session
@@ -211,6 +330,9 @@ class Backend(QObject):
             return
         if serial in self._receivers:
             self.worker.submit(self.api.get_receiver, serial, on_done=self._open_receiver)
+            return
+        if serial in self._keychron:
+            self._open_keychron(self._keychron[serial])
             return
         if serial not in self._modules:
             return
@@ -236,7 +358,7 @@ class Backend(QObject):
     # -- helpers -----------------------------------------------------------
 
     def _report_error(self, exc: Exception) -> None:
-        self.notify.emit(exc.message if isinstance(exc, ApiError) else str(exc), True)
+        self.notify.emit(getattr(exc, "message", None) or str(exc), True)
 
     def _set_connected(self, connected: bool, status: str) -> None:
         if connected != self._connected:
@@ -257,12 +379,22 @@ class Backend(QObject):
     def devices(self) -> DictListModel:
         return self._devices
 
-    @Property(QObject, constant=True)
-    def macros(self) -> MacroLibrary:
+    # QVariant, not QObject: None (no OpenLinkHub) would reach QML as an invalid object.
+    @Property("QVariant", constant=True)
+    def macros(self) -> MacroLibrary | None:
         return self._macros
 
+    @Property(bool, constant=True)
+    def openLinkHub(self) -> bool:
+        """Whether this app drives devices through OpenLinkHub (not OpenDeviceHub)."""
+        return self.api is not None
+
+    @Property(str, constant=True)
+    def brand(self) -> str:
+        return self._brand
+
     @Property(QObject, notify=sessionChanged)
-    def session(self) -> DeviceSession | None:
+    def session(self) -> DeviceSession | KeychronSession | None:
         return self._session
 
     @Property(QObject, notify=sessionChanged)
@@ -292,4 +424,4 @@ class Backend(QObject):
 
     @Property(str, constant=True)
     def serverUrl(self) -> str:
-        return self.api.base_url
+        return self.api.base_url if self.api is not None else ""

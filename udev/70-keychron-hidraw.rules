@@ -1,0 +1,6 @@
+# Let the logged-in user open the raw HID interface of Keychron keyboards (USB vendor 3434),
+# for OpenLinkHub Client and Keychron Launcher. Install with:
+#   sudo cp 70-keychron-hidraw.rules /etc/udev/rules.d/
+#   sudo udevadm control --reload && sudo udevadm trigger
+# then replug the keyboard.
+KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="3434", TAG+="uaccess"

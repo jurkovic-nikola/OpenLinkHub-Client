@@ -214,3 +214,84 @@ def test_update_dialog(qtbot, fake_api, monkeypatch):
     window.close()
     engine.deleteLater()
     assert warnings == []
+
+
+def test_keychron_keyboard(qtbot, fake_api):
+    from olhclient.keychron.protocol import KeychronClient
+    from tests.fake_keychron import SERIAL, FakeKeyboard, device
+
+    keyboard = FakeKeyboard()
+    backend = Backend(fake_api, Registry.discover(), worker=Worker(synchronous=True),
+                      keychron_scan=lambda: {SERIAL: device()},
+                      keychron_connect=lambda d: KeychronClient(keyboard, timeout=0.01))
+    engine = QQmlApplicationEngine()
+    warnings = []
+    engine.warnings.connect(lambda ws: warnings.extend(w.toString() for w in ws))
+    engine.setInitialProperties({"backend": backend})
+    engine.load(QUrl.fromLocalFile(str(QML_DIR / "Main.qml")))
+    window = engine.rootObjects()[0]
+    backend.refresh()
+    settle(qtbot)
+    backend.selectDevice(SERIAL)
+    settle(qtbot)
+    session = backend.session
+    assert window.property("title") == "Keychron V3 Ultra 8K (ANSI) — OpenLinkHub"
+    for feature in session.features:
+        window.setProperty("featureId", feature["id"])
+        settle(qtbot)
+    # writes while the editors are shown, and a failing one
+    window.setProperty("featureId", "keyboard_keys")
+    keys = session.controller("keyboard_keys")
+    keys.setLayer(3)
+    session.selectedButton = "Knob clockwise"
+    settle(qtbot)
+    keys.save(keys.selected["keyIndex"], 0x0106)
+    window.setProperty("featureId", "lighting")
+    settle(qtbot)
+    session.controller("lighting").setEffect(2)
+    session.controller("lighting").setColor("#3366ff")
+    keyboard.silent = True
+    session.controller("lighting").setBrightness(10)
+    keyboard.silent = False
+    window.setProperty("featureId", "settings")
+    settle(qtbot)
+    session.controller("settings").apply("pollingUsb", 0)
+    settle(qtbot)
+    backend.selectDevice("SE0000000000TEST")
+    settle(qtbot)
+    assert keyboard.closed
+    assert warnings == []
+    window.close()
+    engine.deleteLater()
+
+
+def test_opendevicehub(qtbot):
+    """No OpenLinkHub at all: no macros tab, no server, a Keychron keyboard."""
+    from olhclient.keychron.protocol import KeychronClient
+    from tests.fake_keychron import SERIAL, FakeKeyboard, device
+
+    keyboard = FakeKeyboard()
+    found = {}
+    backend = Backend(None, Registry.discover(), worker=Worker(synchronous=True), keychron_scan=lambda: dict(found),
+                      keychron_connect=lambda d: KeychronClient(keyboard, timeout=0.01), brand="OpenDeviceHub")
+    engine = QQmlApplicationEngine()
+    warnings = []
+    engine.warnings.connect(lambda ws: warnings.extend(w.toString() for w in ws))
+    engine.setInitialProperties({"backend": backend})
+    engine.load(QUrl.fromLocalFile(str(QML_DIR / "Main.qml")))
+    window = engine.rootObjects()[0]
+    backend.refresh()  # nothing plugged in yet
+    settle(qtbot)
+    assert window.property("title") == "OpenDeviceHub"
+    found[SERIAL] = device()
+    backend.refresh()
+    settle(qtbot)
+    assert window.property("title") == "Keychron V3 Ultra 8K (ANSI) — OpenDeviceHub"
+    for feature in backend.session.features:
+        window.setProperty("featureId", feature["id"])
+        settle(qtbot)
+    window.setProperty("page", "macros")  # not offered; must not break anything
+    settle(qtbot)
+    assert warnings == []
+    window.close()
+    engine.deleteLater()

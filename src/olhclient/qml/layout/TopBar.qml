@@ -26,7 +26,7 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
             }
             Text {
-                text: "OpenLinkHub"
+                text: root.backend ? root.backend.brand : ""
                 color: Theme.text
                 font.pixelSize: Theme.fontLarge
                 font.bold: true
@@ -34,7 +34,10 @@ Rectangle {
             }
         }
         Repeater {
-            model: [{ page: "devices", title: "DEVICES" }, { page: "macros", title: "MACROS" }]
+            // OpenLinkHub's macros; OpenDeviceHub has no such tab
+            model: root.backend && root.backend.openLinkHub
+                   ? [{ page: "devices", title: "DEVICES" }, { page: "macros", title: "MACROS" }]
+                   : [{ page: "devices", title: "DEVICES" }]
             Text {
                 id: tab
                 required property var modelData
@@ -76,6 +79,7 @@ Rectangle {
             }
         }
         Row {
+            visible: root.backend !== null && root.backend.openLinkHub
             spacing: 8
             Rectangle {
                 width: 8
