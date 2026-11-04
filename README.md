@@ -109,6 +109,7 @@ Supported so far:
 | Vendor | Devices |
 |---|---|
 | Keychron | V3 Ultra 8K keyboards (ANSI, ISO, JIS), by cable or the Ultra-Link 8K receiver; see [Keychron keyboards](#keychron-keyboards) |
+| Gigabyte | Graphics cards with RGB Fusion 2 lighting (AORUS, GAMING OC, EAGLE…, GeForce and Radeon); see [Graphics cards](#graphics-cards) |
 
 Devices with an open protocol or open source firmware are the easiest to add; requests and pull
 requests for other vendors are welcome. Each vendor gets its own package next to
@@ -147,6 +148,32 @@ Then replug the keyboard. Other Ultra 8K boards use the same firmware and only n
 definition in `src/olhclient/keychron/boards.py` (matrix size and key positions, from the board's
 shield in Keychron/zmk).
 
+### Graphics cards
+
+Gigabyte cards with RGB Fusion 2 lighting have a lighting controller on one of the card's I2C
+buses. The client drives it the way [OpenRGB](https://gitlab.com/CalcProgrammer1/OpenRGB) does
+(`Controllers/GigabyteRGBFusion2GPUController`, ported to `src/olhclient/gpu/`), without needing
+OpenRGB. `gpu/cards.py` holds OpenRGB's list of the 103 cards it knows, by PCI id. Tested on the
+AORUS Radeon RX 9070 XT Elite.
+
+Lighting has nine modes (static, pulse, flash, double flash, colour cycle, gradient, wave, colour
+shift, tricolour), brightness, speed and a colour for each of the five zones. A change applies at
+once but lasts only until the computer is switched off; **Save to card** stores it on the card. The
+card cannot report its lighting, so the client shows what it last set (kept in
+`~/.local/state/olh-client/gpu-lighting.json`) and does not change the card until you do.
+
+The client looks for cards once, at startup. That needs the `i2c-dev` module and access to
+`/dev/i2c-*`, the same as OpenRGB:
+
+```sh
+echo i2c-dev | sudo tee /etc/modules-load.d/i2c-dev.conf && sudo modprobe i2c-dev
+```
+
+For access, either install OpenRGB's udev rules (`60-openrgb.rules`, which give the logged-in user
+`/dev/i2c-*`), or use the `i2c` group of i2c-tools' rule (`45-i2c-tools.rules`):
+`sudo usermod -aG i2c "$USER"` and log in again. Other cards with this controller only need an entry in `gpu/cards.py`
+(OpenRGB's detector list has the PCI ids and the address).
+
 ## Requirements
 
 - Linux
@@ -167,12 +194,12 @@ by side.
 |---|---|---|---|
 | **OpenLinkHub Client** | Corsair devices through OpenLinkHub | `OpenLinkHub-Client-vX.Y.Z.flatpak` | `io.github.mdmatthias.OpenLinkHub-Client` |
 | **OpenLinkHub Client Plus** | Corsair devices through OpenLinkHub, and non-Corsair devices | `OpenLinkHub-Client-Plus-vX.Y.Z.flatpak` | `io.github.mdmatthias.OpenLinkHub-Client-Plus` |
-| **OpenDeviceHub** | Non-Corsair devices only (so far Keychron keyboards); no OpenLinkHub needed | `OpenDeviceHub-vX.Y.Z.flatpak` | `io.github.mdmatthias.OpenDeviceHub` |
+| **OpenDeviceHub** | Non-Corsair devices only (so far Keychron keyboards and Gigabyte graphics cards); no OpenLinkHub needed | `OpenDeviceHub-vX.Y.Z.flatpak` | `io.github.mdmatthias.OpenDeviceHub` |
 
 OpenLinkHub Client needs no device access at all. The other two talk to non-Corsair devices
-directly (Keychron keyboards over `/dev/hidraw*`), so their Flatpaks have `--device=all` (Flatpak
-has no narrower permission for it), and Keychron keyboards need the
-[udev rule](#keychron-keyboards). From source, `--edition openlinkhub|plus|devices`
+directly (Keychron keyboards over `/dev/hidraw*`, graphics cards over `/dev/i2c-*`), so their
+Flatpaks have `--device=all` (Flatpak has no narrower permission for it); Keychron keyboards need
+the [udev rule](#keychron-keyboards), graphics cards [the i2c group](#graphics-cards). From source, `--edition openlinkhub|plus|devices`
 picks one; the default is everything (`plus`).
 
 ### Flatpak (recommended)
@@ -294,6 +321,7 @@ src/olhclient/
               artwork lighting
   devices/    device modules: base.py, registry.py, generic/, scimitar/
   keychron/   Keychron keyboards over raw HID: hidraw access, protocol, keycodes, boards
+  gpu/        graphics card lighting over I2C: i2c-dev access, RGB Fusion 2 protocol, card list
   qml/        Main.qml, theme/, components/, layout/, features/
 ```
 
@@ -330,6 +358,12 @@ sends 32-byte reports; the keyboard answers each with the same report, values fi
 the keyboard view and the lighting and settings panels work unchanged; its controllers are in
 `core/features/keychron.py`. Every write (a key, a lighting value, a setting) is stored on the
 keyboard at once, as Keychron Launcher does.
+
+Graphics cards are driven the same way. `gpu/i2c.py` lists the I2C buses in sysfs with the PCI
+ids of the device each belongs to, and `gpu/device.py` probes the known cards' controller address
+(on AMD cards only on the "OEM" bus, as OpenRGB does). `gpu/fusion2.py` turns a `Lighting` into
+8-byte writes. `core/gpu.py` has a `GpuSession`, again with the QML API of `DeviceSession`; its
+lighting controller is in `core/features/gpu.py`, its editor in `qml/features/GpuLightingEditor.qml`.
 
 ### Adding a device
 

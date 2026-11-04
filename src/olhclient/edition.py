@@ -19,14 +19,15 @@ class Edition:
     bundle: str  # release asset: <bundle>-<tag>.flatpak
     openlinkhub: bool  # Corsair devices through OpenLinkHub
     keychron: bool  # Keychron keyboards over raw HID
+    gpu: bool  # graphics card lighting over I2C
 
 
 OPENLINKHUB = Edition("openlinkhub", "io.github.mdmatthias.OpenLinkHub-Client", "OpenLinkHub Client",
-                      "OpenLinkHub", "OpenLinkHub-Client", openlinkhub=True, keychron=False)
+                      "OpenLinkHub", "OpenLinkHub-Client", openlinkhub=True, keychron=False, gpu=False)
 PLUS = Edition("plus", "io.github.mdmatthias.OpenLinkHub-Client-Plus", "OpenLinkHub Client Plus",
-               "OpenLinkHub", "OpenLinkHub-Client-Plus", openlinkhub=True, keychron=True)
+               "OpenLinkHub", "OpenLinkHub-Client-Plus", openlinkhub=True, keychron=True, gpu=True)
 DEVICES = Edition("devices", "io.github.mdmatthias.OpenDeviceHub", "OpenDeviceHub",
-                  "OpenDeviceHub", "OpenDeviceHub", openlinkhub=False, keychron=True)
+                  "OpenDeviceHub", "OpenDeviceHub", openlinkhub=False, keychron=True, gpu=True)
 
 EDITIONS = {edition.key: edition for edition in (OPENLINKHUB, PLUS, DEVICES)}
 #: outside the Flatpaks: everything

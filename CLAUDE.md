@@ -6,7 +6,7 @@ Desktop client (Python, PySide6 + QML) for the [OpenLinkHub](https://github.com/
 HTTP API, which drives Corsair devices on Linux. The client talks HTTP to OpenLinkHub (default
 `http://127.0.0.1:27003`) and never touches Corsair devices itself. The exception is Keychron
 keyboards with Keychron's ZMK firmware, which the client drives directly over `/dev/hidraw*`
-(`keychron/`).
+(`keychron/`), and Gigabyte RGB Fusion 2 graphics cards, driven over `/dev/i2c-*` (`gpu/`).
 
 ## Commands
 
@@ -62,6 +62,13 @@ formatter configured.
   `KeychronSession` mimics the QML API of `DeviceSession`; its controllers are in
   `core/features/keychron.py`. `Backend` scans for them on its poll timer, independently of
   OpenLinkHub being reachable (`keychron_scan`/`keychron_connect` are injectable for tests).
+- `gpu/` — graphics card lighting, ported from OpenRGB's `GigabyteRGBFusion2GPUController`:
+  `i2c.py` (sysfs bus discovery with PCI ids, `/dev/i2c-N` I/O), `cards.py` (OpenRGB's card list:
+  PCI ids and address), `fusion2.py` (`Lighting` -> 8-byte writes, probe, save), `device.py`
+  (`scan`, which probes and so runs once; `LightingStore`, because the card cannot be read back).
+  `core/gpu.py` `GpuSession` mimics the QML API of `DeviceSession`; controller in
+  `core/features/gpu.py`, editor `features/GpuLightingEditor.qml`. `Backend` takes
+  `gpu_scan`/`gpu_connect`/`gpu_store`.
 - `qml/` — `Main.qml`, `layout/` (views, panels), `features/` (list + editor per feature),
   `components/` (dark-themed controls), `theme/Theme.qml` (singleton via `qmldir`).
 
@@ -77,14 +84,14 @@ differ per Scimitar generation). Artwork must stay within SVG Tiny 1.2 (what Qt 
 
 Three apps ("editions", `src/olhclient/edition.py`) come from this code: OpenLinkHub Client
 (`openlinkhub`, OpenLinkHub only, the original app id), OpenLinkHub Client Plus (`plus`,
-OpenLinkHub + Keychron) and OpenDeviceHub (`devices`, Keychron only: `Backend(api=None)`, no macros
-tab). A Flatpak finds its edition through `FLATPAK_ID`; from source `--edition` picks one, default
+OpenLinkHub + Keychron + GPUs) and OpenDeviceHub (`devices`, Keychron and GPUs only: `Backend(api=None)`,
+no macros tab). A Flatpak finds its edition through `FLATPAK_ID`; from source `--edition` picks one, default
 `plus`.
 
 `flatpak/` holds one manifest, desktop file and metainfo per app id (KDE runtime +
 `io.qt.PySide.BaseApp`; the cleanup drops QtWebEngine, numpy and LLVM), `python-dependencies.json`
 (httpx wheels with sha256; keep in sync with `pyproject.toml`) and the launcher. The manifests may
-only differ in app id and permissions (`tests/test_edition.py` checks; only the Keychron editions
+only differ in app id and permissions (`tests/test_edition.py` checks; only the Keychron/GPU editions
 get `--device=all`). Release notes live only in the OpenLinkHub Client metainfo;
 `flatpak/copy_releases.py` copies them into the others at build time. The app is copied to
 `/app/share/olh-client` and started with `python3 -m olhclient`. `flatpak/build-and-run.sh
@@ -110,6 +117,7 @@ Only the Flatpak (`FLATPAK_ID` set) installs; other installs get a link to the r
   **fails on any QML warning**, so QML changes must be warning-free.
 - `QStandardPaths` test mode is on, so lit artwork is written to `~/.qttest`, not the real cache.
 - `tests/fake_keychron.py` has `FakeKeyboard`, a transport that answers reports like the firmware.
+- `tests/fake_gpu.py` has `FakeCard`, an I2C transport that records writes and answers the probe.
 
 ## OpenLinkHub API quirks
 

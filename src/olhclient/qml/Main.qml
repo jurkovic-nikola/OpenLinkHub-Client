@@ -197,7 +197,7 @@ ApplicationWindow {
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: !window.backend.openLinkHub
-                    ? (window.backend.devices.count === 0 ? "No keyboards found" : "Loading keyboard…")
+                    ? (window.backend.devices.count === 0 ? "No devices found" : "Loading device…")
                     : !window.backend.connected ? "Cannot reach OpenLinkHub"
                     : window.backend.devices.count === 0 ? "No devices found" : "Loading device…"
                 color: Theme.text

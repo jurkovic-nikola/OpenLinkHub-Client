@@ -1,10 +1,10 @@
 [Desktop Entry]
 Name=OpenDeviceHub
-Comment=Configure Keychron keyboards: keys, lighting and settings
+Comment=Configure Keychron keyboards and graphics card lighting
 Exec=olh-client
 Icon=io.github.mdmatthias.OpenDeviceHub
 Terminal=false
 Type=Application
 Categories=Settings;HardwareSettings;
-Keywords=Keychron;keyboard;keymap;RGB;ZMK;VIA;
+Keywords=Keychron;keyboard;keymap;RGB;ZMK;VIA;Gigabyte;GPU;
 StartupWMClass=io.github.mdmatthias.OpenDeviceHub

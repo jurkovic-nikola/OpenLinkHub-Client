@@ -4,14 +4,14 @@
     <metadata_license>CC0-1.0</metadata_license>
     <project_license>GPL-3.0-only</project_license>
     <name>OpenDeviceHub</name>
-    <summary>Configure Keychron keyboards: keys, lighting and settings</summary>
+    <summary>Configure Keychron keyboards and graphics card lighting</summary>
     <developer id="io.github.mdmatthias">
         <name>mdmatthias</name>
     </developer>
     <description>
         <p>
-            Configure Keychron keyboards that run Keychron's open source ZMK firmware, without a browser or a
-            background service. OpenDeviceHub talks to the keyboard directly, like Keychron Launcher does.
+            Configure Keychron keyboards that run Keychron's open source ZMK firmware, and the lighting of Gigabyte
+            graphics cards, without a browser or a background service. OpenDeviceHub talks to each device directly.
         </p>
         <p>Features:</p>
         <ul>
@@ -19,10 +19,11 @@
             <li>Remap every key and the knob on each layer: keys with modifiers, media and mouse keys, layers, lighting and Keychron keys</li>
             <li>Lighting effect, brightness, speed and colour</li>
             <li>Polling rate (USB and 2.4 GHz), debounce and the idle and sleep timers</li>
+            <li>Gigabyte graphics cards with RGB Fusion 2 lighting: mode, brightness, speed and a colour per zone</li>
             <li>Tray icon and built-in updates</li>
         </ul>
-        <p>Needs a udev rule for /dev/hidraw access; see the project page.</p>
-        <p>Not affiliated with or endorsed by Keychron.</p>
+        <p>Keychron keyboards need a udev rule for /dev/hidraw access, graphics cards access to /dev/i2c-*; see the project page.</p>
+        <p>Not affiliated with or endorsed by Keychron or Gigabyte.</p>
     </description>
     <launchable type="desktop-id">io.github.mdmatthias.OpenDeviceHub.desktop</launchable>
     <url type="homepage">https://github.com/mdmatthias/OpenLinkHub-Client</url>

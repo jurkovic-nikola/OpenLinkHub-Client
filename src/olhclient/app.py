@@ -21,6 +21,7 @@ from olhclient.core.session import QML_DIR
 from olhclient.core.updater import Updater
 from olhclient.devices.registry import Registry
 from olhclient.edition import EDITIONS, current
+from olhclient.gpu.device import scan as scan_gpus
 from olhclient.keychron.device import scan as scan_keychron
 from olhclient.tray import create_tray
 
@@ -65,7 +66,8 @@ def main(argv: list[str] | None = None) -> int:
 
     api = ApiClient(config.base_url, origin=config.origin or None, verify=config.verify) if edition.openlinkhub else None
     backend = Backend(api, Registry.discover(), poll_interval=config.poll_interval,
-                      keychron_scan=scan_keychron if edition.keychron else None, brand=edition.brand)
+                      keychron_scan=scan_keychron if edition.keychron else None,
+                      gpu_scan=scan_gpus if edition.gpu else None, brand=edition.brand)
     updater = Updater(edition=edition)
     engine = create_engine(backend, updater, config.username)
     if not engine.rootObjects():

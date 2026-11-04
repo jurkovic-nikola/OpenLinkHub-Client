@@ -10,6 +10,7 @@ from PySide6.QtCore import QObject, Property, QTimer, Signal, Slot
 from olhclient.api.client import RECEIVER_PRODUCTS, ApiClient, ApiError
 from olhclient.api.models import DeviceInfo, DeviceKind, DeviceState, ReceiverState
 from olhclient.core.artwork import lit, zone_colors
+from olhclient.core.gpu import GpuSession
 from olhclient.core.keychron import KeychronSession
 from olhclient.core.listmodel import DictListModel
 from olhclient.core.macros import MacroLibrary
@@ -18,6 +19,9 @@ from olhclient.core.session import QML_DIR, DeviceSession, file_url, kind_icon
 from olhclient.core.worker import Worker
 from olhclient.devices.base import DeviceModule
 from olhclient.devices.registry import Registry
+from olhclient.gpu.device import GpuDevice, LightingStore
+from olhclient.gpu.device import connect as connect_gpu
+from olhclient.gpu.fusion2 import Fusion2Gpu
 from olhclient.keychron.boards import RECEIVERS
 from olhclient.keychron.device import KeychronDevice, connect, read_state
 from olhclient.keychron.protocol import KeychronClient
@@ -52,10 +56,14 @@ class Backend(QObject):
                  worker: Worker | None = None,
                  keychron_scan: Callable[[], dict[str, KeychronDevice]] | None = None,
                  keychron_connect: Callable[[KeychronDevice], KeychronClient] = connect,
+                 gpu_scan: Callable[[], dict[str, GpuDevice]] | None = None,
+                 gpu_connect: Callable[[GpuDevice], Fusion2Gpu] = connect_gpu,
+                 gpu_store: LightingStore | None = None,
                  brand: str = "OpenLinkHub",
                  parent: QObject | None = None):
         """``api`` None leaves OpenLinkHub out (OpenDeviceHub); ``keychron_scan`` finds Keychron
-        keyboards (keychron.device.scan), without it there are none. ``brand`` names the app in the UI."""
+        keyboards (keychron.device.scan), without it there are none; ``gpu_scan`` likewise finds
+        graphics cards (gpu.device.scan), once. ``brand`` names the app in the UI."""
         super().__init__(parent)
         self.api = api
         self.registry = registry
@@ -74,7 +82,14 @@ class Backend(QObject):
         self._keychron: dict[str, KeychronDevice] = {}
         self._identified: dict[str, str] = {}  # receiver serial -> model of the keyboard behind it
         self._scanning = False
-        self._opening_keychron = False
+        # graphics cards, found on I2C buses
+        self._gpu_scan = gpu_scan
+        self._gpu_connect = gpu_connect
+        self._gpu_store = gpu_store or LightingStore()
+        self._gpus: dict[str, GpuDevice] = {}
+        self._gpus_scanned = False
+        # a Keychron keyboard or graphics card is being opened
+        self._opening_direct = False
         # OpenLinkHub answered (or failed) once: until then a scan does not pick a keyboard to show,
         # so OpenLinkHub's devices come first as before
         self._polled_once = api is None
@@ -85,10 +100,10 @@ class Backend(QObject):
         self._macros = MacroLibrary(api, self.worker, self) if api is not None else None
         if self._macros is not None:
             self._macros.message.connect(self.notify)
-        self._session: DeviceSession | KeychronSession | None = None
+        self._session: DeviceSession | KeychronSession | GpuSession | None = None
         self._receiver: ReceiverSession | None = None
         self._connected = False
-        self._status = "Connecting…" if api is not None else "Looking for keyboards…"
+        self._status = "Connecting…" if api is not None else "Looking for devices…"
         self._auth_required = False
         self._refreshing = False
         self._timer = QTimer(self)
@@ -103,6 +118,7 @@ class Backend(QObject):
 
     @Slot()
     def refresh(self) -> None:
+        self._scan_gpus()
         self._scan_keychron()
         if self.api is None or self._refreshing or self._auth_required:
             return
@@ -165,8 +181,8 @@ class Backend(QObject):
         self._olh_items = device_items
         self._publish()
 
-        if isinstance(self._session, KeychronSession):
-            pass  # the Keychron scan looks after it
+        if isinstance(self._session, (KeychronSession, GpuSession)):
+            pass  # the Keychron scan looks after keyboards; a card stays
         elif self._session is not None:
             if self._session.serial in self._modules:
                 self._session.reload()
@@ -177,7 +193,7 @@ class Backend(QObject):
                 self._receiver.reload()
             elif not self._receiver.may_be_restarting:  # a receiver may restart after a new polling rate
                 self._select_first()
-        elif self._devices.count and not self._opening_keychron:  # e.g. only a receiver is connected
+        elif self._devices.count and not self._opening_direct:  # e.g. only a receiver is connected
             self.selectDevice(self._devices.get(0)["serial"])
 
     def _publish(self) -> None:
@@ -191,7 +207,17 @@ class Backend(QObject):
             }
             for serial, device in sorted(self._keychron.items())
         ]
-        self._devices.set_items(self._olh_items + keychron_items + self._receiver_items)
+        gpu_items = [
+            {
+                "serial": serial,
+                "product": device.name.upper(),
+                "name": DeviceKind.GPU.title,
+                "thumbnail": file_url(kind_icon(DeviceKind.GPU)),
+                "battery": -1,
+            }
+            for serial, device in sorted(self._gpus.items())
+        ]
+        self._devices.set_items(self._olh_items + keychron_items + gpu_items + self._receiver_items)
 
     # -- Keychron keyboards ----------------------------------------------------
 
@@ -211,22 +237,28 @@ class Backend(QObject):
         if devices != self._keychron:
             self._keychron = devices
             self._publish()
-        if self.api is None:  # nothing else to report in the status bar
-            count = len(devices)
-            self._set_connected(True, f"{count} keyboard{'s' if count != 1 else ''} found" if count
-                                else "No keyboards found")
+        self._report_direct()
         if isinstance(self._session, KeychronSession):
             if self._session.serial in devices:
                 self._session.reload()
             else:
                 self._select_first()
         elif self._polled_once and not self._olh_items:
-            self._open_first_keychron()
+            self._open_first_direct()
 
-    def _open_first_keychron(self) -> None:
-        """Show a Keychron keyboard when nothing else is shown."""
-        if self._session is None and self._receiver is None and self._keychron and not self._opening_keychron:
-            self.selectDevice(next(iter(sorted(self._keychron))))
+    def _report_direct(self) -> None:
+        """Without OpenLinkHub, the status bar counts the keyboards and cards."""
+        if self.api is None:
+            count = len(self._keychron) + len(self._gpus)
+            self._set_connected(True, f"{count} device{'s' if count != 1 else ''} found" if count
+                                else "No devices found")
+
+    def _open_first_direct(self) -> None:
+        """Show a Keychron keyboard, else a graphics card, when nothing else is shown."""
+        if self._session is None and self._receiver is None and not self._opening_direct:
+            serials = sorted(self._keychron) + sorted(self._gpus)
+            if serials:
+                self.selectDevice(serials[0])
 
     def _scan_failed(self, exc: Exception) -> None:
         self._scanning = False
@@ -244,7 +276,7 @@ class Backend(QObject):
                 raise
 
         def opened(result: tuple[KeychronClient, Any]) -> None:
-            self._opening_keychron = False
+            self._opening_direct = False
             client, state = result
             if device.board is None and self._identified.get(device.serial) != state.board.model:
                 self._identified[device.serial] = state.board.model
@@ -254,11 +286,45 @@ class Backend(QObject):
             self._set_session(session)
 
         def failed(exc: Exception) -> None:
-            self._opening_keychron = False
+            self._opening_direct = False
             self._report_error(exc)
 
-        self._opening_keychron = True
+        self._opening_direct = True
         self.worker.submit(open_keyboard, on_done=opened, on_error=failed)
+
+    # -- graphics cards ----------------------------------------------------------
+
+    def _scan_gpus(self) -> None:
+        if self._gpu_scan is None or self._gpus_scanned:
+            return
+        self._gpus_scanned = True  # probing writes to the I2C bus: once is enough, cards are not hot-plugged
+        self.worker.submit(self._gpu_scan, on_done=self._gpus_found, on_error=self._gpu_scan_failed)
+
+    def _gpus_found(self, devices: dict[str, GpuDevice]) -> None:
+        self._gpus = devices
+        self._publish()
+        self._report_direct()
+        if self._polled_once and not self._olh_items:
+            self._open_first_direct()
+
+    def _gpu_scan_failed(self, exc: Exception) -> None:
+        log.debug("Graphics card scan failed: %s", exc)
+
+    def _open_gpu(self, device: GpuDevice) -> None:
+        connect_to = self._gpu_connect
+
+        def opened(client: Fusion2Gpu) -> None:
+            self._opening_direct = False
+            session = GpuSession(client, self.worker, device, self._gpu_store, self)
+            session.message.connect(self.notify)
+            self._set_session(session)
+
+        def failed(exc: Exception) -> None:
+            self._opening_direct = False
+            self._report_error(exc)
+
+        self._opening_direct = True
+        self.worker.submit(connect_to, device, on_done=opened, on_error=failed)
 
     def _order(self, serial: str) -> tuple[int, str]:
         """Devices are listed by kind (mice first), then by name."""
@@ -274,7 +340,7 @@ class Backend(QObject):
     def _poll_failed(self, exc: Exception) -> None:
         self._refreshing = False
         self._polled_once = True
-        self._open_first_keychron()  # Keychron keyboards work without OpenLinkHub
+        self._open_first_direct()  # Keychron keyboards and cards work without OpenLinkHub
         if isinstance(exc, ApiError) and exc.auth_required:
             self._set_auth_required(True)
             self._set_connected(False, "Login required")
@@ -306,11 +372,11 @@ class Backend(QObject):
         receiver.message.connect(self.notify)
         self._set_session(None, receiver)
 
-    def _set_session(self, session: DeviceSession | KeychronSession | None,
+    def _set_session(self, session: DeviceSession | KeychronSession | GpuSession | None,
                      receiver: ReceiverSession | None = None) -> None:
         """Show ``session`` (a device) or ``receiver``; at most one is selected."""
         for old in (self._session, self._receiver):
-            if isinstance(old, KeychronSession):
+            if isinstance(old, (KeychronSession, GpuSession)):
                 # on the worker: the close waits for a request in flight, up to its timeout
                 self.worker.submit(old.client.close)
             if old is not None:
@@ -333,6 +399,9 @@ class Backend(QObject):
             return
         if serial in self._keychron:
             self._open_keychron(self._keychron[serial])
+            return
+        if serial in self._gpus:
+            self._open_gpu(self._gpus[serial])
             return
         if serial not in self._modules:
             return
@@ -394,7 +463,7 @@ class Backend(QObject):
         return self._brand
 
     @Property(QObject, notify=sessionChanged)
-    def session(self) -> DeviceSession | KeychronSession | None:
+    def session(self) -> DeviceSession | KeychronSession | GpuSession | None:
         return self._session
 
     @Property(QObject, notify=sessionChanged)

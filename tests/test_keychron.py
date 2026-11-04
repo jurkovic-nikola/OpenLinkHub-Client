@@ -451,7 +451,7 @@ def test_backend_without_openlinkhub(qtbot, registry, keyboard):
                       keychron_connect=lambda d: KeychronClient(keyboard, timeout=0.01), brand="OpenDeviceHub")
     assert not backend.openLinkHub and backend.macros is None and backend.serverUrl == ""
     backend.refresh()  # no OpenLinkHub to poll: only the keyboards
-    assert backend.status == "1 keyboard found"
+    assert backend.status == "1 device found"
     assert backend.session.product == "Keychron V3 Ultra 8K (ANSI)"
 
 

@@ -1,0 +1,135 @@
+"""Graphics cards with a Gigabyte RGB Fusion 2 controller, from OpenRGB's detector list.
+
+A card is known by its PCI ids; the controller sits at a fixed address on one of
+the card's I2C buses (``GigabyteRGBFusion2GPUControllerDetect.cpp``).
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+AMD = 0x1002
+
+#: on AMD cards only these buses carry the controller (OpenRGB's ``i2c_amd_gpu.h``)
+AMD_BUS_NAMES = ("AMDGPU DM i2c OEM bus", "AMDGPU i2c bit bus OEM 0x97")
+
+
+@dataclass(frozen=True)
+class Card:
+    name: str
+    vendor_id: int
+    device_id: int
+    subsystem_vendor_id: int
+    subsystem_device_id: int
+    address: int
+
+    @property
+    def ids(self) -> tuple[int, int, int, int]:
+        return self.vendor_id, self.device_id, self.subsystem_vendor_id, self.subsystem_device_id
+
+
+CARDS = (
+    Card("Gigabyte AORUS GeForce RTX 2060 SUPER", 0x10de, 0x1f06, 0x1458, 0x3ff7, 0x50),
+    Card("Gigabyte AORUS GeForce RTX 2060 SUPER", 0x10de, 0x1f06, 0x1458, 0x3ff8, 0x50),
+    Card("Gigabyte AORUS GeForce RTX 2070", 0x10de, 0x1f07, 0x1458, 0x37b7, 0x50),
+    Card("Gigabyte AORUS GeForce RTX 2070 XTREME", 0x10de, 0x1f07, 0x1458, 0x37b4, 0x50),
+    Card("Gigabyte AORUS GeForce RTX 2070 XTREME", 0x10de, 0x1f07, 0x1458, 0x37b5, 0x50),
+    Card("Gigabyte AORUS GeForce RTX 2070 SUPER", 0x10de, 0x1e84, 0x1458, 0x3ff5, 0x50),
+    Card("Gigabyte AORUS GeForce RTX 2070 SUPER", 0x10de, 0x1e84, 0x1458, 0x3ff6, 0x50),
+    Card("Gigabyte AORUS GeForce RTX 2080", 0x10de, 0x1e87, 0x1458, 0x37b2, 0x50),
+    Card("Gigabyte AORUS GeForce RTX 2080", 0x10de, 0x1e87, 0x1458, 0x37b3, 0x50),
+    Card("Gigabyte AORUS GeForce RTX 2080 XTREME", 0x10de, 0x1e87, 0x1458, 0x37a2, 0x50),
+    Card("Gigabyte AORUS GeForce RTX 2080 XTREME", 0x10de, 0x1e87, 0x1458, 0x37b1, 0x50),
+    Card("Gigabyte AORUS GeForce RTX 2080 SUPER", 0x10de, 0x1e81, 0x1458, 0x3ff3, 0x50),
+    Card("Gigabyte AORUS GeForce RTX 2080 SUPER", 0x10de, 0x1e81, 0x1458, 0x3ff4, 0x50),
+    Card("Gigabyte AORUS GeForce RTX 2080 SUPER Waterforce WB", 0x10de, 0x1e81, 0x1458, 0x4002, 0x51),
+    Card("Gigabyte AORUS GeForce RTX 2080 SUPER Waterforce WB", 0x10de, 0x1e81, 0x1458, 0x4003, 0x51),
+    Card("Gigabyte AORUS GeForce RTX 2080 SUPER Waterforce", 0x10de, 0x1e81, 0x1458, 0x4004, 0x08),
+    Card("Gigabyte AORUS GeForce RTX 2080 SUPER Waterforce", 0x10de, 0x1e81, 0x1458, 0x4005, 0x08),
+    Card("Gigabyte AORUS GeForce RTX 2080 Ti 11G", 0x10de, 0x1e07, 0x1458, 0x37bf, 0x50),
+    Card("Gigabyte AORUS GeForce RTX 2080 Ti XTREME", 0x10de, 0x1e07, 0x1458, 0x37bc, 0x50),
+    Card("Gigabyte AORUS GeForce RTX 2080 Ti XTREME", 0x10de, 0x1e07, 0x1458, 0x37bd, 0x50),
+    Card("Gigabyte AORUS GeForce RTX 3060 ELITE", 0x10de, 0x2487, 0x1458, 0x407b, 0x70),
+    Card("Gigabyte AORUS GeForce RTX 3060 ELITE Rev A1", 0x10de, 0x2503, 0x1458, 0x407b, 0x70),
+    Card("Gigabyte AORUS GeForce RTX 3060 ELITE LHR", 0x10de, 0x2504, 0x1458, 0x407b, 0x70),
+    Card("Gigabyte AORUS GeForce RTX 3060 Ti ELITE LHR", 0x10de, 0x2489, 0x1458, 0x4076, 0x70),
+    Card("Gigabyte GeForce RTX 3060 Ti GAMING OC", 0x10de, 0x24c9, 0x1458, 0x40cd, 0x62),
+    Card("Gigabyte GeForce RTX 3060 Ti GAMING OC", 0x10de, 0x2486, 0x1458, 0x405a, 0x62),
+    Card("Gigabyte GeForce RTX 3060 Ti GAMING OC LHR Rev 2", 0x10de, 0x2489, 0x1458, 0x405a, 0x32),
+    Card("Gigabyte GeForce RTX 3060 Ti GAMING OC LHR", 0x10de, 0x2489, 0x1458, 0x405a, 0x62),
+    Card("Gigabyte GeForce RTX 3060 Ti GAMING OC PRO", 0x10de, 0x2486, 0x1458, 0x405e, 0x62),
+    Card("Gigabyte GeForce RTX 3060 Ti Gaming OC PRO LHR", 0x10de, 0x2489, 0x1458, 0x405e, 0x62),
+    Card("Gigabyte GeForce RTX 3070 MASTER", 0x10de, 0x2484, 0x1458, 0x4069, 0x66),
+    Card("Gigabyte GeForce RTX 3070 MASTER LHR", 0x10de, 0x2488, 0x1458, 0x4069, 0x66),
+    Card("Gigabyte AORUS GeForce RTX 3070 Ti MASTER", 0x10de, 0x2482, 0x1458, 0x408e, 0x70),
+    Card("Gigabyte AORUS GeForce RTX 3080 XTREME WATERFORCE WB", 0x10de, 0x2206, 0x1458, 0x4038, 0x64),
+    Card("Gigabyte AORUS GeForce RTX 3080 XTREME WATERFORCE WB", 0x10de, 0x2216, 0x1458, 0x4038, 0x64),
+    Card("Gigabyte AORUS GeForce RTX 3080 XTREME WATERFORCE V2", 0x10de, 0x2216, 0x1458, 0x4037, 0x65),
+    Card("Gigabyte AORUS GeForce RTX 3080 12G XTREME WATERFORCE WB", 0x10de, 0x220a, 0x1458, 0x40a3, 0x64),
+    Card("Gigabyte GeForce RTX 3080 Ti Vision OC", 0x10de, 0x2208, 0x1458, 0x4087, 0x63),
+    Card("Gigabyte AORUS GeForce RTX 3080 Ti XTREME WATERFORCE", 0x10de, 0x2208, 0x1458, 0x4083, 0x65),
+    Card("Gigabyte AORUS GeForce RTX 3080 Ti XTREME WATERFORCE", 0x10de, 0x2208, 0x1458, 0x4082, 0x64),
+    Card("Gigabyte GeForce RTX 3090 VISION OC", 0x10de, 0x2204, 0x1458, 0x4044, 0x63),
+    Card("Gigabyte AORUS GeForce RTX 3090 XTREME WATERFORCE", 0x10de, 0x2204, 0x1458, 0x4039, 0x65),
+    Card("Gigabyte AORUS GeForce RTX 3090 XTREME WATERFORCE WB", 0x10de, 0x2204, 0x1458, 0x403a, 0x64),
+    Card("Gigabyte GeForce RTX 4070 GAMING OC", 0x10de, 0x2786, 0x1458, 0x40c6, 0x71),
+    Card("Gigabyte GeForce RTX 4070 GAMING OC", 0x10de, 0x2786, 0x1458, 0x412b, 0x71),
+    Card("Gigabyte GeForce RTX 4070 GAMING OC", 0x10de, 0x2709, 0x1458, 0x412b, 0x71),
+    Card("Gigabyte Geforce RTX 4070 Aero OC", 0x10de, 0x2786, 0x1458, 0x40e6, 0x71),
+    Card("Gigabyte GeForce RTX 4070 SUPER GAMING OC", 0x10de, 0x2783, 0x1458, 0x4138, 0x71),
+    Card("Gigabyte GeForce RTX 4070 SUPER Aero OC", 0x10de, 0x2783, 0x1458, 0x4139, 0x71),
+    Card("Gigabyte GeForce RTX 4070 SUPER Eagle OC", 0x10de, 0x2783, 0x1458, 0x413a, 0x71),
+    Card("Gigabyte GeForce RTX 4070 SUPER Eagle OC ICE", 0x10de, 0x2783, 0x1458, 0x4148, 0x71),
+    Card("Gigabyte GeForce RTX 4070 Ti GAMING", 0x10de, 0x2782, 0x1458, 0x40df, 0x71),
+    Card("Gigabyte GeForce RTX 4070 Ti GAMING OC", 0x10de, 0x2782, 0x1458, 0x40c6, 0x71),
+    Card("Gigabyte GeForce RTX 4070 Ti GAMING OC", 0x10de, 0x2782, 0x1458, 0x4100, 0x71),
+    Card("Gigabyte GeForce RTX 4070 Ti Eagle", 0x10de, 0x2782, 0x1458, 0x40d2, 0x71),
+    Card("Gigabyte GeForce RTX 4070 Ti Eagle OC", 0x10de, 0x2782, 0x1458, 0x40ca, 0x71),
+    Card("Gigabyte GeForce RTX 4070 Eagle OC", 0x10de, 0x2786, 0x1458, 0x40ed, 0x71),
+    Card("Gigabyte GeForce RTX 4070 Ti Eagle OC Rev 2", 0x10de, 0x2782, 0x1458, 0x40ec, 0x71),
+    Card("Gigabyte GeForce RTX 4070 Ti Master", 0x10de, 0x2782, 0x1458, 0x40bb, 0x71),
+    Card("Gigabyte AORUS GeForce RTX 4070 Ti ELITE", 0x10de, 0x2782, 0x1458, 0x40c9, 0x71),
+    Card("Gigabyte GeForce RTX 4070 Ti SUPER GAMING OC", 0x10de, 0x2705, 0x1458, 0x413c, 0x71),
+    Card("Gigabyte GeForce RTX 4070 Ti SUPER AORUS MASTER", 0x10de, 0x2705, 0x1458, 0x4136, 0x71),
+    Card("Gigabyte GeForce RTX 4070 Ti SUPER Eagle OC ICE", 0x10de, 0x2705, 0x1458, 0x414e, 0x71),
+    Card("Gigabyte GeForce RTX 4080 AERO OC", 0x10de, 0x2704, 0x1458, 0x40c5, 0x71),
+    Card("Gigabyte GeForce RTX 4080 Eagle OC", 0x10de, 0x2704, 0x1458, 0x40be, 0x71),
+    Card("Gigabyte GeForce RTX 4080 SUPER GAMING OC", 0x10de, 0x2702, 0x1458, 0x4140, 0x72),
+    Card("Gigabyte GeForce RTX 4080 SUPER AERO OC", 0x10de, 0x2702, 0x1458, 0x4141, 0x72),
+    Card("Gigabyte GeForce RTX 4080 GAMING OC", 0x10de, 0x2704, 0x1458, 0x40bc, 0x71),
+    Card("Gigabyte AORUS GeForce RTX 4080 MASTER", 0x10de, 0x2704, 0x1458, 0x40bd, 0x71),
+    Card("Gigabyte GeForce RTX 4090 AERO OC", 0x10de, 0x2684, 0x1458, 0x40e4, 0x71),
+    Card("Gigabyte GeForce RTX 4090 GAMING OC", 0x10de, 0x2684, 0x1458, 0x40bf, 0x71),
+    Card("Gigabyte AORUS GeForce RTX 4090 MASTER", 0x10de, 0x2684, 0x1458, 0x40c0, 0x71),
+    Card("Gigabyte AORUS GeForce RTX 5090 D MASTER", 0x10de, 0x2b87, 0x1458, 0x4188, 0x71),
+    Card("Gigabyte GeForce RTX 5080 GAMING OC", 0x10de, 0x2c02, 0x1458, 0x4176, 0x71),
+    Card("Gigabyte AORUS GeForce RTX 5080 MASTER", 0x10de, 0x2c02, 0x1458, 0x4178, 0x71),
+    Card("Gigabyte AORUS GeForce RTX 5080 MASTER ICE", 0x10de, 0x2c02, 0x1458, 0x418c, 0x71),
+    Card("Gigabyte GeForce RTX 5090 GAMING OC", 0x10de, 0x2b87, 0x1458, 0x416f, 0x71),
+    Card("Gigabyte AORUS GeForce RTX 5090 MASTER", 0x10de, 0x2b85, 0x1458, 0x416e, 0x71),
+    Card("Gigabyte AORUS GeForce RTX 5090 MASTER ICE", 0x10de, 0x2b85, 0x1458, 0x4199, 0x71),
+    Card("Gigabyte Radeon RX 7600 GAMING OC 8G", 0x1002, 0x7480, 0x1458, 0x240b, 0x55),
+    Card("Gigabyte Radeon RX 7600 GAMING OC 8G", 0x1002, 0x7480, 0x1458, 0x242b, 0x55),
+    Card("Gigabyte Radeon RX 7600 XT GAMING OC 16G", 0x1002, 0x7480, 0x1458, 0x2418, 0x55),
+    Card("Gigabyte Radeon RX 6700 XT EAGLE 12G", 0x1002, 0x73df, 0x1458, 0x2331, 0x63),
+    Card("Gigabyte Radeon RX 6700 XT GAMING OC 12G", 0x1002, 0x73df, 0x1458, 0x232d, 0x62),
+    Card("Gigabyte Radeon RX 6800 XT GAMING OC", 0x1002, 0x73bf, 0x1458, 0x2328, 0x62),
+    Card("Gigabyte Radeon RX 6900 XT GAMING OC", 0x1002, 0x73bf, 0x1458, 0x232c, 0x62),
+    Card("Gigabyte Radeon RX 7700 XT GAMING OC", 0x1002, 0x747e, 0x1458, 0x2414, 0x62),
+    Card("Gigabyte Radeon RX 7800 XT GAMING OC", 0x1002, 0x747e, 0x1458, 0x2413, 0x62),
+    Card("Gigabyte Radeon RX 7900 GRE GAMING OC", 0x1002, 0x744c, 0x1458, 0x2410, 0x62),
+    Card("Gigabyte Radeon RX 7900 XT GAMING OC", 0x1002, 0x744c, 0x1458, 0x240c, 0x62),
+    Card("Gigabyte Radeon RX 7900 XTX GAMING OC", 0x1002, 0x744c, 0x1458, 0x240e, 0x62),
+    Card("Gigabyte AORUS Radeon RX 7900 XTX ELITE 24G", 0x1002, 0x744c, 0x1458, 0x240d, 0x71),
+    Card("Gigabyte AORUS RX 6750 XT ELITE 12G", 0x1002, 0x73df, 0x1458, 0x2407, 0x70),
+    Card("Gigabyte Radeon RX 6750 XT GAMING OC 12G", 0x1002, 0x73df, 0x1458, 0x2408, 0x62),
+    Card("Gigabyte AORUS RX 6900 XT MASTER rev 2.0", 0x1002, 0x73af, 0x1458, 0x2332, 0x70),
+    Card("Gigabyte AORUS RX 6900 XT EXTREME WATERFORCE WB", 0x1002, 0x73af, 0x1458, 0x2333, 0x70),
+    Card("Gigabyte Radeon RX 9060 XT GAMING OC 8G", 0x1002, 0x7590, 0x1458, 0x2430, 0x73),
+    Card("Gigabyte Radeon RX 9060 XT GAMING OC ICE 16G", 0x1002, 0x7590, 0x1458, 0x2438, 0x73),
+    Card("Gigabyte Radeon RX 9070 GRE GAMING OC 12G", 0x1002, 0x7550, 0x1458, 0x242e, 0x73),
+    Card("Gigabyte AORUS Radeon RX 9070 XT Elite", 0x1002, 0x7550, 0x1458, 0x2426, 0x73),
+    Card("Gigabyte Radeon RX 9070 XT GAMING OC", 0x1002, 0x7550, 0x1458, 0x2424, 0x73),
+    Card("Gigabyte Radeon RX 9070 XT GAMING OC ICE", 0x1002, 0x7550, 0x1458, 0x2437, 0x73),
+    Card("Gigabyte Radeon RX 9070 GAMING OC", 0x1002, 0x7550, 0x1458, 0x2425, 0x73),
+)

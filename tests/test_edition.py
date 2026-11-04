@@ -29,7 +29,7 @@ def test_outside_flatpak_the_flag_decides(monkeypatch):
 def test_editions_differ():
     for field in ("app_id", "name", "bundle"):
         assert len({getattr(e, field) for e in EDITIONS.values()}) == 3
-    assert not DEVICES.openlinkhub and not OPENLINKHUB.keychron
+    assert not DEVICES.openlinkhub and not OPENLINKHUB.keychron and not OPENLINKHUB.gpu
 
 
 # -- packaging ----------------------------------------------------------------
@@ -49,7 +49,7 @@ def test_one_manifest_per_edition_and_otherwise_equal():
         text = manifest.read_text()
         edition = EDITIONS[key]
         assert f"app-id: {edition.app_id}\n" in text
-        assert ("--device=all" in text) == edition.keychron
+        assert ("--device=all" in text) == (edition.keychron or edition.gpu)
         assert ("/opt/OpenLinkHub/certificates" in text) == edition.openlinkhub
     shared = {key: _shared_lines(manifest) for key, manifest in manifests.items()}
     assert shared["plus"] == shared["openlinkhub"] == shared["devices"]

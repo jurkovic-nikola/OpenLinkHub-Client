@@ -4,25 +4,26 @@
     <metadata_license>CC0-1.0</metadata_license>
     <project_license>GPL-3.0-only</project_license>
     <name>OpenLinkHub Client Plus</name>
-    <summary>Configure Corsair devices through OpenLinkHub, and Keychron keyboards</summary>
+    <summary>Configure Corsair devices through OpenLinkHub, Keychron keyboards and graphics cards</summary>
     <developer id="io.github.mdmatthias">
         <name>mdmatthias</name>
     </developer>
     <description>
         <p>
-            OpenLinkHub Client with support for Keychron keyboards added. Corsair devices are configured through
+            OpenLinkHub Client with support for Keychron keyboards and Gigabyte graphics card lighting added. Corsair devices are configured through
             OpenLinkHub, the open source Linux service for Corsair devices, with an iCUE-style interface. Keychron
-            keyboards with Keychron's open source ZMK firmware are configured by the app itself; OpenLinkHub does
-            not support them and is not involved.
+            keyboards with Keychron's open source ZMK firmware and graphics cards are configured by the app itself;
+            OpenLinkHub does not support them and is not involved.
         </p>
         <p>Features:</p>
         <ul>
             <li>Everything OpenLinkHub Client does: key remapping, DPI, lighting, fans and pumps, equalizer, device settings, macros and profiles</li>
             <li>Keychron V3 Ultra 8K over USB or the Ultra-Link 8K receiver: keys and knob on every layer, lighting, polling rate, debounce and sleep timers</li>
+            <li>Gigabyte graphics cards with RGB Fusion 2 lighting: mode, brightness, speed and a colour per zone</li>
             <li>Tray icon and built-in updates</li>
         </ul>
-        <p>Keychron keyboards need a udev rule for /dev/hidraw access; see the project page.</p>
-        <p>Not affiliated with or endorsed by Corsair or Keychron.</p>
+        <p>Keychron keyboards need a udev rule for /dev/hidraw access, graphics cards access to /dev/i2c-*; see the project page.</p>
+        <p>Not affiliated with or endorsed by Corsair, Keychron or Gigabyte.</p>
     </description>
     <launchable type="desktop-id">io.github.mdmatthias.OpenLinkHub-Client-Plus.desktop</launchable>
     <url type="homepage">https://github.com/mdmatthias/OpenLinkHub-Client</url>

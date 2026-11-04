@@ -56,6 +56,7 @@ class DeviceKind(Enum):
     MOTHERBOARD = "motherboard"
     LIGHT_TOWERS = "towers"
     DONGLE = "dongle"
+    GPU = "gpu"  # not from OpenLinkHub: graphics cards the client drives itself
     DEVICE = "device"
 
     @classmethod
@@ -109,6 +110,7 @@ _KIND_TITLES = {
     DeviceKind.MOTHERBOARD: "Motherboard",
     DeviceKind.LIGHT_TOWERS: "Light towers",
     DeviceKind.DONGLE: "Receiver",
+    DeviceKind.GPU: "Graphics card",
     DeviceKind.DEVICE: "Device",
 }
 

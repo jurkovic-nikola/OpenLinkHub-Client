@@ -265,6 +265,47 @@ def test_keychron_keyboard(qtbot, fake_api):
     engine.deleteLater()
 
 
+def test_graphics_card(qtbot, fake_api, tmp_path):
+    from olhclient.gpu.device import LightingStore
+    from olhclient.gpu.fusion2 import Fusion2Gpu, ModeValue
+    from tests.fake_gpu import SERIAL, FakeCard, device
+
+    card = FakeCard()
+    backend = Backend(fake_api, Registry.discover(), worker=Worker(synchronous=True),
+                      gpu_scan=lambda: {SERIAL: device()}, gpu_connect=lambda d: Fusion2Gpu(card),
+                      gpu_store=LightingStore(tmp_path / "gpu-lighting.json"))
+    engine = QQmlApplicationEngine()
+    warnings = []
+    engine.warnings.connect(lambda ws: warnings.extend(w.toString() for w in ws))
+    engine.setInitialProperties({"backend": backend})
+    engine.load(QUrl.fromLocalFile(str(QML_DIR / "Main.qml")))
+    window = engine.rootObjects()[0]
+    backend.refresh()
+    settle(qtbot)
+    backend.selectDevice(SERIAL)
+    settle(qtbot)
+    assert window.property("title") == "Gigabyte AORUS Radeon RX 9070 XT Elite — OpenLinkHub"
+    lighting = backend.session.controller("lighting")
+    window.setProperty("featureId", "lighting")
+    settle(qtbot)
+    # every kind of mode while the editor is shown, and a failing write
+    for mode in (ModeValue.COLOR_SHIFT, ModeValue.WAVE, ModeValue.BREATHING):
+        lighting.setEffect(mode)
+        settle(qtbot)
+    lighting.setColor(-1, "#3366ff")
+    card.fail = True
+    lighting.setSpeed(0)
+    card.fail = False
+    lighting.saveToCard()
+    settle(qtbot)
+    backend.selectDevice("SE0000000000TEST")
+    settle(qtbot)
+    assert card.closed
+    assert warnings == []
+    window.close()
+    engine.deleteLater()
+
+
 def test_opendevicehub(qtbot):
     """No OpenLinkHub at all: no macros tab, no server, a Keychron keyboard."""
     from olhclient.keychron.protocol import KeychronClient
