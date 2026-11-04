@@ -52,6 +52,14 @@
     </screenshots>
     <content_rating type="oars-1.1"/>
     <releases>
+        <release version="0.4.0" date="2026-11-04">
+            <description>
+                <ul>
+                    <li>Gigabyte graphics cards with RGB Fusion 2 lighting (AORUS, GAMING OC, EAGLE and others, GeForce and Radeon), driven by the app itself over I2C (OpenLinkHub Client Plus and OpenDeviceHub)</li>
+                    <li>Graphics cards: nine lighting modes, brightness, speed and a colour per zone; "Save to card" keeps the lighting after a power cycle</li>
+                </ul>
+            </description>
+        </release>
         <release version="0.3.0" date="2026-11-03">
             <description>
                 <p>Released as three apps from now on: OpenLinkHub Client (Corsair devices through OpenLinkHub), OpenLinkHub Client Plus (Corsair devices and non-Corsair devices) and OpenDeviceHub (non-Corsair devices only, no OpenLinkHub needed).</p>
