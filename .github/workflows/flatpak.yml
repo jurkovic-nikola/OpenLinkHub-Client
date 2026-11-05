@@ -28,7 +28,7 @@ jobs:
     - name: Extract release notes from metainfo
       run: python3 .github/scripts/release_notes.py "${GITHUB_REF_NAME%-dev}" release-notes.md
 
-    - uses: actions/upload-artifact@v5
+    - uses: actions/upload-artifact@v7
       with:
         name: release-notes
         path: release-notes.md
@@ -62,7 +62,7 @@ jobs:
         cache-key: flatpak-builder-${{ matrix.app-id }}-${{ github.sha }}
         upload-artifact: false
 
-    - uses: actions/upload-artifact@v5
+    - uses: actions/upload-artifact@v7
       with:
         name: bundle-${{ matrix.bundle }}
         path: ${{ matrix.bundle }}-${{ github.ref_name }}.flatpak
@@ -73,7 +73,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/download-artifact@v6
+    - uses: actions/download-artifact@v8
       with:
         path: artifacts
         merge-multiple: true
