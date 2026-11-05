@@ -225,7 +225,7 @@ class Channel:
 
     @property
     def title(self) -> str:
-        return self.label or self.name or f"Channel {self.channel_id}"
+        return self.name or self.label or f"Channel {self.channel_id}"
 
 
 @dataclass(frozen=True)
