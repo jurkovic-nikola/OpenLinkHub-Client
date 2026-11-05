@@ -294,13 +294,13 @@ memory only; no password is stored.
 - **Lighting preview** on artwork: it shows the zone colours, which is what a mouse shows in the
   `mouse` effect. Animated effects are not previewed, brightness only matters when it is 0
   (shown as unlit), and the Scroll and Front zones of the wired Scimitars are not drawn.
-- **Slipstream receiver**: OpenLinkHub cannot return a receiver as JSON
-  (`GET /api/devices/{serial}` answers with an empty body). The client reads its state from the
-  dashboard page `/device/{serial}` instead, so it depends on that page's layout. The polling rate
-  can only be changed on receivers whose OpenLinkHub driver supports it (product ids 7132, 11008
-  and 11035 at the time of writing); other receivers refuse the change. OpenLinkHub answers "OK"
-  as soon as it has sent the command and does not check that the receiver took it, so neither can
-  the client. A receiver that takes the change restarts: its devices drop out and OpenLinkHub
+- **Slipstream receiver**: OpenLinkHub versions before the fix cannot return a receiver as JSON
+  (`GET /api/devices/{serial}` answers with an empty body). On those the client reads its state
+  from the dashboard page `/device/{serial}`, so it depends on that page's layout. The polling
+  rate can only be changed on receivers whose OpenLinkHub driver supports it (product ids 7132,
+  11008 and 11035 at the time of writing); other receivers refuse the change. OpenLinkHub answers
+  "OK" as soon as it has sent the command and does not check that the receiver took it, so neither
+  can the client. A receiver that takes the change restarts: its devices drop out and OpenLinkHub
   lists it again about 9 seconds later. A Slipstream receiver (product id 11008) once got into a
   state where it ignored most changes; unplugging and replugging it fixed that.
 - The top view still draws a cable for the wireless Scimitars.
@@ -409,10 +409,11 @@ With a distribution PySide6, also install `python-pytest-qt` and `python-respx`.
 The tests run against an in-memory fake of the API. The QML smoke tests load the real UI on the
 `offscreen` platform, open every feature on every kind of device, and fail on any QML warning.
 Fixtures in `tests/fixtures/`, with serials and paths anonymised:
-- captured from real devices: Scimitar Elite SE, Virtuoso Max headset, `GET /api/`;
+- captured from real devices: Scimitar Elite SE, Virtuoso Max headset, Slipstream receiver
+  (paired device trimmed), `GET /api/`;
 - derived: the legacy Scimitar (bitmasks of the `scimitarrgbelite` driver);
 - built from OpenLinkHub's driver structs: Commander Core, iCUE Link hub, K70 Core keyboard, and
-  the Slipstream page (`web/slipstream.html`);
+  the Slipstream page (`web/slipstream.html`, for older OpenLinkHub versions);
 - copied from OpenLinkHub: three keyboard layouts, with where its page draws each key
   (`tests/fixtures/keyboards/`).
 

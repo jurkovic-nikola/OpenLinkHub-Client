@@ -24,11 +24,14 @@ RECEIVER_PRODUCTS = ("SLIPSTREAM", "SLIPSTREAM V2")
 class ApiError(Exception):
     """Raised when the server rejects a request or cannot be reached."""
 
-    def __init__(self, message: str, *, http_status: int | None = None, auth_required: bool = False):
+    def __init__(self, message: str, *, http_status: int | None = None, auth_required: bool = False,
+                 invalid_response: bool = False):
         super().__init__(message)
         self.message = message
         self.http_status = http_status
         self.auth_required = auth_required
+        #: the server answered, but not with JSON
+        self.invalid_response = invalid_response
 
 
 def _origin_of(url: str) -> str:
@@ -79,7 +82,7 @@ class ApiClient:
         try:
             return response.json()
         except ValueError as exc:
-            raise ApiError(f"Invalid response from {path}") from exc
+            raise ApiError(f"Invalid response from {path}", invalid_response=True) from exc
 
     def _get_text(self, path: str) -> str:
         """GET a dashboard page (HTML) instead of an API endpoint."""
@@ -133,11 +136,11 @@ class ApiClient:
         return device
 
     def get_receiver(self, serial: str) -> dict[str, Any]:
-        """Receiver JSON; read from its dashboard page while the API cannot encode it."""
+        """Receiver JSON; read from its dashboard page on OpenLinkHub versions that cannot encode it."""
         try:
             return self.get_device(serial)
         except ApiError as exc:
-            if exc.auth_required:
+            if not exc.invalid_response:  # older versions send an empty body for a receiver
                 raise
         try:
             return parse_receiver_page(self._get_text(f"/device/{serial}"))

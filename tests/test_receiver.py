@@ -37,6 +37,13 @@ def test_parse_receiver_page_without_polling_rates():
     assert data["PollingRates"] == {} and data["firmware"] == "5.12.54"
 
 
+def test_parse_receiver_page_matches_json(receiver_device):
+    # what older OpenLinkHub versions only show on the page, newer ones return as JSON
+    page, device = ReceiverState.from_json(parse_receiver_page(PAGE)), ReceiverState.from_json(receiver_device)
+    assert (page.serial, page.product, page.firmware, page.polling_rate, page.polling_rates, page.paired) == (
+        device.serial, device.product, device.firmware, device.polling_rate, device.polling_rates, device.paired)
+
+
 def test_parse_other_page_fails():
     with pytest.raises(ValueError):
         parse_receiver_page("<html><body><main><h1>404</h1></main></body></html>")
@@ -66,7 +73,7 @@ def test_backend_only_lists_hidden_slipstreams_as_receivers(qtbot, registry, rec
 
 @respx.mock
 def test_get_receiver_falls_back_to_dashboard_page(api):
-    # OpenLinkHub fails to encode the receiver and sends an empty body.
+    # OpenLinkHub before the fix fails to encode the receiver and sends an empty body.
     respx.get(f"{BASE}/api/devices/{RECEIVER}").respond(200, content=b"")
     page = respx.get(f"{BASE}/device/{RECEIVER}").respond(200, html=PAGE)
     assert api.get_receiver(RECEIVER)["DeviceProfile"] == {"PollingRate": 4}
@@ -74,20 +81,27 @@ def test_get_receiver_falls_back_to_dashboard_page(api):
 
 
 @respx.mock
-def test_get_receiver_prefers_json(api):
-    device = {"serial": RECEIVER, "product": "SLIPSTREAM", "PollingRates": {"1": "125 Hz / 8 msec"}}
-    respx.get(f"{BASE}/api/devices/{RECEIVER}").respond(json={"code": 200, "device": device})
+def test_get_receiver_prefers_json(api, receiver_device):
+    respx.get(f"{BASE}/api/devices/{RECEIVER}").respond(json={"code": 200, "status": 0, "device": receiver_device})
     page = respx.get(f"{BASE}/device/{RECEIVER}")
-    assert api.get_receiver(RECEIVER) == device
+    assert api.get_receiver(RECEIVER) == receiver_device
     assert not page.called
 
 
 @respx.mock
 def test_get_receiver_errors(api):
-    respx.get(f"{BASE}/api/devices/GONE").respond(json={"code": 200})
-    respx.get(f"{BASE}/device/GONE").respond(200, html="<html><main>404</main></html>")
+    page = respx.get(f"{BASE}/device/GONE").respond(200, html="<html><main>404</main></html>")
+    respx.get(f"{BASE}/api/devices/GONE").respond(200, content=b"")
     with pytest.raises(ApiError, match="not found"):
         api.get_receiver("GONE")
+    assert page.called
+
+    # only an answer that is not JSON falls back to the page
+    page.reset()
+    respx.get(f"{BASE}/api/devices/GONE").respond(json={"code": 200, "status": 0, "message": "Device not found"})
+    with pytest.raises(ApiError, match="Device not found"):
+        api.get_receiver("GONE")
+    assert not page.called
 
     respx.get(f"{BASE}/api/devices/{RECEIVER}").respond(401)
     with pytest.raises(ApiError) as exc:

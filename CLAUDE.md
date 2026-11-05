@@ -29,8 +29,8 @@ formatter configured.
 
 - `api/` — `ApiClient` (synchronous httpx), typed models of the device JSON (`models.py`,
   `DeviceState.from_json`), `keyboard_grid.py` (port of OpenLinkHub's keyboard page CSS grid), and
-  `receiver_page.py` (scrapes the Slipstream receiver's HTML dashboard page, because OpenLinkHub
-  cannot return a receiver as JSON).
+  `receiver_page.py` (scrapes the Slipstream receiver's HTML dashboard page: the fallback for older
+  OpenLinkHub versions, which answer `GET /api/devices/{serial}` for a receiver with an empty body).
 - `core/` — Qt objects exposed to QML:
   - `Worker`: runs blocking API calls on a `QThreadPool` and delivers callbacks on the GUI thread.
     Pass `owner=` so callbacks are dropped if that QObject was deleted. `Worker(synchronous=True)`

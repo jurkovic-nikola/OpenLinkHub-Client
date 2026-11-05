@@ -50,9 +50,7 @@ def other_devices() -> list[dict[str, Any]]:
 
 @pytest.fixture
 def receiver_device() -> dict[str, Any]:
-    from olhclient.api.receiver_page import parse_receiver_page
-
-    return parse_receiver_page((FIXTURES / "slipstream_page.html").read_text())
+    return load_fixture("device_slipstream.json")["device"]
 
 
 class FakeApi:

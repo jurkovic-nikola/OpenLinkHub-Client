@@ -1,0 +1,52 @@
+{
+ "code": 200,
+ "status": 0,
+ "device": {
+  "manufacturer": "Corsair",
+  "product": "CORSAIR SLIPSTREAM WIRELESS USB Receiver",
+  "serial": "SLIPSTREAM0TEST",
+  "firmware": "5.12.54",
+  "ProductId": 11008,
+  "VendorId": 6940,
+  "devices": {
+   "0": {
+    "type": 2,
+    "endpoint": 9,
+    "serial": "SE0000000000TEST",
+    "deviceId": 6940,
+    "productId": 11042
+   }
+  },
+  "PairedDevices": {
+   "11042": {
+    "manufacturer": "",
+    "product": "SCIMITAR ELITE SE",
+    "serial": "SE0000000000TEST",
+    "path": "9",
+    "firmware": "7.8.11"
+   }
+  },
+  "DeviceList": {
+   "SE0000000000TEST": null
+  },
+  "DeviceProfile": {
+   "Active": true,
+   "Path": "/opt/OpenLinkHub/database/profiles/SLIPSTREAM0TEST.json",
+   "Product": "CORSAIR SLIPSTREAM WIRELESS USB Receiver",
+   "Serial": "SLIPSTREAM0TEST",
+   "PollingRate": 4,
+   "RgbOff": false
+  },
+  "SingleDevice": true,
+  "Template": "slipstream.html",
+  "Debug": false,
+  "Exit": false,
+  "PollingRates": {
+   "0": "Not Set",
+   "1": "125 Hz / 8 msec",
+   "2": "250 Hz / 4 msec",
+   "3": "500 Hz / 2 msec",
+   "4": "1000 Hz / 1 msec"
+  }
+ }
+}
