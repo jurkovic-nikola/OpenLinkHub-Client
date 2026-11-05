@@ -160,6 +160,13 @@ def test_fans(session, every_api):
     assert writes(every_api, "set_rgb_effect") == [("set_rgb_effect", COMMANDER, "rainbow", 0)]
     assert writes(every_api, "set_label") == [("set_label", COMMANDER, 0, "Ring", True)]
     assert fans.selected["title"] == "Ring" and fans.selected["rgbProfile"] == "rainbow"
+    assert fans.effectProfile.colorNames == [] and fans.effectProfile.hasSpeed  # rainbow: only a speed
+    fans.setRgbProfile(0, "colorshift")
+    profile = fans.effectProfile
+    assert profile.effectTitle == "Colorshift" and profile.colorNames == ["Start", "End"]
+    profile.save({**profile.values, "colors": ["#0000ff", "#ff6400"]})
+    (_, serial, effect, saved), = writes(every_api, "save_rgb_profile")
+    assert (serial, effect, saved["start"]["blue"], saved["start"]["red"]) == (COMMANDER, "colorshift", 255, 0)
 
 
 def test_keyboard_remap_and_profiles(session, every_api):

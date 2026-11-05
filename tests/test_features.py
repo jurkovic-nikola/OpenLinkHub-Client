@@ -89,6 +89,95 @@ def test_zone_colours_send_only_changes(make_session, fake_api):
     assert lighting.zones.get(1)["color"] == "#00ff00"
 
 
+def test_effect_profile(make_session, fake_api):
+    session = make_session()
+    profile = session.controller("lighting").effectProfile
+    assert (profile.effectTitle, profile.colorNames, profile.hasSpeed, profile.hasAlternate) == (
+        "Colorshift", ["Start", "End"], True, True)
+    values = profile.values
+    assert (values["colors"], values["speed"], values["alternate"]) == (["#ff0000", "#ff6400"], 4.0, False)
+    profile.save(values)
+    assert not writes(fake_api, "save_rgb_profile")
+    assert session.messages[-1] == ("No changes to save", False)
+    profile.save({**values, "colors": ["#FF0000", "#00FF00"], "speed": 2.5, "alternate": True})
+    (_, serial, effect, saved), = writes(fake_api, "save_rgb_profile")
+    assert (serial, effect, saved["speed"], saved["alternateColors"]) == (SE, "colorshift", 2.5, True)
+    assert (saved["start"]["red"], saved["end"]["green"], saved["end"]["red"]) == (255, 255, 0)
+    assert saved["smoothness"] == 50  # the rest comes back as fetched
+    assert profile.values["colors"] == ["#ff0000", "#00ff00"]
+    assert session.messages[-1] == ("Colorshift saved", False)
+
+
+def test_effect_profile_rejects_invalid_values(make_session, fake_api):
+    session = make_session()
+    profile = session.controller("lighting").effectProfile
+    for change in ({"speed": 0}, {"speed": 11}, {"colors": ["red", "#000000"]}, {"colors": ["#000000"]}):
+        profile.save({**profile.values, **change})
+        assert session.messages[-1][1] is True, change
+    assert not writes(fake_api, "save_rgb_profile")
+
+
+def test_effect_profile_temperatures(make_session, fake_api):
+    session = make_session()
+    lighting = session.controller("lighting")
+    lighting.setEffect("cpu-temperature")
+    profile = lighting.effectProfile
+    assert (profile.colorNames, profile.hasTemperatures, profile.hasSpeed) == (["Start", "Middle", "End"], True, False)
+    assert profile.values["temperatures"] == [20, 50, 95]
+    profile.save({**profile.values, "temperatures": [30, 60, 90]})
+    saved = writes(fake_api, "save_rgb_profile")[-1][3]
+    assert [saved[slot]["temperature"] for slot in ("start", "middle", "end")] == [30, 60, 90]
+    profile.save({**profile.values, "temperatures": [30, 60, 120]})
+    assert session.messages[-1][1] is True
+
+
+def test_effect_profile_gradient(make_session, fake_api):
+    session = make_session()
+    lighting = session.controller("lighting")
+    lighting.setEffect("gradient")
+    profile = lighting.effectProfile
+    assert profile.hasGradient and profile.colorNames == []
+    assert profile.values["gradient"] == [{"color": "#ff0000", "position": 0, "brightness": 1},
+                                          {"color": "#0000ff", "position": 1, "brightness": 0.5}]
+    stops = [{"color": "#00ff00", "position": 0.5, "brightness": 0.8}, *profile.values["gradient"]]
+    profile.save({**profile.values, "gradient": stops})
+    saved = writes(fake_api, "save_rgb_profile")[-1][3]["gradients"]
+    assert [(s["Hex"], s["position"]) for s in saved.values()] == [("#FF0000", 0), ("#00FF00", 0.5), ("#0000FF", 1)]
+    assert saved["1"]["brightness"] == 0.8
+    profile.save({**profile.values, "gradient": stops[:1]})  # one colour is not a gradient
+    assert session.messages[-1] == ("A gradient needs at least two colours", True)
+
+
+@pytest.mark.parametrize(("effect", "names", "speed", "direction"), [
+    ("static", ["Start"], False, False),
+    ("rainbow", [], True, False),
+    ("colorwave", ["Start", "End"], True, True),
+    ("probe-temperature", ["Start", "End"], True, False),
+])
+def test_effect_profile_options_per_effect(make_session, effect, names, speed, direction):
+    profile = make_session().controller("lighting").effectProfile
+    profile.load(effect)
+    assert (profile.colorNames, profile.hasSpeed, profile.hasDirection) == (names, speed, direction)
+    assert profile.hasTempRange == (effect == "probe-temperature")
+    assert profile.speedMax == (3 if effect == "colorwave" else 10)
+
+
+def test_effect_profile_not_for_device_effects(make_session):
+    profile = make_session().controller("lighting").effectProfile
+    profile.load("mouse")
+    assert not profile.available
+
+
+def test_effect_profile_without_rgb_profiles(make_session, fake_api, monkeypatch):
+    def refuse(serial, effect):
+        raise ApiError("No such RGB profile")
+
+    monkeypatch.setattr(fake_api, "rgb_profile", refuse)
+    session = make_session()
+    assert not session.controller("lighting").effectProfile.available
+    assert not any(error for _, error in session.messages)
+
+
 # -- device settings -----------------------------------------------------------
 
 

@@ -82,6 +82,12 @@ def test_every_feature_panel_on_every_device(ui, qtbot, fake_api):
     window.setProperty("featureId", "lighting")
     settle(qtbot)
     session.controller("lighting").setEffect("static")
+    settle(qtbot)
+    profile = session.controller("lighting").effectProfile
+    profile.save({**profile.values, "colors": ["#00ff00"]})
+    for effect in ("gradient", "cpu-temperature", "colorwave", "probe-temperature", "rainbow"):
+        profile.load(effect)
+        settle(qtbot)
     fake_api.fail_with = ApiError("Unable to change")
     session.controller("lighting").setOpenRgb(True)
     fake_api.fail_with = None
@@ -182,6 +188,10 @@ def test_every_feature_on_every_device_kind(every_ui, qtbot, every_api):
     window.setProperty("featureId", "fans")
     settle(qtbot)
     backend.session.controller("fans").setSpeedProfile(-1, "Quiet")
+    backend.session.controller("fans").setRgbProfile(-1, "colorshift")
+    settle(qtbot)
+    profile = backend.session.controller("fans").effectProfile
+    profile.save({**profile.values, "colors": ["#0000ff", "#00ff00"], "speed": 2})
     backend.selectDevice(KEYBOARD)
     window.setProperty("featureId", "keyboard_keys")
     settle(qtbot)

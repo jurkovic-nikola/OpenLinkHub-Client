@@ -255,6 +255,25 @@ def test_lighting_calls(api):
 
 
 @respx.mock
+def test_rgb_profile_calls(api):
+    profile = {"speed": 4, "start": {"red": 255, "green": 0, "blue": 0, "brightness": 1, "temperature": 0},
+               "end": {"red": 255, "green": 100, "blue": 0, "brightness": 1, "temperature": 0},
+               "gradients": None, "minTemp": 0, "maxTemp": 0, "alternateColors": False, "rgbDirection": 0}
+    respx.get(f"{BASE}/api/color/profile/SER/colorshift").respond(json={"status": 1, "data": profile})
+    change = respx.put(f"{BASE}/api/color/change").respond(json=OK)
+    assert api.rgb_profile("SER", "colorshift") == profile
+    api.save_rgb_profile("SER", "colorshift", {**profile, "end": {**profile["end"], "red": 0, "green": 255, "blue": 128}})
+    assert json.loads(change.calls.last.request.content) == {
+        "deviceId": "SER", "profile": "colorshift",
+        "startColor": {"red": 255, "green": 0, "blue": 0, "temperature": 0},
+        "middleColor": {"red": 0, "green": 0, "blue": 0, "temperature": 0},
+        "endColor": {"red": 0, "green": 255, "blue": 128, "temperature": 0},
+        "speed": 4, "alternateColors": False, "rgbDirection": 0, "rgbMinTemp": 0, "rgbMaxTemp": 0,
+        "colorZones": None,
+    }
+
+
+@respx.mock
 def test_user_profile_calls_use_put_and_delete(api):
     change = respx.post(f"{BASE}/api/userProfile/change").respond(json=OK)
     save = respx.put(f"{BASE}/api/userProfile").respond(json=OK)

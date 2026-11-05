@@ -6,7 +6,7 @@ from PySide6.QtCore import Property, QObject, Signal, Slot
 
 from olhclient.api.models import Channel, DeviceState
 from olhclient.core.features.base import FeatureController
-from olhclient.core.features.lighting import effect_title
+from olhclient.core.features.effect_profile import EffectProfile, effect_title
 from olhclient.core.listmodel import DictListModel
 
 CHANNEL_ROLES = ("key", "channelId", "title", "label", "rpm", "temperature", "hasSpeed", "speedProfile",
@@ -21,7 +21,7 @@ def channel_key(channel: Channel) -> str:
 
 
 class FansController(FeatureController):
-    """Channels of a fan/LED hub or AIO cooler: speed profile, lighting effect and label.
+    """Channels of a fan/LED hub or AIO cooler: speed profile, lighting effect and its settings, label.
 
     Speeds and temperatures refresh with the regular device poll.
     """
@@ -37,6 +37,8 @@ class FansController(FeatureController):
         self._profiles: list[str] = []
         self._effects: list[str] = []
         self._loading = False
+        self._effect_profile = EffectProfile(self)
+        self.selectedChanged.connect(self._load_effect_profile)
         self._channels.dataChanged.connect(lambda *_: self.selectedChanged.emit())
         self._channels.modelReset.connect(self.selectedChanged)
 
@@ -70,6 +72,10 @@ class FansController(FeatureController):
             "rgbProfile": channel.rgb_profile or "",
             "rgbDevice": channel.rgb_device,
         }
+
+    def _load_effect_profile(self) -> None:
+        selected = self.selected
+        self._effect_profile.load(selected["rgbProfile"] if selected else "")
 
     def _load_profiles(self) -> None:
         self._loading = True
@@ -105,6 +111,11 @@ class FansController(FeatureController):
     def selected(self) -> dict[str, Any] | None:
         row = self._channels.indexOf("key", self._selected)
         return self._channels.get(row) if row >= 0 else None
+
+    @Property(QObject, constant=True)
+    def effectProfile(self) -> EffectProfile:
+        """Settings of the selected channel's effect, shared by every channel showing that effect."""
+        return self._effect_profile
 
     @Property("QVariantList", notify=profilesChanged)
     def speedProfiles(self) -> list[dict[str, Any]]:

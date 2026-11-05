@@ -27,6 +27,10 @@ IMAGES = {"mouse": "icon-mouse.svg", "keyboard": "icon-keyboard.svg", "headset":
           "hub": "icon-device.svg"}
 
 
+def effect_name(effect: str) -> str:
+    return effect.replace("-", " ").title()
+
+
 def load_fixture(name: str) -> Any:
     return json.loads((FIXTURES / name).read_text())
 
@@ -68,6 +72,8 @@ class FakeApi:
         #: macro id -> macro JSON, as GET /api/macro/ returns it
         self.macro_data: dict[int, dict[str, Any]] = {
             int(k): v for k, v in copy.deepcopy(load_fixture("macro.json")["data"]).items()}
+        #: (serial, effect) -> RGB profile, as GET /api/color/profile/{serial}/{effect} returns it
+        self.rgb_profiles: dict[tuple[str, str], dict[str, Any]] = {}
 
     def _check(self) -> None:
         if self.fail_with is not None:
@@ -209,6 +215,31 @@ class FakeApi:
         for entry in self._channels(serial, rgb=True):
             if channel in (-1, entry["channelId"]):
                 entry["rgb"] = effect
+
+    def rgb_profile(self, serial: str, effect: str) -> dict[str, Any]:
+        self._check()
+        if (serial, effect) not in self.rgb_profiles:
+            def color(red, green, blue, temperature=0):
+                return {"red": red, "green": green, "blue": blue, "brightness": 1, "position": 0,
+                        "temperature": temperature, "Hex": ""}
+
+            gradients = None
+            if effect == "gradient":
+                gradients = {"0": {**color(255, 0, 0), "position": 0},
+                             "1": {**color(0, 0, 255), "brightness": 0.5, "position": 1}}
+            hot = effect.endswith("-temperature")
+            self.rgb_profiles[serial, effect] = {
+                "speed": 4, "brightness": 1, "smoothness": 50,
+                "start": color(255, 0, 0, 20 if hot else 0), "middle": color(255, 255, 0, 50 if hot else 0),
+                "end": color(255, 100, 0, 95 if hot else 0), "gradients": gradients,
+                "minTemp": 20 if hot else 0, "maxTemp": 95 if hot else 0, "profileName": effect_name(effect),
+                "alternateColors": False, "rgbDirection": 4 if effect == "colorwave" else 0}
+        return copy.deepcopy(self.rgb_profiles[serial, effect])
+
+    def save_rgb_profile(self, serial: str, effect: str, profile: dict[str, Any]) -> None:
+        self._check()
+        self.calls.append(("save_rgb_profile", serial, effect, copy.deepcopy(profile)))
+        self.rgb_profiles[serial, effect] = copy.deepcopy(profile)
 
     def set_brightness_mode(self, serial: str, mode: int) -> None:
         self._check()

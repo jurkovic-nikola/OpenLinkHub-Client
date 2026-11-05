@@ -38,6 +38,10 @@ What a device gets depends on what OpenLinkHub reports for it.
 - **DPI**: stage values and stage colours.
 - **Lighting**: effect, brightness (slider or steps, depending on the device), zone colours, RGB
   cluster and OpenRGB integration. Artwork shows the device in its own zone colours.
+- **Effect settings**, under the effect in Lighting and Fans & pumps, like OpenLinkHub's RGB
+  editor: the effect's colours (with a temperature each for the CPU/GPU/liquid temperature
+  effects), speed, the probe temperature range, gradient colours, and the Slipstream-only
+  direction and alternate colours.
 - **Fans & pumps** on hubs and AIO coolers: live speed and temperature per channel, speed profile
   and lighting effect per channel (or for all at once), channel labels.
 - **Equalizer** for headsets.
@@ -460,6 +464,10 @@ own edition's asset, `<bundle>-<tag>.flatpak`.
   stages that differ. Colours (DPI and zones) are only sent for stages and zones that changed.
 - Zone colours are only used by the `mouse` effect. The DPI LED always shows the colour of the
   active stage.
+- Effect settings (`GET /api/color/profile/{serial}/{effect}`, saved with `PUT /api/color/change`)
+  belong to the device, not to a channel or zone. The drivers replace colours, speed and gradients
+  on every save (the Slipstream ones also direction and alternate colours), so the client sends
+  every setting back, changed or not.
 - Which device settings appear follows the OpenLinkHub web UI: the polling rate only when the
   driver lists `PollingRates` (not for a mouse on the Slipstream dongle; the receiver has its own
   polling rate), the sleep timer only for wireless models on the dongle. The polling rate

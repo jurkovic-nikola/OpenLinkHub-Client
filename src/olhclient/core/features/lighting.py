@@ -6,15 +6,12 @@ from PySide6.QtCore import Property, QObject, Signal, Slot
 
 from olhclient.api.models import DeviceState, Lighting
 from olhclient.core.features.base import FeatureController
+from olhclient.core.features.effect_profile import EffectProfile, effect_title
 from olhclient.core.listmodel import DictListModel
 
 ZONE_ROLES = ("zoneIndex", "name", "color")
 #: device kinds with a zoneColors endpoint (/api/<kind>/zoneColors)
 ZONE_KINDS = ("mouse", "headset", "controller")
-
-
-def effect_title(effect: str) -> str:
-    return effect.replace("-", " ").capitalize()
 
 
 class LightingController(FeatureController):
@@ -32,6 +29,7 @@ class LightingController(FeatureController):
         self._zones = DictListModel(ZONE_ROLES, self)
         self._lighting: Lighting | None = None
         self._saving = False
+        self._effect_profile = EffectProfile(self)
 
     @classmethod
     def supports(cls, state: DeviceState) -> bool:
@@ -44,6 +42,7 @@ class LightingController(FeatureController):
         if lighting != self._lighting:
             self._lighting = lighting
             self.changed.emit()
+        self._effect_profile.load(lighting.effect if lighting else "")
 
     # -- QML API -----------------------------------------------------------
 
@@ -54,6 +53,10 @@ class LightingController(FeatureController):
     @Property(QObject, constant=True)
     def zones(self) -> DictListModel:
         return self._zones
+
+    @Property(QObject, constant=True)
+    def effectProfile(self) -> EffectProfile:
+        return self._effect_profile
 
     @Property(str, notify=changed)
     def effect(self) -> str:

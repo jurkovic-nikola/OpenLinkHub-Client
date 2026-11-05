@@ -229,6 +229,32 @@ class ApiClient:
         """Set the colour per lighting zone; ``colors`` maps zone index -> ``#rrggbb``."""
         self._call("POST", f"/api/{kind}/zoneColors", {"deviceId": serial, "colorZones": _rgb_map(colors)})
 
+    def rgb_profile(self, serial: str, effect: str) -> dict[str, Any]:
+        """The device's settings of one effect: ``start``/``middle``/``end`` colours, speed, gradients…"""
+        return self._call("GET", f"/api/color/profile/{serial}/{effect}").get("data") or {}
+
+    def save_rgb_profile(self, serial: str, effect: str, profile: dict[str, Any]) -> None:
+        """Save an effect's settings, given in the shape ``rgb_profile`` returns. Send every setting:
+        the drivers replace colours, speed and gradients, and the Slipstream ones also the rest."""
+
+        def color(slot: str) -> dict[str, float]:
+            current = profile.get(slot) or {}
+            return {k: current.get(k, 0) for k in ("red", "green", "blue", "temperature")}
+
+        self._call("PUT", "/api/color/change", {
+            "deviceId": serial,
+            "profile": effect,
+            "startColor": color("start"),
+            "middleColor": color("middle"),
+            "endColor": color("end"),
+            "speed": profile.get("speed") or 1,
+            "alternateColors": bool(profile.get("alternateColors")),
+            "rgbDirection": profile.get("rgbDirection") or 0,
+            "rgbMinTemp": profile.get("minTemp") or 0,
+            "rgbMaxTemp": profile.get("maxTemp") or 0,
+            "colorZones": profile.get("gradients"),
+        })
+
     def set_rgb_cluster(self, serial: str, enabled: bool) -> None:
         self._call("POST", "/api/color/setCluster", {"deviceId": serial, "mode": int(enabled)})
 
