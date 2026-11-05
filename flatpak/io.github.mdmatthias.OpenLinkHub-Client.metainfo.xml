@@ -52,6 +52,14 @@
     </screenshots>
     <content_rating type="oars-1.1"/>
     <releases>
+        <release version="0.5.0" date="2026-11-05">
+            <description>
+                <ul>
+                    <li>Effect settings under the lighting effect, for devices and fan/LED hub channels: the effect's colours, speed, temperatures, gradient colours and the Slipstream-only direction and alternate colours, like OpenLinkHub's RGB editor</li>
+                    <li>The Lighting and Fans &amp; pumps editors scroll when their content does not fit</li>
+                </ul>
+            </description>
+        </release>
         <release version="0.4.1" date="2026-11-05">
             <description>
                 <ul>
