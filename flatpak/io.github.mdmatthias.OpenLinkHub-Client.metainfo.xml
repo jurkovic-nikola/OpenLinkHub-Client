@@ -52,6 +52,13 @@
     </screenshots>
     <content_rating type="oars-1.1"/>
     <releases>
+        <release version="0.4.1" date="2026-11-05">
+            <description>
+                <ul>
+                    <li>Slipstream receivers are read through the OpenLinkHub API, now that it can return them; older OpenLinkHub versions still work through the receiver's dashboard page</li>
+                </ul>
+            </description>
+        </release>
         <release version="0.4.0" date="2026-11-04">
             <description>
                 <ul>
