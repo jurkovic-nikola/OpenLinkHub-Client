@@ -11,3 +11,4 @@ build/
 build-dir/
 repo/
 *.flatpak
+uv.lock
