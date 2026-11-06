@@ -16,7 +16,6 @@ ApplicationWindow {
     // A Slipstream receiver is selected instead of a mouse.
     readonly property var receiver: backend.receiver
     property string featureId: ""
-    // top bar tab: "devices" or "macros"
     property string page: "devices"
     readonly property var feature: {
         if (!session)
@@ -47,6 +46,7 @@ ApplicationWindow {
     minimumHeight: 700
     visible: true
     title: page === "macros" ? "Macros — " + backend.brand
+        : page === "profiles" ? "Profiles — " + backend.brand
         : session ? session.product + " — " + backend.brand
         : receiver ? receiver.product + " — " + backend.brand : backend.brand
     color: Theme.window
@@ -185,10 +185,18 @@ ApplicationWindow {
         sourceComponent: MacrosView { library: window.backend.macros }
     }
 
+    Loader {
+        anchors.fill: parent
+        anchors.margins: Theme.gap
+        active: window.page === "profiles" && window.backend.openLinkHub && window.backend.connected
+                && !window.backend.authRequired
+        sourceComponent: TemperatureProfilesView { backend: window.backend }
+    }
+
     // -- empty / error states ------------------------------------------------
     Rectangle {
         anchors.fill: parent
-        visible: !window.backend.authRequired && (window.page === "macros" ? !window.backend.connected
+        visible: !window.backend.authRequired && (window.page !== "devices" ? !window.backend.connected
                  : window.session === null && window.receiver === null)
         color: Qt.rgba(0.08, 0.08, 0.08, 0.92)
         Column {

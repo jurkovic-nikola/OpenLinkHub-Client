@@ -257,36 +257,15 @@ RowLayout {
         }
     }
 
-    Popup {
+    ConfirmationDialog {
         id: deletePopup
-        parent: listPanel
-        y: listPanel.height - height - 50
-        width: listPanel.width
-        padding: 14
-        modal: true
-        background: Rectangle { color: Theme.panel; border.color: Theme.danger }
-
-        contentItem: ColumnLayout {
-            spacing: 8
-            Text {
-                Layout.fillWidth: true
-                text: root.current ? "Delete macro " + root.current.name + "? Buttons that run it will do nothing." : ""
-                color: Theme.text
-                font.pixelSize: Theme.fontNormal
-                wrapMode: Text.Wrap
-            }
-            RowLayout {
-                Layout.alignment: Qt.AlignRight
-                spacing: 8
-                AccentButton { text: "Cancel"; onClicked: deletePopup.close() }
-                AccentButton {
-                    text: "Delete"
-                    onClicked: {
-                        root.library.deleteMacro(root.current.id)
-                        deletePopup.close()
-                    }
-                }
-            }
+        title: "Delete macro"
+        message: root.current ? "Delete macro " + root.current.name + "? Buttons that run it will do nothing." : ""
+        confirmText: "Delete"
+        destructive: true
+        onAccepted: {
+            if (root.current)
+                root.library.deleteMacro(root.current.id)
         }
     }
 
