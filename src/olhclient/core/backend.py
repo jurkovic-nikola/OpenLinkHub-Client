@@ -50,6 +50,13 @@ class Backend(QObject):
     authRequiredChanged = Signal()
     busyChanged = Signal()
     #: text, is_error
+    temperatureFormLoaded = Signal("QVariantMap")
+    temperatureFormFailed = Signal()
+    temperatureSelected = Signal(str, "QVariantMap")
+    temperatureSaved = Signal(str, int)
+    temperatureDeleted = Signal(str)
+    temperatureCreated = Signal(str)
+    temperatureSavingChanged = Signal()
     notify = Signal(str, bool)
 
     def __init__(self, api: ApiClient | None, registry: Registry, *, poll_interval: float = 5.0,
@@ -65,6 +72,7 @@ class Backend(QObject):
         keyboards (keychron.device.scan), without it there are none; ``gpu_scan`` likewise finds
         graphics cards (gpu.device.scan), once. ``brand`` names the app in the UI."""
         super().__init__(parent)
+        self._temperature_saving = False
         self.api = api
         self.registry = registry
         self.worker = worker or Worker(self)
@@ -443,6 +451,85 @@ class Backend(QObject):
             self.authRequiredChanged.emit()
 
     # -- QML API -----------------------------------------------------------
+
+    @Slot()
+    def loadTemperatureForm(self) -> None:
+        def failed(exc):
+            self.temperatureFormFailed.emit()
+            self._report_error(exc)
+
+        self.worker.submit(self.api.temperature_form, on_done=self.temperatureFormLoaded.emit,
+                           on_error=failed, owner=self)
+
+    @Property(bool, notify=temperatureSavingChanged)
+    def temperatureSaving(self):
+        return self._temperature_saving
+
+    @Slot(str)
+    def selectTemperatureProfile(self, name):
+        self.worker.submit(self.api.temperature_profile, name,
+                           on_done=lambda data: self.temperatureSelected.emit(name, data),
+                           on_error=self._report_error, owner=self)
+
+    def _temperature_write(self, method, args, done):
+        if self._temperature_saving:
+            return
+        self._temperature_saving = True
+        self.temperatureSavingChanged.emit()
+
+        def finish():
+            self._temperature_saving = False
+            self.temperatureSavingChanged.emit()
+
+        def success(_):
+            finish()
+            done()
+
+        def failed(exc):
+            finish()
+            self._report_error(exc)
+
+        self.worker.submit(method, *args, on_done=success, on_error=failed, owner=self)
+
+    @Slot("QVariantMap")
+    def createTemperatureProfile(self, payload):
+        name = payload["profile"]
+
+        def done():
+            if isinstance(self._session, DeviceSession):
+                fans = self._session.controller("fans")
+                if fans:
+                    fans.add_profile(name)
+            self.temperatureCreated.emit(name)
+            self.notify.emit(f"Temperature profile {name} created", False)
+
+        self._temperature_write(self.api.create_temperature_profile, (payload,), done)
+
+    def _saved_temperature(self, name, kind):
+        self.temperatureSaved.emit(name, kind)
+        self.notify.emit(f"Temperature profile {name} saved", False)
+
+    @Slot(str, int, "QVariantList")
+    def saveTemperatureCurve(self, name, kind, points):
+        self._temperature_write(self.api.save_temperature_curve, (name, kind, points),
+                                lambda: self._saved_temperature(name, kind))
+
+    @Slot(str, "QVariantMap")
+    def saveTemperatureRanges(self, name, ranges):
+        self._temperature_write(self.api.save_temperature_ranges, (name, ranges),
+                                lambda: self._saved_temperature(name, -1))
+
+    @Slot(str)
+    def deleteTemperatureProfile(self, name):
+        def done():
+            if isinstance(self._session, DeviceSession):
+                fans = self._session.controller("fans")
+                if fans:
+                    fans.remove_profile(name)
+            self.temperatureDeleted.emit(name)
+            self.notify.emit(f"Temperature profile {name} deleted", False)
+
+        self._temperature_write(self.api.delete_temperature_profile, (name,), done)
 
     @Property(QObject, constant=True)
     def devices(self) -> DictListModel:

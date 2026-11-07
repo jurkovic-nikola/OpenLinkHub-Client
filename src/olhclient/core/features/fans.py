@@ -77,12 +77,22 @@ class FansController(FeatureController):
         selected = self.selected
         self._effect_profile.load(selected["rgbProfile"] if selected else "")
 
+    def add_profile(self, name: str) -> None:
+        if name not in self._profiles:
+            self._profiles = sorted([*self._profiles, name], key=str.lower)
+            self.profilesChanged.emit()
+
+    def remove_profile(self, name: str) -> None:
+        if name in self._profiles:
+            self._profiles.remove(name)
+            self.profilesChanged.emit()
+
     def _load_profiles(self) -> None:
         self._loading = True
 
         def done(profiles: list[str]) -> None:
             self._loading = False
-            self._profiles = profiles
+            self._profiles = sorted(set(profiles).union(self._profiles), key=str.lower)
             self.profilesChanged.emit()
 
         def failed(exc: Exception) -> None:

@@ -7,6 +7,7 @@ convention and raises :class:`ApiError` instead.
 
 from __future__ import annotations
 
+import json
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -14,6 +15,7 @@ import httpx
 
 from olhclient.api.models import DeviceInfo, Macro, MacroAction
 from olhclient.api.receiver_page import parse_receiver_page
+from olhclient.api.temperature_page import TemperatureOptions
 
 INPUT_KINDS = ("media", "keyboard", "mouse")
 
@@ -66,12 +68,13 @@ class ApiClient:
 
     # -- low level ---------------------------------------------------------
 
-    def _request(self, method: str, path: str, payload: dict[str, Any] | None = None) -> dict[str, Any]:
+    def _request(self, method: str, path: str, payload: dict[str, Any] | None = None,
+                 *, form: dict[str, str] | None = None) -> dict[str, Any]:
         headers = {}
         if method != "GET":
             headers["Origin"] = self.origin
         try:
-            response = self._http.request(method, path, json=payload, headers=headers)
+            response = self._http.request(method, path, json=payload, data=form, headers=headers)
         except httpx.HTTPError as exc:
             raise ApiError(f"Cannot reach OpenLinkHub at {self.base_url}: {exc}") from exc
 
@@ -166,7 +169,52 @@ class ApiClient:
     def temperature_profiles(self) -> list[str]:
         """Names of the fan/pump speed profiles (this endpoint answers with status 0)."""
         data = self._request("GET", "/api/temperatures/").get("data") or {}
-        return sorted(data, key=str.lower)
+        return sorted((name for name, profile in data.items()
+                       if name != "aioCriticalTemperature" and not profile.get("Hidden")), key=str.lower)
+
+    def temperature_form(self) -> dict[str, Any]:
+        page = TemperatureOptions()
+        sensors = self._call("GET", "/api/temperatures/sensors/").get("data")
+        if not sensors:
+            raise ApiError("Unable to load temperature sensors from OpenLinkHub")
+        try:
+            page.feed(self._get_text("/temperature"))
+        except ApiError as exc:
+            if exc.http_status != 404:
+                raise
+        page.options["sensor"] = [
+            {"value": int(code), "text": sensors[code]} for code in sorted(sensors, key=int)
+        ]
+        presets = {"Normal", "Performance", "Quiet"}
+        editable_profiles = [name for name in self.temperature_profiles() if name not in presets]
+        return {"graphMode": page.graph_mode, "options": page.options, "profiles": editable_profiles}
+
+    def create_temperature_profile(self, payload: dict[str, Any]) -> None:
+        payload = dict(payload)
+        for field in ("sensor", "gpuIndex", "channelId"):
+            if field in payload:
+                payload[field] = int(payload[field])
+        self._call("POST", "/api/temperatures/new", payload)
+
+    def temperature_profile(self, name: str) -> dict[str, Any]:
+        return self._call("GET", f"/api/temperatures/{name}")["data"]
+
+    def save_temperature_curve(self, name: str, kind: int, points: list) -> None:
+        self._call("PUT", "/api/temperatures/updateGraph",
+                   {"profile": name, "updateType": int(kind), "points": points})
+
+    def save_temperature_ranges(self, name: str, ranges: dict) -> None:
+        ranges = {
+            key: {"fans": int(value["fans"]), "pump": int(value["pump"])}
+            for key, value in ranges.items()
+        }
+        body = self._request("PUT", "/api/temperatures/update",
+                             form={"profile": name, "data": json.dumps(ranges)})
+        if body.get("status") != 1:
+            raise ApiError(body.get("message") or "Unable to save temperature ranges")
+
+    def delete_temperature_profile(self, name: str) -> None:
+        self._call("DELETE", "/api/temperatures/delete", {"profile": name})
 
     def battery_levels(self) -> dict[str, int]:
         data = self._call("GET", "/api/batteryStats").get("data") or {}

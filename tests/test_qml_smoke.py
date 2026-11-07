@@ -346,3 +346,70 @@ def test_opendevicehub(qtbot):
     assert warnings == []
     window.close()
     engine.deleteLater()
+
+
+def test_create_temperature_profile(ui, qtbot, fake_api, monkeypatch):
+    from PySide6.QtCore import QObject
+
+    backend, window, warnings = ui
+    form = {"profiles": ["Quiet"], "options": {
+        "sensor": [{"value": 6, "text": "External HWMON"}],
+        "hwmon-probeData": [{"value": "hwmon2;temp2_input;coretemp", "text": "CPU package"}],
+    }}
+    writes = []
+    monkeypatch.setattr(fake_api, "temperature_form", lambda: form, raising=False)
+    monkeypatch.setattr(fake_api, "temperature_profile", lambda _: {"sensor": 6, "points": {}}, raising=False)
+    monkeypatch.setattr(fake_api, "create_temperature_profile", writes.append, raising=False)
+    backend.refresh()
+    window.setProperty("page", "profiles")
+    settle(qtbot)
+    page = window.findChild(QObject, "temperatureForm")
+    page.findChild(QObject, "profileName").setProperty("text", "Custom123")
+    page.create()
+    assert writes == [{"profile": "Custom123", "sensor": 6, "static": False, "linear": False,
+                       "zeroRpm": False, "hwmonDeviceId": "hwmon2", "temperatureInputId": "temp2_input",
+                       "hwmonDevice": "coretemp"}]
+    assert warnings == []
+
+
+def test_click_temperature_profile_edit_and_save_curves(ui, qtbot, fake_api, monkeypatch):
+    from PySide6.QtCore import QPointF, Qt
+    from PySide6.QtQuick import QQuickItem
+    from PySide6.QtTest import QTest
+
+    backend, window, warnings = ui
+    monkeypatch.setattr(fake_api, "temperature_form", lambda: {
+        "profiles": ["Liquid"], "options": {}, "graphMode": True}, raising=False)
+    initial = [{"x": 0, "y": 50}, {"x": 60, "y": 100}]
+    monkeypatch.setattr(fake_api, "temperature_profile", lambda name: {
+        "sensor": 2, "points": {"0": initial, "1": initial}}, raising=False)
+    saved = []
+    monkeypatch.setattr(fake_api, "save_temperature_curve", lambda *args: saved.append(args), raising=False)
+    backend.refresh()
+    window.setProperty("page", "profiles")
+    settle(qtbot)
+
+    def item_named(item, name):
+        if item.objectName() == name:
+            return item
+        for child in item.childItems():
+            found = item_named(child, name)
+            if found is not None:
+                return found
+
+    def click(name, x=0.5, y=0.5):
+        item = item_named(window.contentItem(), name)
+        assert isinstance(item, QQuickItem) and item.isVisible() and item.isEnabled()
+        position = item.mapToScene(QPointF(item.width() * x, item.height() * y))
+        QTest.mouseClick(window, Qt.LeftButton, pos=position.toPoint())
+        settle(qtbot)
+
+    click("profileRow_Liquid")
+    for kind, title in enumerate(("Pump speed", "Fan speed")):
+        click(title + " plot")
+        click(title + " save")
+        name, index, points = saved[-1]
+        assert (name, index) == ("Liquid", kind)
+        assert len(points) == 3 and 0 < points[1]["x"] < 60
+        assert points[0] == initial[0] and points[-1] == initial[-1]
+    assert warnings == []

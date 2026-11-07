@@ -38,14 +38,14 @@ def test_headset_state(other_devices):
 def test_hub_channels(other_devices):
     commander = DeviceState.from_json(other_devices[1])
     assert [(c.channel_id, c.title, c.rgb_device) for c in commander.channels] == [
-        (0, "Pump", False), (1, "Fan 1", False), (2, "Fan 2", False), (7, "Temperature Probe 1", False),
+        (0, "AIO Pump", False), (1, "Fan 1", False), (2, "Fan 2", False), (7, "Temperature Probe 1", False),
         (0, "Pump LED ring", True), (1, "Fan 1 LEDs", True),
     ]
     pump, probe = commander.channels[0], commander.channels[3]
     assert (pump.rpm, pump.temperature, pump.speed_profile, pump.rgb_profile) == (2410, 31.4, "aioPump", None)
     assert (probe.rpm, probe.temperature, probe.has_speed) == (None, 29.8, False)
     link = DeviceState.from_json(other_devices[2])
-    assert [(c.title, c.rgb_profile) for c in link.channels] == [("Front fan", "colorpulse"), ("iCUE LINK H150i Pump", "static")]
+    assert [(c.title, c.rgb_profile) for c in link.channels] == [("iCUE LINK QX120 RGB", "colorpulse"), ("iCUE LINK H150i Pump", "static")]
     assert commander.lighting is None
 
 
@@ -147,7 +147,7 @@ def test_fans(session, every_api):
     s = session(COMMANDER)
     fans = s.controller("fans")
     assert [p["value"] for p in fans.speedProfiles] == ["aioPump", "Normal", "Quiet"]
-    assert fans.selected["title"] == "Pump" and fans.selected["rpm"] == 2410
+    assert fans.selected["title"] == "AIO Pump" and fans.selected["rpm"] == 2410
     fans.setSpeedProfile(1, "Quiet")
     fans.setSpeedProfile(-1, "Normal")
     fans.setSpeedProfile(1, "Turbo")  # unknown: not sent
@@ -159,7 +159,9 @@ def test_fans(session, every_api):
         ("set_speed_profile", COMMANDER, 1, "Quiet"), ("set_speed_profile", COMMANDER, -1, "Normal")]
     assert writes(every_api, "set_rgb_effect") == [("set_rgb_effect", COMMANDER, "rainbow", 0)]
     assert writes(every_api, "set_label") == [("set_label", COMMANDER, 0, "Ring", True)]
-    assert fans.selected["title"] == "Ring" and fans.selected["rgbProfile"] == "rainbow"
+    assert fans.selected["title"] == "Pump LED ring"
+    assert fans.selected["label"] == "Ring"
+    assert fans.selected["rgbProfile"] == "rainbow"
     assert fans.effectProfile.colorNames == [] and fans.effectProfile.hasSpeed  # rainbow: only a speed
     fans.setRgbProfile(0, "colorshift")
     profile = fans.effectProfile

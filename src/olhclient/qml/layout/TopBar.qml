@@ -6,7 +6,6 @@ Rectangle {
     id: root
     property var backend
     property var updater: null
-    // "devices" or "macros"
     property string page: "devices"
     signal pageSelected(string page)
     implicitHeight: 40
@@ -34,9 +33,9 @@ Rectangle {
             }
         }
         Repeater {
-            // OpenLinkHub's macros; OpenDeviceHub has no such tab
             model: root.backend && root.backend.openLinkHub
-                   ? [{ page: "devices", title: "DEVICES" }, { page: "macros", title: "MACROS" }]
+                   ? [{ page: "devices", title: "DEVICES" }, { page: "macros", title: "MACROS" },
+                      { page: "profiles", title: "PROFILES" }]
                    : [{ page: "devices", title: "DEVICES" }]
             Text {
                 id: tab

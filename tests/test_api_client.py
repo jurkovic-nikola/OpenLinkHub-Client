@@ -285,3 +285,65 @@ def test_user_profile_calls_use_put_and_delete(api):
         request = route.calls.last.request
         assert json.loads(request.content) == {"deviceId": "SER", "userProfileName": "game"}
         assert request.headers["Origin"] == BASE
+
+
+@respx.mock
+def test_temperature_form_uses_sensor_api_and_dashboard_hardware(api):
+    respx.get(f"{BASE}/api/temperatures/sensors/").respond(
+        json={"status": 1, "data": {"10": "PSU", "4": "Temperature Probe", "0": "CPU"}})
+    respx.get(f"{BASE}/temperature").respond(text="""
+        <select id="sensor"><option value="0">Ignored</option></select>
+        <select id="probeData"><option value="0;0">Select probe</option>
+        <option value="ABC;0">Inlet &amp; reservoir</option></select>""")
+    respx.get(f"{BASE}/api/temperatures/").respond(json={"data": {
+        "Quiet": {}, "Normal": {}, "Performance": {}, "Liquid": {}, "aioCriticalTemperature": {},
+    }})
+    form = api.temperature_form()
+    assert form["profiles"] == ["Liquid"]
+    assert api.temperature_profiles() == ["Liquid", "Normal", "Performance", "Quiet"]
+    assert form["options"]["sensor"] == [{"value": 0, "text": "CPU"}, {"value": 4, "text": "Temperature Probe"},
+                                         {"value": 10, "text": "PSU"}]
+    assert form["options"]["probeData"] == [{"value": "ABC;0", "text": "Inlet & reservoir"}]
+
+
+@respx.mock
+def test_temperature_profile_editor_requests(api):
+    from urllib.parse import parse_qs
+
+    profiles = {"Liquid": {}, "aioCriticalTemperature": {}, "internal": {"Hidden": True}}
+    respx.get(f"{BASE}/api/temperatures/").respond(json={"data": profiles})
+    assert api.temperature_profiles() == ["Liquid"]
+
+    points = [{"x": 0, "y": 50}, {"x": 60, "y": 100}]
+    detail = {"sensor": 2, "points": {"0": points, "1": points}}
+    respx.get(f"{BASE}/api/temperatures/Liquid").respond(json={"status": 1, "data": detail})
+    assert api.temperature_profile("Liquid") == detail
+
+    graph = respx.put(f"{BASE}/api/temperatures/updateGraph").respond(json=OK)
+    api.save_temperature_curve("Liquid", 0.0, points)
+    assert type(json.loads(graph.calls.last.request.content)["updateType"]) is int
+
+    table = respx.put(f"{BASE}/api/temperatures/update").respond(json=OK)
+    values = {"1": {"pump": 55.0, "fans": 35.0}}
+    api.save_temperature_ranges("Liquid", values)
+    form = parse_qs(table.calls.last.request.content.decode())
+    assert all(type(v) is int for v in json.loads(form["data"][0])["1"].values())
+    assert form["profile"] == ["Liquid"] and json.loads(form["data"][0]) == values
+
+    delete = respx.delete(f"{BASE}/api/temperatures/delete").respond(json=OK)
+    api.delete_temperature_profile("Liquid")
+    assert json.loads(delete.calls.last.request.content) == {"profile": "Liquid"}
+
+@pytest.mark.parametrize("sensor,extra", [(8.0, {"gpuIndex": 0.0}), (4.0, {"channelId": 2.0}),
+                                          (9.0, {"channelId": 2.0})])
+@respx.mock
+def test_temperature_creation_serializes_qml_numbers_as_integers(api, sensor, extra):
+    route = respx.post(f"{BASE}/api/temperatures/new").respond(json=OK)
+    payload = {"profile": "Test", "sensor": sensor, "static": False, "zeroRpm": True, **extra}
+    api.create_temperature_profile(payload)
+    sent = json.loads(route.calls.last.request.content)
+    for field in ("sensor", *extra):
+        assert type(sent[field]) is int
+
+    assert sent["static"] is False and sent["zeroRpm"] is True
+    assert type(payload["sensor"]) is float
