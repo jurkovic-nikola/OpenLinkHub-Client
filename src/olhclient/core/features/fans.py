@@ -29,6 +29,7 @@ class FansController(FeatureController):
     selectedChanged = Signal()
     profilesChanged = Signal()
     effectsChanged = Signal()
+    clusterChanged = Signal()
 
     def __init__(self, session):
         super().__init__(session)
@@ -36,6 +37,7 @@ class FansController(FeatureController):
         self._selected = ""
         self._profiles: list[str] = []
         self._effects: list[str] = []
+        self._rgb_cluster: bool | None = None  # None: the driver has no such option
         self._loading = False
         self._effect_profile = EffectProfile(self)
         self.selectedChanged.connect(self._load_effect_profile)
@@ -54,6 +56,12 @@ class FansController(FeatureController):
         if effects != self._effects:
             self._effects = effects
             self.effectsChanged.emit()
+        # hubs keep the cluster flag in their profile, next to the per-channel RGBProfiles
+        profile = state.raw.get("DeviceProfile") or {}
+        cluster = bool(profile["RGBCluster"]) if "RGBCluster" in profile else None
+        if cluster != self._rgb_cluster:
+            self._rgb_cluster = cluster
+            self.clusterChanged.emit()
         if not self._profiles and not self._loading and any(c.has_speed for c in state.channels):
             self._load_profiles()
 
@@ -135,6 +143,14 @@ class FansController(FeatureController):
     def effects(self) -> list[dict[str, Any]]:
         return [{"value": e, "text": effect_title(e)} for e in self._effects]
 
+    @Property(bool, notify=clusterChanged)
+    def hasRgbCluster(self) -> bool:
+        return self._rgb_cluster is not None
+
+    @Property(bool, notify=clusterChanged)
+    def rgbCluster(self) -> bool:
+        return bool(self._rgb_cluster)
+
     @Slot(int, str)
     def setSpeedProfile(self, channel: int, profile: str) -> None:
         if profile not in self._profiles:
@@ -153,6 +169,15 @@ class FansController(FeatureController):
         serial = self.session.serial
         self.write(lambda: self.session.api.set_rgb_effect(serial, effect, channel),
                    f"Effect set to {effect_title(effect)}", done=lambda ok: ok or self.selectedChanged.emit())
+
+    @Slot(bool)
+    def setRgbCluster(self, enabled: bool) -> None:
+        if self._rgb_cluster is None or enabled == self._rgb_cluster:
+            return
+        serial = self.session.serial
+        self.write(lambda: self.session.api.set_rgb_cluster(serial, enabled),
+                   "RGB cluster enabled" if enabled else "RGB cluster disabled",
+                   done=lambda ok: ok or self.clusterChanged.emit())
 
     @Slot(int, bool, str)
     def setLabel(self, channel: int, rgb_device: bool, label: str) -> None:

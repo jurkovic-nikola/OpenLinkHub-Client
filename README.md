@@ -43,7 +43,7 @@ What a device gets depends on what OpenLinkHub reports for it.
   effects), speed, the probe temperature range, gradient colours, and the Slipstream-only
   direction and alternate colours.
 - **Fans & pumps** on hubs and AIO coolers: live speed and temperature per channel, speed profile
-  and lighting effect per channel (or for all at once), channel labels.
+  and lighting effect per channel (or for all at once), channel labels, RGB cluster.
 - **Equalizer** for headsets.
 - **Device settings**, each shown when the device has it: polling rate, lift-off distance,
   surface, sleep timer, angle snapping, button response, motion sync, ripple control,

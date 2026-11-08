@@ -171,6 +171,16 @@ def test_fans(session, every_api):
     assert (serial, effect, saved["start"]["blue"], saved["start"]["red"]) == (COMMANDER, "colorshift", 255, 0)
 
 
+def test_fans_rgb_cluster(session, every_api):
+    fans = session(COMMANDER).controller("fans")
+    assert fans.hasRgbCluster and not fans.rgbCluster
+    fans.setRgbCluster(True)
+    fans.setRgbCluster(True)  # unchanged: no request
+    assert writes(every_api, "set_rgb_cluster") == [("set_rgb_cluster", COMMANDER, True)]
+    assert fans.rgbCluster
+    assert not session(LINK_HUB).controller("fans").hasRgbCluster  # no RGBCluster in its profile
+
+
 def test_keyboard_remap_and_profiles(session, every_api):
     s = session(KEYBOARD)
     keys = s.controller("keyboard_keys")

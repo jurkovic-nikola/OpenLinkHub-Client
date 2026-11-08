@@ -7,6 +7,7 @@
     "0": "Pump"
    },
    "Product": "iCUE COMMANDER CORE",
+   "RGBCluster": false,
    "RGBProfiles": {
     "0": "colorshift",
     "1": "static"

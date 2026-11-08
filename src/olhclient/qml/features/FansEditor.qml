@@ -104,6 +104,22 @@ Item {
                         onClicked: root.controller.setRgbProfile(-1, effectBox.model[effectBox.currentIndex].value)
                     }
 
+                    // device-wide, not per channel
+                    Text {
+                        visible: clusterSwitch.visible
+                        text: "RGB cluster"; color: Theme.text; font.pixelSize: Theme.fontNormal
+                    }
+                    DarkSwitch {
+                        id: clusterSwitch
+                        visible: root.controller !== null && root.controller.hasRgbCluster
+                        checked: root.controller ? root.controller.rgbCluster : false
+                        onToggled: root.controller.setRgbCluster(checked)
+                    }
+                    Text {
+                        visible: clusterSwitch.visible
+                        text: "All channels"; color: Theme.textMuted; font.pixelSize: Theme.fontSmall
+                    }
+
                     Text { text: "Label"; color: Theme.text; font.pixelSize: Theme.fontNormal }
                     DarkTextField {
                         id: labelField
