@@ -51,6 +51,10 @@ What a device gets depends on what OpenLinkHub reports for it.
   debounce time, keyboard layout, automatic brightness and controller vibration.
 - **User profiles**: switch the active OpenLinkHub profile, create one from the current settings,
   delete one.
+- **Speed profiles**: the PROFILES tab creates, edits and deletes OpenLinkHub's temperature
+  profiles, as a fan/pump curve or as temperature ranges.
+- **RGB cluster**: the RGB CLUSTER tab sets the cluster's brightness, effect and effect settings,
+  and lists the devices in the cluster.
 - **Macros**: the MACROS tab lists OpenLinkHub's macros: create, delete and edit them. A macro
   is a list of keyboard keys, mouse buttons, delays, typed text and mouse moves, in the order
   they play; keys can be held, text and mouse moves repeated, and the whole macro played several
@@ -292,7 +296,7 @@ memory only; no password is stored.
 - **A setting can be refused**: OpenLinkHub sometimes lists options for a setting the device's
   driver cannot change. The client then shows OpenLinkHub's error and the real value again.
 - **Not covered** (use "Open in OpenLinkHub"): LCD and Xeneon screens, per-key and per-area
-  colours, hub strip and adapter setup, mouse gestures, editing speed profiles, manual fan speed.
+  colours, hub strip and adapter setup, mouse gestures, manual fan speed.
 - **Hub lighting**: OpenLinkHub does not say which hub channels have LEDs (except on the
   Commander Core), so every channel offers a lighting effect.
 - **Lighting preview** on artwork: it shows the zone colours, which is what a mouse shows in the

@@ -5,7 +5,7 @@ import "../theme"
 import "../components"
 
 // The selected channel of a hub or AIO: speed profile, lighting effect and label.
-// Speed profiles themselves are edited in OpenLinkHub.
+// Speed profiles themselves are edited in the PROFILES tab.
 Item {
     id: root
     property var controller
@@ -148,7 +148,7 @@ Item {
                     Layout.fillWidth: true
                     visible: root.channel !== null && root.channel.hasSpeed
                     Layout.bottomMargin: 24
-                    text: "Speed profiles are created and edited in OpenLinkHub."
+                    text: "Speed profiles are created and edited in the PROFILES tab."
                     color: Theme.textMuted
                     font.pixelSize: Theme.fontSmall
                     wrapMode: Text.WordWrap
