@@ -52,6 +52,14 @@
     </screenshots>
     <content_rating type="oars-1.1"/>
     <releases>
+        <release version="0.7.0" date="2026-11-08">
+            <description>
+                <ul>
+                    <li>RGB cluster toggle for fan/LED hubs (Lighting Node Core, Commander Core, Commander Pro, iCUE Link and more), in Fans &amp; pumps</li>
+                    <li>RGB CLUSTER tab: edit the settings of the cluster's effect (colours, speed, gradient)</li>
+                </ul>
+            </description>
+        </release>
         <release version="0.6.0" date="2026-11-08">
             <description>
                 <ul>
