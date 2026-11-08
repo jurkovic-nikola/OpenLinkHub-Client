@@ -38,10 +38,10 @@ What a device gets depends on what OpenLinkHub reports for it.
 - **DPI**: stage values and stage colours.
 - **Lighting**: effect, brightness (slider or steps, depending on the device), zone colours, RGB
   cluster and OpenRGB integration. Artwork shows the device in its own zone colours.
-- **Effect settings**, under the effect in Lighting and Fans & pumps, like OpenLinkHub's RGB
-  editor: the effect's colours (with a temperature each for the CPU/GPU/liquid temperature
-  effects), speed, the probe temperature range, gradient colours, and the Slipstream-only
-  direction and alternate colours.
+- **Effect settings**, under the effect in Lighting, Fans & pumps and RGB Cluster, like
+  OpenLinkHub's RGB editor: the effect's colours (with a temperature each for the CPU/GPU/liquid
+  temperature effects), speed, the probe temperature range, gradient colours, and the
+  Slipstream-only direction and alternate colours.
 - **Fans & pumps** on hubs and AIO coolers: live speed and temperature per channel, speed profile
   and lighting effect per channel (or for all at once), channel labels, RGB cluster.
 - **Equalizer** for headsets.

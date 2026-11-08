@@ -109,6 +109,7 @@ class Backend(QObject):
         self._cluster = Cluster(api, self.worker, self) if api is not None else None
         if self._cluster is not None:
             self._cluster.failed.connect(self._report_error)
+            self._cluster.message.connect(self.notify)
         self._macros = MacroLibrary(api, self.worker, self) if api is not None else None
         if self._macros is not None:
             self._macros.message.connect(self.notify)

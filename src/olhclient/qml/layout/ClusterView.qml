@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import "../theme"
 import "../components"
+import "../features"
 
 RowLayout {
     id: root
@@ -15,41 +16,55 @@ RowLayout {
     Panel {
         title: "RGB Cluster"
         highlighted: true
-        Layout.preferredWidth: 310
-        Layout.maximumWidth: 310
+        Layout.fillWidth: true
         Layout.fillHeight: true
-        ColumnLayout {
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.margins: 16
-            spacing: 10
+        // the effect settings can be long (gradients); scroll when the window is low
+        ScrollView {
+            id: scroll
+            anchors.fill: parent
             visible: root.loaded
-            enabled: root.cluster && !root.cluster.busy
-            RowLayout {
-                Layout.fillWidth: true
-                Text { text: "Brightness"; color: Theme.text }
-                Item { Layout.fillWidth: true }
-                Text { text: Math.round(slider.value) + "%"; color: Theme.accent }
-            }
-            DarkSlider {
-                id: slider
-                objectName: "clusterBrightness"
-                Layout.fillWidth: true
-                from: 0
-                to: 100
-                stepSize: 1
-                live: false
-                value: root.state.brightness ?? 0
-                onMoved: if (!pressed) root.cluster.setBrightness(Math.round(value))
-                onPressedChanged: if (!pressed && root.loaded) root.cluster.setBrightness(Math.round(value))
-            }
-            Text { text: "RGB effect"; color: Theme.text }
-            DarkComboBox {
-                Layout.fillWidth: true
-                model: (root.state.modes || []).map(mode => ({value: mode, text: mode}))
-                currentIndex: (root.state.modes || []).indexOf(root.state.effect)
-                onActivated: root.cluster.setEffect(currentValue)
+            contentWidth: availableWidth
+            ScrollBar.vertical.policy: scroll.contentHeight > scroll.availableHeight ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff
+            ColumnLayout {
+                width: scroll.availableWidth
+                spacing: 0
+                ColumnLayout {
+                    Layout.margins: 16
+                    Layout.maximumWidth: 310
+                    spacing: 10
+                    enabled: root.cluster && !root.cluster.busy
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Text { text: "Brightness"; color: Theme.text }
+                        Item { Layout.fillWidth: true }
+                        Text { text: Math.round(slider.value) + "%"; color: Theme.accent }
+                    }
+                    DarkSlider {
+                        id: slider
+                        objectName: "clusterBrightness"
+                        Layout.fillWidth: true
+                        from: 0
+                        to: 100
+                        stepSize: 1
+                        live: false
+                        value: root.state.brightness ?? 0
+                        onMoved: if (!pressed) root.cluster.setBrightness(Math.round(value))
+                        onPressedChanged: if (!pressed && root.loaded) root.cluster.setBrightness(Math.round(value))
+                    }
+                    Text { text: "RGB effect"; color: Theme.text }
+                    DarkComboBox {
+                        Layout.fillWidth: true
+                        model: (root.state.modes || []).map(mode => ({value: mode, text: mode}))
+                        currentIndex: (root.state.modes || []).indexOf(root.state.effect)
+                        onActivated: root.cluster.setEffect(currentValue)
+                    }
+                }
+                EffectProfileEditor {
+                    Layout.leftMargin: 16
+                    Layout.rightMargin: 16
+                    Layout.bottomMargin: 16
+                    profile: root.cluster ? root.cluster.effectProfile : null
+                }
             }
         }
         AccentButton {
@@ -63,7 +78,7 @@ RowLayout {
     Panel {
         title: "Cluster devices"
         highlighted: true
-        Layout.fillWidth: true
+        Layout.preferredWidth: 420
         Layout.fillHeight: true
         ColumnLayout {
             anchors.fill: parent
