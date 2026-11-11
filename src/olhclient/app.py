@@ -7,7 +7,7 @@ import logging
 import sys
 from pathlib import Path
 
-from PySide6.QtCore import QUrl
+from PySide6.QtCore import QCoreApplication, QProcess, QUrl
 from PySide6.QtGui import QIcon
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtQuickControls2 import QQuickStyle
@@ -17,6 +17,7 @@ from olhclient import __version__
 from olhclient.api.client import ApiClient
 from olhclient.config import Config, default_path
 from olhclient.core.backend import Backend
+from olhclient.core.config_editor import ConfigEditor
 from olhclient.core.session import QML_DIR
 from olhclient.core.updater import Updater
 from olhclient.devices.registry import Registry
@@ -38,23 +39,36 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def create_engine(backend: Backend, updater: Updater | None = None, username: str = "") -> QQmlApplicationEngine:
+def create_engine(backend: Backend, updater: Updater | None = None, username: str = "",
+                  config: ConfigEditor | None = None, visible: bool = True) -> QQmlApplicationEngine:
     engine = QQmlApplicationEngine()
-    engine.setInitialProperties({"backend": backend, "updater": updater, "defaultUsername": username})
+    engine.setInitialProperties({"backend": backend, "updater": updater, "defaultUsername": username,
+                                 "config": config, "visible": visible})
     engine.load(QUrl.fromLocalFile(str(QML_DIR / "Main.qml")))
     return engine
 
 
+def restart(argv: list[str]) -> None:
+    """Start a new instance with the same arguments, then quit this one."""
+    QProcess.startDetached(sys.executable, ["-m", "olhclient", *argv])
+    QCoreApplication.quit()
+
+
 def main(argv: list[str] | None = None) -> int:
-    args = parse_args(sys.argv[1:] if argv is None else argv)
+    argv = sys.argv[1:] if argv is None else argv
+    args = parse_args(argv)
     logging.basicConfig(level=logging.DEBUG if args.debug else logging.WARNING)
 
     edition = current(args.edition)
-    config = Config.load(args.config)
+    config_path = args.config or default_path()
+    config = Config.load(config_path)
+    overrides = {}
     if args.url:
         config.base_url = args.url
+        overrides["base_url"] = "--url"
     if args.insecure:
         config.verify_tls, config.ca_file = False, ""
+        overrides["verify_tls"] = overrides["ca_file"] = "--insecure"
 
     QQuickStyle.setStyle("Basic")
     # QApplication (not QGuiApplication): the tray menu is a QMenu.
@@ -69,10 +83,16 @@ def main(argv: list[str] | None = None) -> int:
                       keychron_scan=scan_keychron if edition.keychron else None,
                       gpu_scan=scan_gpus if edition.gpu else None, brand=edition.brand)
     updater = Updater(edition=edition)
-    engine = create_engine(backend, updater, config.username)
+    editor = ConfigEditor(config_path, openlinkhub=edition.openlinkhub, overrides=overrides,
+                          apply=lambda saved: backend.set_poll_interval(saved.poll_interval),
+                          restart=lambda: restart(argv))
+    engine = create_engine(backend, updater, config.username, editor, visible=not config.start_minimized)
     if not engine.rootObjects():
         return 1
-    tray = create_tray(app, engine.rootObjects()[0], updater.check, backend.devices)  # noqa: F841 - keep alive
+    window = engine.rootObjects()[0]
+    tray = create_tray(app, window, updater.check, backend.devices)
+    if config.start_minimized and tray is None:
+        window.showMinimized()  # no tray to restore a hidden window from
     backend.start()
     if config.check_updates:
         updater.checkQuietly()

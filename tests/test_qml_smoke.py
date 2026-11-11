@@ -413,3 +413,47 @@ def test_click_temperature_profile_edit_and_save_curves(ui, qtbot, fake_api, mon
         assert len(points) == 3 and 0 < points[1]["x"] < 60
         assert points[0] == initial[0] and points[-1] == initial[-1]
     assert warnings == []
+
+
+def test_config_page(qtbot, fake_api, tmp_path):
+    from olhclient.api.client import ApiError
+    from olhclient.core.config_editor import ConfigEditor
+
+    path = tmp_path / "config.toml"
+    path.write_text('base_url = "http://127.0.0.1:27003"\n')
+    backend = Backend(fake_api, Registry.discover(), worker=Worker(synchronous=True))
+    restarted = []
+    config = ConfigEditor(path, overrides={"base_url": "--url"}, restart=lambda: restarted.append(1))
+    engine = QQmlApplicationEngine()
+    warnings = []
+    engine.warnings.connect(lambda ws: warnings.extend(w.toString() for w in ws))
+    engine.setInitialProperties({"backend": backend, "config": config})
+    engine.load(QUrl.fromLocalFile(str(QML_DIR / "Main.qml")))
+    window = engine.rootObjects()[0]
+    fake_api.fail_with = ApiError("Cannot reach OpenLinkHub")  # the tab must work while disconnected
+    backend.refresh()
+    window.setProperty("page", "config")
+    settle(qtbot)
+    assert window.property("title") == "Config — OpenLinkHub"
+    def item_named(item, name):
+        if item.objectName() == name and item.property("placeholderText") is not None:
+            return item
+        for child in item.childItems():
+            found = item_named(child, name)
+            if found is not None:
+                return found
+
+    field = item_named(window.contentItem(), "config_base_url")
+    assert field.property("text") == "http://127.0.0.1:27003"
+    config.setValue("base_url", "http://10.0.0.2:27003")
+    config.setValue("check_updates", False)
+    settle(qtbot)
+    assert field.property("text") == "http://10.0.0.2:27003"
+    config.save()
+    config.useDefault("base_url")
+    settle(qtbot)
+    config.restart()
+    assert restarted == [1]
+    assert warnings == []
+    window.close()
+    engine.deleteLater()

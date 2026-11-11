@@ -7,6 +7,7 @@ Rectangle {
     property var backend
     property var updater: null
     property string page: "devices"
+    property bool hasConfig: false
     signal pageSelected(string page)
     implicitHeight: 40
     color: Theme.topBar
@@ -33,10 +34,11 @@ Rectangle {
             }
         }
         Repeater {
-            model: root.backend && root.backend.openLinkHub
-                   ? [{ page: "devices", title: "DEVICES" }, { page: "macros", title: "MACROS" },
-                      { page: "profiles", title: "PROFILES" }, { page: "cluster", title: "RGB CLUSTER" }]
-                   : [{ page: "devices", title: "DEVICES" }]
+            model: (root.backend && root.backend.openLinkHub
+                    ? [{ page: "devices", title: "DEVICES" }, { page: "macros", title: "MACROS" },
+                       { page: "profiles", title: "PROFILES" }, { page: "cluster", title: "RGB CLUSTER" }]
+                    : [{ page: "devices", title: "DEVICES" }])
+                   .concat(root.hasConfig ? [{ page: "config", title: "CONFIG" }] : [])
             Text {
                 id: tab
                 required property var modelData

@@ -11,6 +11,8 @@ ApplicationWindow {
     property string defaultUsername: ""
     // core/updater.py; null when the client runs without one (tests)
     property var updater: null
+    // core/config_editor.py, the CONFIG tab; null without one (tests)
+    property var config: null
 
     readonly property var session: backend.session
     // A Slipstream receiver is selected instead of a mouse.
@@ -45,7 +47,8 @@ ApplicationWindow {
     minimumWidth: 1120
     minimumHeight: 700
     visible: true
-    title: page === "macros" ? "Macros — " + backend.brand
+    title: page === "config" ? "Config — " + backend.brand
+        : page === "macros" ? "Macros — " + backend.brand
         : page === "cluster" ? "RGB Cluster — " + backend.brand
         : page === "profiles" ? "Profiles — " + backend.brand
         : session ? session.product + " — " + backend.brand
@@ -56,6 +59,7 @@ ApplicationWindow {
         backend: window.backend
         updater: window.updater
         page: window.page
+        hasConfig: window.config !== null
         onPageSelected: page => window.page = page
     }
     footer: StatusBar { backend: window.backend }
@@ -63,6 +67,10 @@ ApplicationWindow {
     Connections {
         target: window.backend
         function onNotify(text, isError) { toast.show(text, isError) }
+    }
+    Connections {
+        target: window.config
+        function onMessage(text, isError) { toast.show(text, isError) }
     }
 
     RowLayout {
@@ -202,10 +210,18 @@ ApplicationWindow {
         sourceComponent: ClusterView { cluster: window.backend.cluster }
     }
 
+    Loader {
+        anchors.fill: parent
+        anchors.margins: Theme.gap
+        active: window.page === "config" && window.config !== null
+        sourceComponent: ConfigView { config: window.config }
+    }
+
     // -- empty / error states ------------------------------------------------
     Rectangle {
         anchors.fill: parent
-        visible: !window.backend.authRequired && (window.page !== "devices" ? !window.backend.connected
+        // the CONFIG tab stays usable without a connection: it is where the server URL is fixed
+        visible: !window.backend.authRequired && window.page !== "config" && (window.page !== "devices" ? !window.backend.connected
                  : window.session === null && window.receiver === null)
         color: Qt.rgba(0.08, 0.08, 0.08, 0.92)
         Column {
@@ -235,8 +251,8 @@ ApplicationWindow {
 
     LoginDialog {
         anchors.centerIn: parent
-        visible: window.backend.authRequired
-        username: window.defaultUsername
+        visible: window.backend.authRequired && window.page !== "config"
+        username: window.config ? window.config.saved.username || window.defaultUsername : window.defaultUsername
         onLogin: (user, password) => window.backend.login(user, password)
     }
 

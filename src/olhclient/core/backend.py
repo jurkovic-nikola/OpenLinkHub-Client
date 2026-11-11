@@ -127,6 +127,9 @@ class Backend(QObject):
         self.refresh()
         self._timer.start()
 
+    def set_poll_interval(self, seconds: float) -> None:
+        self._timer.setInterval(int(seconds * 1000))
+
     # -- polling -----------------------------------------------------------
 
     @Slot()

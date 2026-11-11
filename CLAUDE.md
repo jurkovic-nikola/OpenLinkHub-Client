@@ -48,6 +48,10 @@ formatter configured.
   - `macros.py`: `MacroLibrary` (QML `backend.macros`, the MACROS tab, `layout/MacrosView.qml`).
     Macros are global, not per device. `plan_macro` turns a saved macro plus the edited action
     list into API writes (see the macro quirk below).
+  - `config_editor.py`: `ConfigEditor` (QML `config`, the CONFIG tab, `layout/ConfigView.qml`):
+    every `Config` field from the file or its default. `config.FIELDS` describes them (label, help,
+    whether a restart is needed); `config.write_values` edits the TOML line by line so comments
+    and unknown keys survive.
   - `artwork.py`: recolours SVG artwork by lighting zone (`class="zone-<zone>"`) and drops
     `class="button-<name>"` elements for `missing_buttons`.
 - `devices/` — optional device modules (artwork, hotspots, labels, limits). `Registry.discover()`

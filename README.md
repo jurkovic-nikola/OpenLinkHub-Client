@@ -272,12 +272,16 @@ have a Save button; everything else applies immediately.
 ### Configuration
 
 All settings are optional. They live in `~/.config/olh-client/config.toml`
-(`$XDG_CONFIG_HOME` is honoured):
+(`$XDG_CONFIG_HOME` is honoured) and can be edited in the **CONFIG** tab, which shows every
+setting with its value from the file or its default. Saving there keeps comments and other keys
+in the file; "Use default" removes a key. The refresh interval and username apply right away,
+connection settings after a restart (the tab offers one).
 
 ```toml
 base_url = "http://127.0.0.1:27003"
 poll_interval = 5            # seconds
 check_updates = true         # look for a new release at startup
+start_minimized = false      # start hidden in the tray (minimized when there is no tray)
 
 # Only needed when OpenLinkHub's dashboard authentication is enabled (HTTPS):
 # origin   = "https://127.0.0.1:27003"   # must equal authOrigin in dashboard.json
